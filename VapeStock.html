@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VapeStock</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--sur:#13131a;--sur2:#1c1c27;--brd:#2a2a3a;--acc:#7c6fff;--grn:#00e5a0;--red:#ff4d6d;--amb:#ffb800;--txt:#f0f0f8;--txt2:#9090b0;--txt3:#5a5a7a;--r:14px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",sans-serif;overflow-x:hidden}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--brd);padding:12px 14px 0}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.logo{font-size:19px;font-weight:800;letter-spacing:-.5px}
+.logo b{color:var(--acc);font-weight:800}
+.sync-row{display:flex;align-items:center;gap:6px}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--txt3);transition:background .3s;flex-shrink:0}
+.sdot.ok{background:var(--grn)}.sdot.err{background:var(--red)}.sdot.busy{background:var(--amb);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.slbl{font-size:10px;color:var(--txt3);font-weight:600}
+.hstats{display:flex;gap:8px;margin-left:8px}
+.hs{text-align:center}
+.hsv{font-size:16px;font-weight:700;color:var(--grn);font-family:"DM Mono",monospace}
+.hsl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px}
+.tabs{display:flex;gap:1px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:44px;padding:9px 2px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--txt3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.on{color:var(--acc);border-color:var(--acc)}
+.pg{display:none;padding:14px;padding-bottom:100px}.pg.on{display:block}
+.stitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt3);margin-bottom:10px}
+.bscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none}
+.bscroll::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:6px 12px;border-radius:50px;background:var(--sur);border:1px solid var(--brd);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--txt2);transition:all .2s;user-select:none}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.fcard{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:11px;position:relative;transition:border-color .2s}
+.fcard.low{border-color:rgba(255,184,0,.5)}.fcard.out{border-color:rgba(255,77,109,.4);background:rgba(255,77,109,.04)}
+.fname{font-size:12px;font-weight:600;line-height:1.3;margin-bottom:8px;min-height:30px;padding-right:12px}
+.qrow{display:flex;align-items:center;gap:5px}
+.qbtn{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.qbtn.m{background:rgba(255,77,109,.15);color:var(--red)}.qbtn.m:active{background:rgba(255,77,109,.4);transform:scale(.9)}
+.qbtn.p{background:rgba(0,229,160,.15);color:var(--grn)}.qbtn.p:active{background:rgba(0,229,160,.4);transform:scale(.9)}
+.qval{flex:1;text-align:center;font-family:"DM Mono",monospace;font-size:18px;font-weight:700}
+.qval.z{color:var(--txt3)}.qval.lw{color:var(--amb)}
+.qedit{width:48px;text-align:center;padding:4px 0;border-radius:6px;background:var(--sur2);border:1px solid var(--acc);color:var(--txt);font-family:"DM Mono",monospace;font-size:16px;font-weight:700;outline:none}
+.cdot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%}
+.cdot.in{background:var(--grn)}.cdot.lw{background:var(--amb)}.cdot.out{background:var(--red)}
+.fedit-btn{position:absolute;bottom:8px;right:8px;font-size:10px;color:var(--txt3);cursor:pointer;font-weight:700;padding:2px 5px;border-radius:4px;background:var(--sur2);border:1px solid var(--brd)}
+.frow{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.fc{padding:5px 11px;border-radius:50px;border:1px solid var(--brd);background:var(--sur);font-size:11px;font-weight:700;cursor:pointer;color:var(--txt3);transition:all .2s;user-select:none}
+.fc.on{border-color:var(--acc);color:var(--acc);background:rgba(124,111,255,.1)}
+.fc-count{display:inline-block;background:rgba(255,255,255,.15);border-radius:50px;padding:1px 6px;font-size:10px;font-family:"DM Mono",monospace;margin-left:3px;font-weight:700}
+.fc.on .fc-count{background:rgba(124,111,255,.25)}
+.igrp{margin-bottom:12px}
+.ilbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:6px}
+.ifield{width:100%;padding:11px 13px;border-radius:var(--rs);background:var(--sur);border:1px solid var(--brd);color:var(--txt);font-family:"Syne",sans-serif;font-size:14px;outline:none;transition:border .2s}
+.ifield:focus{border-color:var(--acc)}
+.swrap{position:relative;margin-bottom:10px}
+.swrap .ifield{padding-left:36px}
+.sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:14px}
+.flist{max-height:200px;overflow-y:auto;border-radius:var(--rs);border:1px solid var(--brd);scrollbar-width:thin;scrollbar-color:var(--brd) transparent}
+.fitem{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background .15s;user-select:none}
+.fitem:last-child{border-bottom:none}.fitem:active{background:var(--sur2)}.fitem.sel{background:rgba(124,111,255,.1)}
+.fin{font-size:13px;font-weight:600}.fsub{font-size:10px;color:var(--txt3);margin-top:1px}
+.fchk{width:20px;height:20px;border-radius:6px;border:2px solid var(--brd);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#fff}
+.fitem.sel .fchk{background:var(--acc);border-color:var(--acc)}
+.citem{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--brd);border-radius:var(--rs);padding:9px 11px;margin-bottom:7px}
+.cinfo{flex:1}.cin{font-size:13px;font-weight:600}.cbr{font-size:10px;color:var(--txt3)}
+.cqwrap{display:flex;align-items:center;gap:7px}
+.cqinp{width:48px;text-align:center;padding:5px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:14px;font-weight:700}
+.crm{color:var(--red);font-size:16px;cursor:pointer;padding:4px;line-height:1;font-weight:700}
+.btn{width:100%;padding:12px;border-radius:var(--rs);border:none;font-family:"Syne",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn:active{opacity:.85;transform:scale(.98)}
+.bpri{background:var(--acc);color:#fff}
+.bsuc{background:var(--grn);color:#000}
+.bdgr{background:rgba(255,77,109,.15);color:var(--red);border:1px solid rgba(255,77,109,.3)}
+.bsec{background:var(--sur2);color:var(--txt2);border:1px solid var(--brd)}
+.bamb{background:rgba(255,184,0,.15);color:var(--amb);border:1px solid rgba(255,184,0,.3)}
+.bsm{width:auto;padding:7px 13px;font-size:12px}
+.brow{display:flex;gap:8px}.brow .btn{flex:1}
+.wabtn{background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;gap:7px}
+.ota{width:100%;min-height:160px;padding:11px;border-radius:var(--rs);background:var(--sur);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:12px;line-height:1.7;resize:vertical;outline:none}
+.ota:focus{border-color:var(--acc)}
+.vitem{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:var(--rs);margin-bottom:7px;border:1px solid var(--brd)}
+.vico{font-size:14px;flex-shrink:0;margin-top:2px}
+.vtxt{font-size:12px;line-height:1.4;flex:1}
+.vtxt strong{font-size:13px;display:block;margin-bottom:2px}
+.qav{font-family:"DM Mono",monospace;color:var(--txt2);font-size:11px}
+.vitem.vok{background:rgba(0,229,160,.07);border-color:rgba(0,229,160,.25)}
+.vitem.ver{background:rgba(255,77,109,.07);border-color:rgba(255,77,109,.25)}
+.vitem.vsug{background:rgba(255,184,0,.07);border-color:rgba(255,184,0,.3)}
+.vitem.vman{background:rgba(124,111,255,.07);border-color:rgba(124,111,255,.25)}
+.match-sel{width:100%;margin-top:6px;padding:6px 8px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt);font-family:"Syne",sans-serif;font-size:12px;outline:none}
+.match-sel:focus{border-color:var(--acc)}
+.qinline{width:48px;padding:4px 6px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:13px;font-weight:700;text-align:center;outline:none}
+.qinline:focus{border-color:var(--acc)}
+.skip-btn{font-size:10px;color:var(--txt3);cursor:pointer;font-weight:700;margin-left:6px;padding:3px 7px;border-radius:4px;background:var(--sur2);border:1px solid var(--brd);flex-shrink:0}
+.hitem{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:12px;margin-bottom:9px}
+.hmeta{display:flex;justify-content:space-between;margin-bottom:6px}
+.htype{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.htype.pur{color:var(--grn)}.htype.sal{color:#ff6b9d}.htype.adj{color:var(--amb)}
+.hdt{font-size:11px;color:var(--txt3);font-family:"DM Mono",monospace}
+.hdtl{font-size:12px;color:var(--txt2);line-height:1.6}
+.scard{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:15px;margin-bottom:11px}
+.scard-t{font-size:15px;font-weight:700;margin-bottom:4px}
+.scard-s{font-size:12px;color:var(--txt3);line-height:1.6;margin-bottom:12px}
+.step{display:flex;gap:9px;margin-bottom:9px;align-items:flex-start}
+.stepn{width:21px;height:21px;border-radius:50%;background:var(--acc);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.stept{font-size:12px;color:var(--txt2);line-height:1.5}
+.stept a{color:var(--acc);text-decoration:none}
+.info-box{background:rgba(124,111,255,.08);border:1px solid rgba(124,111,255,.25);border-radius:var(--rs);padding:11px;margin-bottom:12px}
+.info-box p{font-size:12px;color:var(--txt2);line-height:1.6;margin-bottom:5px}.info-box p:last-child{margin-bottom:0}
+.status-box{padding:9px 13px;border-radius:var(--rs);font-size:12px;font-weight:600;margin-top:9px;display:none}
+.status-box.ok{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);color:var(--grn)}
+.status-box.err{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--red)}
+.status-box.busy{background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.3);color:var(--amb)}
+.dv{height:1px;background:var(--brd);margin:12px 0}
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--sur2);border:1px solid var(--brd);border-radius:50px;padding:9px 18px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ts{border-color:rgba(0,229,160,.5);color:var(--grn)}.toast.te{border-color:rgba(255,77,109,.5);color:var(--red)}.toast.tw{border-color:rgba(255,184,0,.5);color:var(--amb)}
+.empty{text-align:center;padding:34px 18px}
+.ei{font-size:34px;margin-bottom:9px}.et{color:var(--txt3);font-size:13px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px}
+.leg{display:flex;align-items:center;gap:5px;color:var(--txt2)}
+.legdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-sheet{background:var(--sur);border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.modal-overlay.open .modal-sheet{transform:translateY(0)}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--txt3);margin-bottom:16px}
+.modal-close{position:absolute;top:14px;right:16px;font-size:22px;color:var(--txt2);cursor:pointer;font-weight:700;line-height:1;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--sur2);border:1px solid var(--brd);user-select:none;-webkit-tap-highlight-color:transparent}
+.cfl-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--sur2);border-radius:var(--rs);margin-bottom:6px;border:1px solid var(--brd)}
+.cfl-name{font-size:13px;font-weight:600}.cfl-brand{font-size:10px;color:var(--txt3)}
+.cfl-del{color:var(--red);font-size:15px;cursor:pointer;font-weight:700;padding:4px 6px;border-radius:4px}
+.cfl-del:active{background:rgba(255,77,109,.15)}
+
+.chip-add{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--acc);border:none;color:#fff;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-left:2px}
+.chip-add:active{transform:scale(.88);background:rgba(124,111,255,.8)}
+
+.cat-brand-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--acc);border-radius:var(--r) var(--r) 0 0;margin-bottom:0}
+.cat-brand-name{font-size:14px;font-weight:700;color:#fff}
+.cat-brand-count{font-size:11px;color:rgba(255,255,255,.7);margin-left:8px}
+.cat-brand-actions{display:flex;gap:6px}
+.cat-action-btn{padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+.cat-action-btn:active{background:rgba(255,255,255,.3)}
+.cat-action-del{border-color:rgba(255,77,109,.5);background:rgba(255,77,109,.2)}
+.cat-flavor-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--brd);background:var(--sur)}
+.cat-flavor-row:last-child{border-bottom:none;border-radius:0 0 var(--r) var(--r)}
+.cat-flavor-name{font-size:13px;font-weight:600;flex:1}
+.cat-flavor-stock{font-family:"DM Mono",monospace;font-size:13px;color:var(--txt2);margin-right:10px}
+.cat-flavor-del{color:var(--red);font-size:15px;cursor:pointer;padding:4px 7px;border-radius:4px;font-weight:700;flex-shrink:0}
+.cat-flavor-del:active{background:rgba(255,77,109,.15)}
+.cat-brand-block{border-radius:var(--r);border:1px solid var(--brd);margin-bottom:14px;overflow:hidden}
+.cat-add-flavor-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;background:rgba(124,111,255,.08);border:none;width:100%;text-align:left;color:var(--acc);font-size:12px;font-weight:700;cursor:pointer;font-family:"Syne",sans-serif;border-top:1px solid var(--brd)}
+.cat-add-flavor-btn:active{background:rgba(124,111,255,.18)}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="logo">Vape<b>Stock</b></div>
+    <div class="sync-row">
+      <div class="sdot" id="sdot"></div>
+      <span class="slbl" id="slbl">local</span>
+      <div class="hstats">
+        <div class="hs"><div class="hsv" id="hs-tot">0</div><div class="hsl">Units</div></div>
+        <div class="hs"><div class="hsv" style="color:var(--amb)" id="hs-low">0</div><div class="hsl">Low</div></div>
+        <div class="hs"><div class="hsv" style="color:var(--red)" id="hs-out">0</div><div class="hsl">Out</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tabs" id="mtabs">
+    <div class="tab on" data-pg="stock">Stock</div>
+    <div class="tab" data-pg="purchase">Buy</div>
+    <div class="tab" data-pg="sell">Sell</div>
+    <div class="tab" data-pg="order">Order</div>
+    <div class="tab" data-pg="history">Log</div>
+    <div class="tab" data-pg="sync">Sync</div>
+    <div class="tab" data-pg="catalog">Catalog</div>
+    <div class="tab" data-pg="export">Excel</div>
+  </div>
+</div>
+
+<!-- STOCK PAGE -->
+<div class="pg on" id="pg-stock">
+  <div class="bscroll" id="sb"></div>
+  <div class="frow" id="sf-row">
+    <div class="fc on" data-sf="all">All <span class="fc-count" id="fc-all">0</span></div>
+    <div class="fc" data-sf="in">In Stock <span class="fc-count" id="fc-in">0</span></div>
+    <div class="fc" data-sf="low">Low <span class="fc-count" id="fc-low">0</span></div>
+    <div class="fc" data-sf="out">Out <span class="fc-count" id="fc-out">0</span></div>
+  </div>
+  <p style="font-size:11px;color:var(--txt3);margin-bottom:10px">Tap a number to edit it directly. Use + / - for quick adjust.</p>
+  <div class="fgrid" id="sgrid"></div>
+</div>
+
+<!-- PURCHASE PAGE -->
+<div class="pg" id="pg-purchase">
+  <div class="tabs" id="ptabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
+    <div class="tab on" data-pt="upload" style="border-radius:6px">Upload Text</div>
+    <div class="tab" data-pt="manual" style="border-radius:6px">Manual Pick</div>
+  </div>
+
+  <!-- UPLOAD pane -->
+  <div id="pur-upload-pane">
+    <p class="stitle">Paste Purchase Text</p>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Paste any WhatsApp order, invoice or list. Each line should have a flavor name and optional quantity (e.g. "Miami Mint x10" or "Blue Razz 5").</p>
+    <textarea class="ota" id="pur-text" placeholder="Geek Bar 15K&#10;Miami Mint x10&#10;Blue Razz Ice x5&#10;Watermelon Ice 8&#10;&#10;Crown Bar&#10;Berry Ice x12&#10;Grape Mint 6"></textarea>
+    <div class="brow" style="margin-top:10px">
+      <button class="btn bpri" id="btn-pur-parse">Parse &amp; Preview</button>
+      <button class="btn bsec bsm" id="btn-pur-clr">Clear</button>
+    </div>
+    <div id="pur-preview" style="margin-top:14px"></div>
+    <div id="pur-confirm-wrap" style="display:none;margin-top:12px">
+      <div class="dv"></div>
+      <div class="legend">
+        <div class="leg"><div class="legdot" style="background:var(--grn)"></div> Exact match</div>
+        <div class="leg"><div class="legdot" style="background:var(--amb)"></div> Suggested match</div>
+        <div class="leg"><div class="legdot" style="background:var(--acc)"></div> Manual selected</div>
+        <div class="leg"><div class="legdot" style="background:var(--red)"></div> Skipped</div>
+      </div>
+      <button class="btn bsuc" id="btn-pur-confirm">&#10003; Confirm &amp; Add to Stock</button>
+      <div id="pur-unmatched-wrap" style="display:none;margin-top:14px">
+        <div class="dv"></div>
+        <div class="stitle" style="color:var(--red)">&#9888; Unmatched Items</div>
+        <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">These items could not be matched to any flavor in the catalog. Send this list on WhatsApp to verify or check spellings.</p>
+        <textarea class="ota" id="pur-unmatched-text" readonly style="min-height:120px;border-color:rgba(255,77,109,.4)"></textarea>
+        <div class="brow" style="margin-top:8px">
+          <button class="btn wabtn bsm" id="btn-pur-wa-unmatched">&#128172; Send via WhatsApp</button>
+          <button class="btn bsec bsm" id="btn-pur-copy-unmatched">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANUAL pane -->
+  <div id="pur-manual-pane" style="display:none">
+    <div class="igrp"><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
+    <div class="igrp">
+      <div class="ilbl">Select Flavors</div>
+      <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="psearch" placeholder="Search flavor..."></div>
+      <div class="flist" id="pflist"></div>
+    </div>
+    <div id="pcart-wrap" style="display:none">
+      <div class="stitle" style="margin-top:12px">Cart</div>
+      <div id="pcart"></div>
+      <button class="btn bsuc" id="btn-confirm-pur">Confirm Purchase</button>
+    </div>
+  </div>
+</div>
+
+<!-- SELL PAGE -->
+<div class="pg" id="pg-sell">
+  <div class="tabs" id="stabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
+    <div class="tab on" data-st="upload" style="border-radius:6px">Upload Text</div>
+    <div class="tab" data-st="manual" style="border-radius:6px">Manual Sale</div>
+  </div>
+
+  <!-- UPLOAD pane -->
+  <div id="sell-upload-pane">
+    <p class="stitle">Paste Sale / Order Text</p>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Paste any WhatsApp order or sale list. The app matches flavors, checks stock, and removes quantities after confirmation.</p>
+    <textarea class="ota" id="sell-text" placeholder="Geek Bar 15K&#10;Miami Mint x3&#10;Blue Razz Ice x2&#10;&#10;Crown Bar&#10;Berry Ice x5"></textarea>
+    <div class="brow" style="margin-top:10px">
+      <button class="btn bdgr" id="btn-sell-parse">Preview Sale</button>
+      <button class="btn bsec bsm" id="btn-sell-clr">Clear</button>
+    </div>
+    <div id="sell-preview" style="margin-top:14px"></div>
+    <div id="sell-confirm-wrap" style="display:none;margin-top:12px">
+      <div class="dv"></div>
+      <div class="legend">
+        <div class="leg"><div class="legdot" style="background:var(--grn)"></div> Can fulfill</div>
+        <div class="leg"><div class="legdot" style="background:var(--amb)"></div> Suggested match</div>
+        <div class="leg"><div class="legdot" style="background:var(--red)"></div> Insufficient stock</div>
+        <div class="leg"><div class="legdot" style="background:var(--txt3)"></div> Skipped</div>
+      </div>
+      <button class="btn bdgr" id="btn-sell-confirm">&#8722; Confirm Sale &amp; Remove from Stock</button>
+    </div>
+  </div>
+
+  <!-- MANUAL pane -->
+  <div id="sell-manual-pane" style="display:none">
+    <div class="igrp"><div class="ilbl">Brand</div><div class="bscroll" id="sell-brand-scroll"></div></div>
+    <div class="igrp">
+      <div class="ilbl">Select Flavors to Sell</div>
+      <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="sell-search" placeholder="Search flavor..."></div>
+      <div class="flist" id="sell-flavor-list"></div>
+    </div>
+    <div id="sell-cart-wrap" style="display:none">
+      <div class="stitle" style="margin-top:12px">Sale Cart</div>
+      <div id="sell-cart"></div>
+      <button class="btn bdgr" id="btn-confirm-manual-sell">&#8722; Confirm Sale &amp; Remove from Stock</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER PAGE -->
+<div class="pg" id="pg-order">
+  <div class="tabs" id="otabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
+    <div class="tab on" data-ot="verify" style="border-radius:6px">Verify Order</div>
+    <div class="tab" data-ot="generate" style="border-radius:6px">Generate List</div>
+  </div>
+  <div id="ov-pane">
+    <p class="stitle">Paste WhatsApp Order</p>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Check if you have enough stock to fill an order.</p>
+    <textarea class="ota" id="oinput" placeholder="Geek Bar 15K&#10;- Miami Mint x3&#10;- Blue Razz Ice x2&#10;&#10;Crown Bar&#10;- Berry Ice x5"></textarea>
+    <div class="brow" style="margin-top:10px">
+      <button class="btn bpri" id="btn-verify">Check Stock</button>
+      <button class="btn bsec bsm" id="btn-clro">Clear</button>
+    </div>
+    <div id="vresult" style="margin-top:12px"></div>
+  </div>
+  <div id="og-pane" style="display:none">
+    <p class="stitle">Generate Stock List</p>
+    <div class="igrp"><div class="ilbl">Brand Filter</div><div class="bscroll" id="gb"></div></div>
+    <div class="frow" id="gf-row">
+      <div class="fc on" data-gf="in">In Stock</div>
+      <div class="fc" data-gf="low">Low Only</div>
+      <div class="fc" data-gf="all">All Flavors</div>
+    </div>
+    <button class="btn bpri" id="btn-gen" style="margin-bottom:10px">Generate List</button>
+    <textarea class="ota" id="gout" placeholder="WhatsApp list appears here..." readonly style="min-height:220px"></textarea>
+    <div class="brow" style="margin-top:10px">
+      <button class="btn wabtn" id="btn-wa">&#128172; WhatsApp</button>
+      <button class="btn bsec bsm" id="btn-copy">Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="pg" id="pg-history">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <p class="stitle" style="margin-bottom:0">Transaction Log</p>
+    <button class="btn bdgr bsm" id="btn-clrhist">Clear</button>
+  </div>
+  <div id="hlist"></div>
+</div>
+
+<!-- CATALOG PAGE -->
+<div class="pg" id="pg-catalog">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <p class="stitle" style="margin-bottom:0">Master Catalog</p>
+    <button class="btn bpri bsm" id="btn-cat-add-brand">+ Add Brand</button>
+  </div>
+  <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">All brands and flavors available in Stock, Buy and Sell. Add new brands or flavors here — they appear across the whole app instantly.</p>
+
+  <!-- Brand filter chips -->
+  <div class="bscroll" id="cat-brand-scroll"></div>
+
+  <!-- Search -->
+  <div class="swrap" style="margin-bottom:12px">
+    <span class="sico">&#128269;</span>
+    <input class="ifield" id="cat-search" placeholder="Search flavor...">
+  </div>
+
+  <!-- Flavor list for selected brand -->
+  <div id="cat-flavor-list"></div>
+
+  <!-- Add Brand Modal -->
+  <div class="modal-overlay" id="add-brand-modal">
+    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
+      <span class="modal-close" id="add-brand-close-btn">&#10005;</span>
+      <div class="modal-title">Add New Brand</div>
+      <div class="modal-sub">Create a new vape brand. You can add flavors to it after.</div>
+      <div class="igrp">
+        <div class="ilbl">Brand Name</div>
+        <input class="ifield" id="add-brand-input" placeholder="e.g. Elf Bar Pro" autocomplete="off">
+      </div>
+      <div class="brow">
+        <button class="btn bpri" id="btn-add-brand-confirm">+ Create Brand</button>
+        <button class="btn bsec" id="btn-add-brand-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Flavor to Brand Modal -->
+  <div class="modal-overlay" id="add-cat-flavor-modal">
+    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
+      <span class="modal-close" id="add-cat-flavor-close-btn">&#10005;</span>
+      <div class="modal-title">Add Flavor</div>
+      <div id="cat-flavor-modal-hint" style="font-size:12px;font-weight:700;color:var(--acc);margin-bottom:12px"></div>
+      <div class="igrp">
+        <div class="ilbl">Flavor Name</div>
+        <input class="ifield" id="add-cat-flavor-input" placeholder="e.g. Mango Ice" autocomplete="off">
+      </div>
+      <div class="igrp">
+        <div class="ilbl">Initial Stock (optional)</div>
+        <input class="ifield" id="add-cat-flavor-qty" type="number" min="0" value="0">
+      </div>
+      <div class="brow">
+        <button class="btn bpri" id="btn-add-cat-flavor-confirm">+ Add Flavor</button>
+        <button class="btn bsec" id="btn-add-cat-flavor-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SYNC PAGE -->
+<div class="pg" id="pg-sync">
+  <p class="stitle">Google Drive Sync</p>
+  <div class="info-box">
+    <p><strong style="color:var(--acc)">How it works:</strong> Stock data is saved as a JSON file in your Google Drive. Both phones read and write to the same file — any change syncs within seconds.</p>
+    <p>One Google account. Both phones use the same Web App URL.</p>
+  </div>
+  <div class="scard">
+    <div class="scard-t">Step 1 &mdash; One-time Setup</div>
+    <div class="scard-s">Do this once. Creates the shared file in Google Drive.</div>
+    <div class="step"><div class="stepn">1</div><div class="stept">Go to <a href="https://script.google.com" target="_blank">script.google.com</a> &rarr; New Project</div></div>
+    <div class="step"><div class="stepn">2</div><div class="stept">Delete existing code, paste the code below, then click Save</div></div>
+    <div class="step"><div class="stepn">3</div><div class="stept">Deploy &rarr; New Deployment &rarr; Web App &rarr; Execute as: Me &rarr; Anyone &rarr; Deploy</div></div>
+    <div class="step"><div class="stepn">4</div><div class="stept">Authorize &rarr; copy the Web App URL &rarr; paste below</div></div>
+    <div class="stitle" style="margin-top:10px">Apps Script Code</div>
+    <div style="background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;overflow-x:auto">
+      <pre id="gs-code" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;word-break:break-word">function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var file = getFile();
+  file.setContent(JSON.stringify(data));
+  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  var file = getFile();
+  var content = file.getContent();
+  return ContentService.createTextOutput(content || &#x27;{}&#x27;)
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getFile() {
+  var folder = DriveApp.getRootFolder();
+  var files = folder.getFilesByName(&#x27;vapestock_data.json&#x27;);
+  if (files.hasNext()) return files.next();
+  return folder.createFile(&#x27;vapestock_data.json&#x27;, &#x27;{}&#x27;, MimeType.PLAIN_TEXT);
+}</pre>
+    </div>
+    <button class="btn bsec" id="btn-copy-code">Copy Script Code</button>
+  </div>
+  <div class="scard">
+    <div class="scard-t">Step 2 &mdash; Connect Both Phones</div>
+    <div class="scard-s">Paste the Web App URL on each phone.</div>
+    <div class="igrp">
+      <div class="ilbl">Web App URL</div>
+      <input class="ifield" id="gd-url" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="brow">
+      <button class="btn bpri" id="btn-gd-connect">Connect</button>
+      <button class="btn bdgr bsm" id="btn-gd-disc" style="display:none">Disconnect</button>
+    </div>
+    <div class="status-box" id="gd-status"></div>
+  </div>
+  <div class="scard">
+    <div class="scard-t" style="color:var(--red)">Reset All Data</div>
+    <div class="scard-s">Clears all stock and history from this device.</div>
+    <button class="btn bdgr" id="btn-reset">Reset Everything</button>
+  </div>
+</div>
+
+<!-- EXPORT PAGE -->
+<div class="pg" id="pg-export">
+  <p class="stitle">Export to Excel</p>
+  <div class="scard">
+    <div class="scard-t">&#128196; Download Excel Report</div>
+    <div class="scard-s">Generates a .xlsx file with 3 sheets: Summary by brand, Full inventory, and Transaction log.</div>
+    <button class="btn bsuc" id="btn-export-xl" style="font-size:15px">&#11015; Download Excel File</button>
+    <div id="xl-status" style="margin-top:9px;font-size:12px;color:var(--txt3);text-align:center;display:none">Building file...</div>
+  </div>
+  <div class="scard">
+    <div class="scard-t">&#128337; Last Exported</div>
+    <div id="xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Never exported yet</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
+var BRANDS = Object.keys(CATALOG);
+
+var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}";
+
+var stock = {};
+var txLog = [];
+var activeBrand = BRANDS[0];
+var purBrand = BRANDS[0];
+var cart = {};
+var stockFlt = "all";
+var genBrand = "all";
+var genFlt = "in";
+var gdUrl = "";
+var gdConnected = false;
+var gdPollTimer = null;
+var gdPushTimer = null;
+var gdLastTs = 0;
+
+// parsed items from upload/sell
+var purItems = [];
+var sellItems = [];
+
+function skey(b, f) { return b + "~~" + f; }
+function qty(b, f) { return stock[skey(b, f)] || 0; }
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function eattr(s) {
+  return String(s).replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+// ── FUZZY MATCH ──
+// Returns best {brand, flavor, score} or null. score 1=exact, 0.7+=strong, below=weak
+function bestMatch(rawText, hintBrand) {
+  var raw = rawText.toLowerCase().trim();
+  var best = null;
+  var bestScore = 0;
+  // If brand is known, only search within that brand
+  var brandsToSearch = hintBrand ? [hintBrand] : BRANDS;
+  brandsToSearch.forEach(function(br) {
+    (CATALOG[br] || []).forEach(function(fl) {
+      var fl_lc = fl.toLowerCase();
+      var score = 0;
+      if (fl_lc === raw) score = 1;
+      else if (fl_lc.indexOf(raw) !== -1 || raw.indexOf(fl_lc) !== -1) score = 0.85;
+      else {
+        // word overlap score
+        var rawWords = raw.split(/\s+/);
+        var flWords = fl_lc.split(/\s+/);
+        var matches = 0;
+        rawWords.forEach(function(rw) {
+          if (rw.length > 2 && flWords.some(function(fw) { return fw.indexOf(rw) !== -1 || rw.indexOf(fw) !== -1; })) matches++;
+        });
+        if (matches > 0) score = 0.4 + (matches / Math.max(rawWords.length, flWords.length)) * 0.45;
+      }
+      if (score > bestScore) { bestScore = score; best = {brand: br, flavor: fl, score: score}; }
+    });
+  });
+  return bestScore >= 0.35 ? best : null;
+}
+
+// top N suggestions for a raw text
+function topSuggestions(rawText, n, hintBrand) {
+  var raw = rawText.toLowerCase().trim();
+  var results = [];
+  // Only search within hintBrand if provided; otherwise search all brands
+  var brandsToSearch = hintBrand ? [hintBrand] : BRANDS;
+  brandsToSearch.forEach(function(br) {
+    (CATALOG[br] || []).forEach(function(fl) {
+      var fl_lc = fl.toLowerCase();
+      var score = 0;
+      if (fl_lc === raw) score = 1;
+      else if (fl_lc.indexOf(raw) !== -1 || raw.indexOf(fl_lc) !== -1) score = 0.85;
+      else {
+        var rawWords = raw.split(/\s+/);
+        var flWords = fl_lc.split(/\s+/);
+        var matches = 0;
+        rawWords.forEach(function(rw) {
+          if (rw.length > 2 && flWords.some(function(fw) { return fw.indexOf(rw) !== -1 || rw.indexOf(fw) !== -1; })) matches++;
+        });
+        if (matches > 0) score = 0.35 + (matches / Math.max(rawWords.length, flWords.length)) * 0.45;
+      }
+      if (score >= 0.35) results.push({brand: br, flavor: fl, score: score});
+    });
+  });
+  results.sort(function(a, b) { return b.score - a.score; });
+  return results.slice(0, n || 5);
+}
+
+// parse a block of text into {rawFlavor, qty, brand} items
+function parseTextBlock(text) {
+  var lines = text.split("\n");
+  var curBrand = null;
+  var items = [];
+  lines.forEach(function(line) {
+    line = line.trim();
+    if (!line) return;
+    // detect brand line
+    var mb = BRANDS.filter(function(b) { return line.toLowerCase().indexOf(b.toLowerCase()) !== -1; });
+    if (mb.length && !line.match(/[xX\xd7]\s*\d+/) && !line.match(/^\d/) && line.indexOf("-") !== 0) {
+      curBrand = mb.sort(function(a,b){ return b.length - a.length; })[0];
+      return;
+    }
+    var clean = line.replace(/^[-*\u2022]\s*/, "");
+    var qm = clean.match(/[xX\xd7]\s*(\d+)\s*$/) || clean.match(/\s+(\d+)\s*$/) || clean.match(/^(\d+)\s+/);
+    var q = 1;
+    var flRaw = clean.trim();
+    if (qm) {
+      q = parseInt(qm[1], 10) || 1;
+      if (clean.match(/^(\d+)\s+/)) flRaw = clean.replace(/^\d+\s+/, "").trim();
+      else flRaw = clean.substring(0, clean.length - qm[0].length).trim();
+    }
+    if (!flRaw) return;
+    items.push({ rawFlavor: flRaw, qty: q, hintBrand: curBrand });
+  });
+  return items;
+}
+
+// ── PERSIST ──
+function saveLocal() {
+  try {
+    localStorage.setItem("vs5_stock", JSON.stringify(stock));
+    localStorage.setItem("vs5_log", JSON.stringify(txLog));
+    localStorage.setItem("vs5_gdurl", gdUrl);
+  } catch(e) {}
+}
+function loadLocal() {
+  try {
+    var s = localStorage.getItem("vs5_stock"); if(s) stock = JSON.parse(s);
+    var l = localStorage.getItem("vs5_log"); if(l) txLog = JSON.parse(l);
+    var u = localStorage.getItem("vs5_gdurl"); if(u) gdUrl = u;
+  } catch(e) {}
+}
+
+// ── TOAST ──
+var toastTmr;
+function toast(msg, t) {
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast " + (t==="err"?"te":t==="warn"?"tw":"ts") + " show";
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(function() { el.classList.remove("show"); }, 2800);
+}
+
+// ── SYNC DOT ──
+function setSyncDot(state, label) {
+  document.getElementById("sdot").className = "sdot " + (state||"");
+  document.getElementById("slbl").textContent = label || "local";
+}
+
+// ── STATS ──
+function updateStats() {
+  var tot=0, low=0, out=0;
+  BRANDS.forEach(function(br) {
+    CATALOG[br].forEach(function(fl) {
+      var q = qty(br, fl); tot += q;
+      if (q===0) out++; else if (q<=3) low++;
+    });
+  });
+  document.getElementById("hs-tot").textContent = tot;
+  document.getElementById("hs-low").textContent = low;
+  document.getElementById("hs-out").textContent = out;
+}
+
+function afterChange() { saveLocal(); updateStats(); if(gdConnected){ clearTimeout(gdPushTimer); gdPushTimer=setTimeout(gdPush,1500); } }
+
+// ── GOOGLE DRIVE ──
+function gdPush() {
+  if(!gdConnected) return;
+  setSyncDot("busy","saving...");
+  fetch(gdUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({stock:stock,txLog:txLog.slice(0,300),ts:Date.now()})})
+  .then(function(r){return r.json();}).then(function(d){ setSyncDot(d.ok?"ok":"err",d.ok?"synced":"error"); })
+  .catch(function(){ setSyncDot("err","offline"); });
+}
+function gdPull() {
+  if(!gdConnected) return;
+  fetch(gdUrl+"?t="+Date.now()).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d||!d.ts) return;
+    if(d.ts>gdLastTs){ gdLastTs=d.ts; if(d.stock) stock=d.stock; if(d.txLog) txLog=d.txLog; saveLocal(); renderStockGrid(); renderHistory(); updateStats(); }
+    setSyncDot("ok","live");
+  }).catch(function(){ setSyncDot("err","offline"); });
+}
+function gdConnect(url) {
+  if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL"); return; }
+  gdUrl=url.trim(); gdConnected=true; saveLocal();
+  setSyncDot("busy","connecting..."); showGdStatus("busy","Connecting...");
+  document.getElementById("btn-gd-disc").style.display="";
+  gdPull(); clearInterval(gdPollTimer); gdPollTimer=setInterval(gdPull,10000);
+  toast("Google Drive connected!","ok");
+}
+function gdDisconnect() {
+  gdConnected=false; gdUrl=""; clearInterval(gdPollTimer);
+  setSyncDot("","local"); document.getElementById("btn-gd-disc").style.display="none";
+  document.getElementById("gd-url").value=""; hideGdStatus(); saveLocal();
+  toast("Disconnected","warn");
+}
+function showGdStatus(type,msg){ var el=document.getElementById("gd-status"); el.textContent=msg; el.className="status-box "+type; el.style.display="block"; }
+function hideGdStatus(){ document.getElementById("gd-status").style.display="none"; }
+
+// ── MAIN TABS ──
+document.getElementById("mtabs").addEventListener("click",function(e){
+  var tab=e.target.closest("[data-pg]"); if(!tab) return;
+  var pg=tab.getAttribute("data-pg");
+  document.querySelectorAll("#mtabs .tab").forEach(function(t){t.classList.remove("on");});
+  tab.classList.add("on");
+  document.querySelectorAll(".pg").forEach(function(p){p.classList.remove("on");});
+  document.getElementById("pg-"+pg).classList.add("on");
+  if(pg==="stock") renderStock();
+  if(pg==="purchase"){ renderPurBrands(); renderPurFlavors(); }
+  if(pg==="order") renderGenBrands();
+  if(pg==="history") renderHistory();
+  if(pg==="sync") renderSyncPage();
+  if(pg==="catalog") renderCatalogPage();
+  if(pg==="export") renderExportPage();
+  updateStats();
+});
+
+// ── ORDER SUB-TABS ──
+(function(){var __el=document.getElementById("otabs");if(!__el)return;__el.addEventListener("click",function(e){
+  var tab=e.target.closest("[data-ot]"); if(!tab) return;
+  var ot=tab.getAttribute("data-ot");
+  document.querySelectorAll("#otabs .tab").forEach(function(t){t.classList.remove("on");});
+  tab.classList.add("on");
+  document.getElementById("ov-pane").style.display=ot==="verify"?"block":"none";
+  document.getElementById("og-pane").style.display=ot==="generate"?"block":"none";
+})})();
+
+// ── PURCHASE SUB-TABS ──
+(function(){var __el=document.getElementById("ptabs");if(!__el)return;__el.addEventListener("click",function(e){
+  var tab=e.target.closest("[data-pt]"); if(!tab) return;
+  var pt=tab.getAttribute("data-pt");
+  document.querySelectorAll("#ptabs .tab").forEach(function(t){t.classList.remove("on");});
+  tab.classList.add("on");
+  document.getElementById("pur-upload-pane").style.display=pt==="upload"?"block":"none";
+  document.getElementById("pur-manual-pane").style.display=pt==="manual"?"block":"none";
+})})();
+
+// ── STOCK PAGE ──
+function renderStockBrands() {
+  var wrap=document.getElementById("sb"); wrap.innerHTML="";
+  BRANDS.forEach(function(br) {
+    var d=document.createElement("div"); d.className="chip"+(br===activeBrand?" on":""); d.textContent=br;
+    d.addEventListener("click",function(){ activeBrand=br; renderStock(); });
+    wrap.appendChild(d);
+  });
+}
+(function(){var __el=document.getElementById("sf-row");if(!__el)return;__el.addEventListener("click",function(e){
+  var c=e.target.closest("[data-sf]"); if(!c) return;
+  stockFlt=c.getAttribute("data-sf");
+  document.querySelectorAll("#sf-row .fc").forEach(function(x){x.classList.remove("on");});
+  c.classList.add("on"); renderStockGrid(); updateFilterCounts();
+})})();
+function updateFilterCounts() {
+  var flavors = CATALOG[activeBrand] || [];
+  var allQty = 0, inQty = 0, lowQty = 0, outCount = 0;
+  flavors.forEach(function(fl) {
+    var q = qty(activeBrand, fl);
+    allQty += q;
+    if (q > 3)      inQty += q;
+    else if (q > 0) lowQty += q;
+    else            outCount++;
+  });
+  var fcAll = document.getElementById("fc-all");
+  var fcIn  = document.getElementById("fc-in");
+  var fcLow = document.getElementById("fc-low");
+  var fcOut = document.getElementById("fc-out");
+  if (fcAll) fcAll.textContent = allQty;
+  if (fcIn)  fcIn.textContent  = inQty;
+  if (fcLow) fcLow.textContent = lowQty;
+  if (fcOut) fcOut.textContent = outCount;
+}
+
+function renderStock() { renderStockBrands(); renderStockGrid(); updateFilterCounts(); }
+
+function renderStockGrid() {
+  var grid=document.getElementById("sgrid");
+  var flavors=(CATALOG[activeBrand]||[]).filter(function(fl){
+    var q=qty(activeBrand,fl);
+    if(stockFlt==="in") return q>3;
+    if(stockFlt==="low") return q>0&&q<=3;
+    if(stockFlt==="out") return q===0;
+    return true;
+  });
+  grid.innerHTML="";
+  if(!flavors.length){
+    var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
+    empty.innerHTML="<div class=\"ei\">&#128235;</div><div class=\"et\">No items match</div>";
+    grid.appendChild(empty); return;
+  }
+  flavors.forEach(function(fl){
+    var q=qty(activeBrand,fl);
+    var card=document.createElement("div");
+    card.className="fcard"+(q===0?" out":q<=3?" low":"");
+    var dot=document.createElement("div"); dot.className="cdot "+(q===0?"out":q<=3?"lw":"in");
+    var name=document.createElement("div"); name.className="fname"; name.textContent=fl;
+    var qrow=document.createElement("div"); qrow.className="qrow";
+    var btnM=document.createElement("button"); btnM.className="qbtn m"; btnM.textContent="−";
+    btnM.setAttribute("data-br",activeBrand); btnM.setAttribute("data-fl",fl); btnM.setAttribute("data-d","-1");
+    var qvalEl=document.createElement("div"); qvalEl.className="qval"+(q===0?" z":q<=3?" lw":""); qvalEl.textContent=q;
+    // tap to edit inline
+    qvalEl.addEventListener("click",function(){
+      var inp=document.createElement("input"); inp.type="number"; inp.min="0"; inp.value=q; inp.className="qedit";
+      inp.addEventListener("blur",function(){
+        var nv=Math.max(0,parseInt(inp.value,10)||0);
+        var old=stock[skey(activeBrand,fl)]||0;
+        stock[skey(activeBrand,fl)]=nv;
+        if(nv!==old) txLog.unshift({type:"adj",brand:activeBrand,flavor:fl,qty:nv-old,date:new Date().toLocaleString()});
+        afterChange(); renderStockGrid();
+      });
+      inp.addEventListener("keydown",function(e){ if(e.key==="Enter") inp.blur(); });
+      qrow.replaceChild(inp,qvalEl); inp.focus(); inp.select();
+    });
+    var btnP=document.createElement("button"); btnP.className="qbtn p"; btnP.textContent="+";
+    btnP.setAttribute("data-br",activeBrand); btnP.setAttribute("data-fl",fl); btnP.setAttribute("data-d","1");
+    qrow.appendChild(btnM); qrow.appendChild(qvalEl); qrow.appendChild(btnP);
+    card.appendChild(dot); card.appendChild(name); card.appendChild(qrow);
+    grid.appendChild(card);
+  });
+}
+(function(){var __el=document.getElementById("sgrid");if(!__el)return;__el.addEventListener("click",function(e){
+  var btn=e.target.closest("[data-d]"); if(!btn) return;
+  var br=btn.getAttribute("data-br"), fl=btn.getAttribute("data-fl"), d=parseInt(btn.getAttribute("data-d"),10);
+  var k=skey(br,fl), cur=stock[k]||0, nxt=Math.max(0,cur+d);
+  stock[k]=nxt;
+  if(d<0&&cur>0) txLog.unshift({type:"sale",brand:br,flavor:fl,qty:1,date:new Date().toLocaleString()});
+  afterChange(); renderStockGrid();
+})})();
+
+// ── UPLOAD PURCHASE PARSER ──
+function buildPreviewItems(items, mode){
+  return items.map(function(item,i){
+    // Pass hintBrand so suggestions are restricted to that brand only
+    var suggestions = topSuggestions(item.rawFlavor, 6, item.hintBrand || null);
+    var best = suggestions[0] || null;
+    var matchType = best ? (best.score >= 0.85 ? "exact" : "suggest") : "none";
+    return { idx:i, rawFlavor:item.rawFlavor, qty:item.qty, suggestions:suggestions, best:best, matchType:matchType, skipped:false, overrideKey:null };
+  });
+}
+
+function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
+  var container=document.getElementById(containerId);
+  var confirmWrap=document.getElementById(confirmWrapId);
+  container.innerHTML="";
+  if(!parsedItems.length){
+    container.innerHTML="<div class=\"empty\"><div class=\"et\">Nothing parsed. Check format.</div></div>";
+    confirmWrap.style.display="none"; return;
+  }
+  parsedItems.forEach(function(item){
+    // ── Determine state ──
+    var state = item.skipped ? "skipped"
+              : item.overrideKey ? "manual"
+              : item.matchType === "exact" ? "exact"
+              : item.matchType === "suggest" ? "suggest"
+              : "none";
+
+    // ── Strong distinct colors per state ──
+    var borderColor, bgColor, badgeColor, badgeBg, badgeText, icoText;
+    if (state === "exact") {
+      borderColor="#00e5a0"; bgColor="rgba(0,229,160,.18)";
+      badgeBg="rgba(0,229,160,.3)"; badgeColor="#00b87a"; badgeText="Exact Match";
+      icoText="✓";
+    } else if (state === "suggest") {
+      borderColor="#ffb800"; bgColor="rgba(255,184,0,.18)";
+      badgeBg="rgba(255,184,0,.3)"; badgeColor="#cc9200"; badgeText="Suggested";
+      icoText="~";
+    } else if (state === "manual") {
+      borderColor="#7c6fff"; bgColor="rgba(124,111,255,.18)";
+      badgeBg="rgba(124,111,255,.3)"; badgeColor="#a89fff"; badgeText="Manual Selected";
+      icoText="✎";
+    } else if (state === "skipped") {
+      borderColor="#5a5a7a"; bgColor="rgba(90,90,122,.12)";
+      badgeBg="rgba(90,90,122,.22)"; badgeColor="#9090b0"; badgeText="Skipped";
+      icoText="—";
+    } else {
+      borderColor="#ff4d6d"; bgColor="rgba(255,77,109,.18)";
+      badgeBg="rgba(255,77,109,.3)"; badgeColor="#ff4d6d"; badgeText="Not Matched";
+      icoText="?";
+    }
+
+    var row = document.createElement("div");
+    row.className = "vitem";
+    row.style.cssText = "border-color:"+borderColor+";background:"+bgColor+";border-width:2px";
+
+    // ── Icon ──
+    var ico = document.createElement("span");
+    ico.className = "vico";
+    ico.style.cssText = "font-size:16px;font-weight:700;color:"+borderColor+";min-width:20px;text-align:center";
+    ico.textContent = icoText;
+
+    // ── Body ──
+    var body = document.createElement("div");
+    body.className = "vtxt"; body.style.flex = "1";
+
+    // Top row: raw flavor + status badge right-aligned
+    var topRow = document.createElement("div");
+    topRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:4px";
+    var rawLine = document.createElement("strong");
+    rawLine.style.cssText = "font-size:13px;color:var(--txt)";
+    rawLine.textContent = item.rawFlavor + " ×" + item.qty;
+    var badge = document.createElement("span");
+    badge.style.cssText = "font-size:10px;font-weight:700;padding:3px 10px;border-radius:50px;background:"+badgeBg+";color:"+badgeColor+";white-space:nowrap;margin-left:8px;flex-shrink:0;letter-spacing:.3px";
+    badge.textContent = badgeText;
+    topRow.appendChild(rawLine);
+    topRow.appendChild(badge);
+    body.appendChild(topRow);
+
+    if(!item.skipped){
+      var sel = document.createElement("select"); sel.className = "match-sel";
+      sel.style.cssText = "border-color:"+borderColor+";margin-top:4px";
+      if(!item.best){
+        var optNone = document.createElement("option"); optNone.value = ""; optNone.textContent = "No match found — select manually";
+        sel.appendChild(optNone);
+      }
+      item.suggestions.forEach(function(s){
+        var opt = document.createElement("option");
+        var k = skey(s.brand, s.flavor); opt.value = k;
+        var stockInfo = mode === "sell" ? " (have "+qty(s.brand,s.flavor)+")" : "";
+        opt.textContent = s.flavor + " — " + s.brand + stockInfo;
+        if(item.overrideKey===k || ((!item.overrideKey) && item.best && skey(item.best.brand,item.best.flavor)===k)) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      var optOther = document.createElement("option"); optOther.value = "__other__"; optOther.textContent = "Other (select different brand)...";
+      sel.appendChild(optOther);
+      sel.addEventListener("change", function(){
+        item.overrideKey = sel.value || null;
+        item.matchType = sel.value ? "exact" : "none";
+        renderUploadPreview(parsedItems, containerId, confirmWrapId, mode);
+      });
+      body.appendChild(sel);
+
+      var qwrap = document.createElement("div");
+      qwrap.style.cssText = "display:flex;align-items:center;gap:6px;margin-top:6px";
+      var qlbl = document.createElement("span");
+      qlbl.style.cssText = "font-size:11px;color:var(--txt3)"; qlbl.textContent = "Qty:";
+      var qinp = document.createElement("input");
+      qinp.type = "number"; qinp.min = "1"; qinp.value = item.qty; qinp.className = "qinline";
+      qinp.style.cssText = "border-color:"+borderColor;
+      qinp.addEventListener("change", function(){ item.qty = Math.max(1, parseInt(qinp.value,10)||1); });
+      qwrap.appendChild(qlbl); qwrap.appendChild(qinp);
+
+      if(mode === "sell" && item.best){
+        var avail = qty(item.best.brand, item.best.flavor);
+        var avLbl = document.createElement("span");
+        avLbl.style.cssText = "font-size:11px;font-family:'DM Mono',monospace;color:"+(avail >= item.qty ? "var(--grn)" : "var(--red)");
+        avLbl.textContent = "stock: "+avail;
+        qwrap.appendChild(avLbl);
+      }
+      body.appendChild(qwrap);
+    }
+
+    var skipBtn = document.createElement("span");
+    skipBtn.className = "skip-btn";
+    skipBtn.style.cssText = "border-color:"+borderColor+";color:"+(item.skipped?"var(--acc)":borderColor);
+    skipBtn.textContent = item.skipped ? "Undo" : "Skip";
+    skipBtn.addEventListener("click", function(){
+      item.skipped = !item.skipped;
+      renderUploadPreview(parsedItems, containerId, confirmWrapId, mode);
+    });
+
+    row.appendChild(ico); row.appendChild(body); row.appendChild(skipBtn);
+    container.appendChild(row);
+  });
+
+  var activeCount = parsedItems.filter(function(it){ return !it.skipped && (it.overrideKey || it.best); }).length;
+    var activeCount = parsedItems.filter(function(it) { return !it.skipped && (it.overrideKey || it.best); }).length;
+  confirmWrap.style.display = activeCount > 0 ? "block" : "none";
+}
+
+// PARSE purchase text
+(function(){var __el=document.getElementById("btn-pur-parse");if(!__el)return;__el.addEventListener("click",function(){
+  var text=document.getElementById("pur-text").value.trim();
+  if(!text){toast("Paste some text first","err");return;}
+  var raw=parseTextBlock(text);
+  if(!raw.length){toast("Nothing could be parsed","err");return;}
+  purItems=buildPreviewItems(raw,"purchase");
+  renderUploadPreview(purItems,"pur-preview","pur-confirm-wrap","purchase");
+})})();
+(function(){var __el=document.getElementById("btn-pur-wa-unmatched");if(!__el)return;__el.addEventListener("click",function(){
+  var t=document.getElementById("pur-unmatched-text");
+  if(!t||!t.value.trim()){toast("No unmatched items","err");return;}
+  window.open("https://wa.me/?text="+encodeURIComponent(t.value),"_blank");
+})})();
+(function(){var __el=document.getElementById("btn-pur-copy-unmatched");if(!__el)return;__el.addEventListener("click",function(){
+  var t=document.getElementById("pur-unmatched-text");
+  if(!t||!t.value.trim()){toast("No unmatched items","err");return;}
+  if(navigator.clipboard) navigator.clipboard.writeText(t.value).then(function(){toast("Copied!","ok");});
+  else{t.select();document.execCommand("copy");toast("Copied!","ok");}
+})})();
+(function(){var __el=document.getElementById("btn-pur-clr");if(!__el)return;__el.addEventListener("click",function(){
+  document.getElementById("pur-text").value="";
+  document.getElementById("pur-preview").innerHTML="";
+  document.getElementById("pur-confirm-wrap").style.display="none";
+  var uw=document.getElementById("pur-unmatched-wrap");
+  if(uw) uw.style.display="none";
+  purItems=[];
+})})();
+
+// CONFIRM purchase
+(function(){var __el=document.getElementById("btn-pur-confirm");if(!__el)return;__el.addEventListener("click",function(){
+  var count = 0;
+  var unmatched = [];
+  purItems.forEach(function(item) {
+    var k = item.overrideKey || (item.best ? skey(item.best.brand, item.best.flavor) : null);
+    if (item.skipped || !k) {
+      // collect unmatched / skipped
+      unmatched.push({ raw: item.rawFlavor, qty: item.qty });
+      return;
+    }
+    var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
+    stock[k] = (stock[k] || 0) + item.qty;
+    txLog.unshift({ type: "purchase", brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString() });
+    count++;
+  });
+  afterChange();
+  // clear preview
+  document.getElementById("pur-preview").innerHTML = "";
+  document.getElementById("pur-text").value = "";
+  purItems = [];
+  // show unmatched list if any
+  var unmatchedWrap = document.getElementById("pur-unmatched-wrap");
+  var unmatchedText = document.getElementById("pur-unmatched-text");
+  if (unmatched.length && unmatchedWrap && unmatchedText) {
+    var lines = ["*UNMATCHED PURCHASE ITEMS*",
+      "Date: " + new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+      "These items were NOT added to stock - please verify:\n"];
+    unmatched.forEach(function(u, i) {
+      lines.push((i + 1) + ". " + u.raw + (u.qty > 1 ? " x" + u.qty : ""));
+    });
+    lines.push("\nTotal unmatched: " + unmatched.length);
+    unmatchedText.value = lines.join("\n");
+    unmatchedWrap.style.display = "block";
+    toast(count + " added. " + unmatched.length + " unmatched — see below", "warn");
+  } else {
+    if (unmatchedWrap) unmatchedWrap.style.display = "none";
+    toast(count + " item(s) added to stock", "ok");
+  }
+})})();
+
+// ── MANUAL PURCHASE ──
+function renderPurBrands(){
+  var wrap=document.getElementById("pb"); wrap.innerHTML="";
+  BRANDS.forEach(function(br){
+    var d=document.createElement("div"); d.className="chip"+(br===purBrand?" on":""); d.textContent=br;
+    d.addEventListener("click",function(){purBrand=br;renderPurBrands();renderPurFlavors();});
+    wrap.appendChild(d);
+  });
+}
+(function(){var __el=document.getElementById("psearch");if(!__el)return;__el.addEventListener("input",renderPurFlavors)})();
+function renderPurFlavors(){
+  var q=document.getElementById("psearch").value.toLowerCase();
+  var flavors=(CATALOG[purBrand]||[]).filter(function(f){return !q||f.toLowerCase().indexOf(q)!==-1;});
+  var list=document.getElementById("pflist"); list.innerHTML="";
+  if(!flavors.length){list.innerHTML="<div class=\"empty\" style=\"padding:12px\"><div class=\"et\">No match</div></div>";return;}
+  flavors.forEach(function(fl){
+    var k=skey(purBrand,fl), inCart=cart[k]!==undefined;
+    var item=document.createElement("div"); item.className="fitem"+(inCart?" sel":"");
+    var info=document.createElement("div");
+    var ne=document.createElement("div"); ne.className="fin"; ne.textContent=fl;
+    var se=document.createElement("div"); se.className="fsub"; se.textContent=purBrand+" · Stock: "+qty(purBrand,fl);
+    info.appendChild(ne); info.appendChild(se);
+    var chk=document.createElement("div"); chk.className="fchk"; if(inCart) chk.textContent="✓";
+    item.appendChild(info); item.appendChild(chk);
+    item.addEventListener("click",function(){
+      if(cart[k]!==undefined) delete cart[k]; else cart[k]=1;
+      renderPurFlavors(); renderCart();
+    });
+    list.appendChild(item);
+  });
+}
+function renderCart(){
+  var keys=Object.keys(cart);
+  document.getElementById("pcart-wrap").style.display=keys.length?"block":"none";
+  var el=document.getElementById("pcart"); el.innerHTML="";
+  keys.forEach(function(k){
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    var item=document.createElement("div"); item.className="citem";
+    var info=document.createElement("div"); info.className="cinfo";
+    var ne=document.createElement("div"); ne.className="cin"; ne.textContent=fl;
+    var be=document.createElement("div"); be.className="cbr"; be.textContent=br;
+    info.appendChild(ne); info.appendChild(be);
+    var right=document.createElement("div"); right.className="cqwrap";
+    var inp=document.createElement("input"); inp.type="number"; inp.min="1"; inp.value=String(cart[k]); inp.className="cqinp";
+    inp.addEventListener("change",function(){cart[k]=Math.max(1,parseInt(this.value,10)||1);});
+    var rm=document.createElement("span"); rm.className="crm"; rm.textContent="×";
+    rm.addEventListener("click",function(){delete cart[k];renderPurFlavors();renderCart();});
+    right.appendChild(inp); right.appendChild(rm);
+    item.appendChild(info); item.appendChild(right); el.appendChild(item);
+  });
+}
+(function(){var __el=document.getElementById("btn-confirm-pur");if(!__el)return;__el.addEventListener("click",function(){
+  var keys=Object.keys(cart);
+  if(!keys.length){toast("No items selected","err");return;}
+  keys.forEach(function(k){
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~"),q=parseInt(cart[k],10)||1;
+    stock[k]=(stock[k]||0)+q;
+    txLog.unshift({type:"purchase",brand:br,flavor:fl,qty:q,date:new Date().toLocaleString()});
+  });
+  afterChange(); cart={}; renderCart(); renderPurFlavors();
+  toast(keys.length+" item(s) added to stock","ok");
+})})();
+
+// ── SELL PAGE ──
+(function(){var __el=document.getElementById("btn-sell-parse");if(!__el)return;__el.addEventListener("click",function(){
+  var text=document.getElementById("sell-text").value.trim();
+  if(!text){toast("Paste sale text first","err");return;}
+  var raw=parseTextBlock(text);
+  if(!raw.length){toast("Nothing could be parsed","err");return;}
+  sellItems=buildPreviewItems(raw,"sell");
+  renderUploadPreview(sellItems,"sell-preview","sell-confirm-wrap","sell");
+})})();
+(function(){var __el=document.getElementById("btn-sell-clr");if(!__el)return;__el.addEventListener("click",function(){
+  document.getElementById("sell-text").value="";
+  document.getElementById("sell-preview").innerHTML="";
+  document.getElementById("sell-confirm-wrap").style.display="none";
+  sellItems=[];
+})})();
+(function(){var __el=document.getElementById("btn-sell-confirm");if(!__el)return;__el.addEventListener("click",function(){
+  var count=0, warn=0;
+  sellItems.forEach(function(item){
+    if(item.skipped) return;
+    var k=item.overrideKey||(item.best?skey(item.best.brand,item.best.flavor):null);
+    if(!k) return;
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    var cur=stock[k]||0;
+    var deduct=Math.min(item.qty,cur);
+    stock[k]=Math.max(0,cur-item.qty);
+    if(item.qty>cur) warn++;
+    txLog.unshift({type:"sale",brand:br,flavor:fl,qty:deduct,date:new Date().toLocaleString()});
+    count++;
+  });
+  afterChange();
+  sellItems=[];
+  document.getElementById("sell-preview").innerHTML="";
+  document.getElementById("sell-confirm-wrap").style.display="none";
+  document.getElementById("sell-text").value="";
+  if(warn>0) toast(count+" sold. "+warn+" item(s) went below 0 — check stock","warn");
+  else toast(count+" item(s) removed from stock","ok");
+})})();
+
+// ── VERIFY ORDER ──
+(function(){var __el=document.getElementById("btn-verify");if(!__el)return;__el.addEventListener("click",function(){
+  var text=document.getElementById("oinput").value.trim();
+  if(!text){toast("Paste an order first","err");return;}
+  var raw=parseTextBlock(text); var res=document.getElementById("vresult"); res.innerHTML="";
+  if(!raw.length){res.innerHTML="<div class=\"vitem ver\"><span class=\"vico\">&#9888;</span><div class=\"vtxt\"><strong>Nothing parsed</strong>Use: - Miami Mint x3</div></div>";return;}
+  var results=[]; var okN=0;
+  raw.forEach(function(item){
+    var best=bestMatch(item.rawFlavor, item.hintBrand || null);
+    if(best){ var av=qty(best.brand,best.flavor); var ok=(av>=item.qty); if(ok)okN++; results.push({flavor:best.flavor,brand:best.brand,req:item.qty,av:av,ok:ok}); }
+    else results.push({flavor:item.rawFlavor,notFound:true,req:item.qty});
+  });
+  var sum=document.createElement("div"); sum.style.cssText="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;font-weight:700";
+  sum.innerHTML="<span style=\"color:var(--grn)\">"+okN+" OK</span><span style=\"color:var(--red)\">"+(results.length-okN)+" Issues</span>";
+  res.appendChild(sum);
+  results.forEach(function(r){
+    var el=document.createElement("div"); el.className="vitem "+(r.notFound?"ver":r.ok?"vok":"ver");
+    var ic=document.createElement("span"); ic.className="vico"; ic.textContent=r.notFound?"?":r.ok?"✓":"✕";
+    var tx=document.createElement("div"); tx.className="vtxt";
+    var st=document.createElement("strong"); st.textContent=r.flavor;
+    var sb=document.createElement("span"); sb.className="qav";
+    sb.textContent=r.notFound?"Not found in catalog":r.brand+" · Need: "+r.req+" · Have: "+r.av+(r.ok?"":" — SHORT by "+(r.req-r.av));
+    tx.appendChild(st); tx.appendChild(sb); el.appendChild(ic); el.appendChild(tx); res.appendChild(el);
+  });
+})})();
+(function(){var __el=document.getElementById("btn-clro");if(!__el)return;__el.addEventListener("click",function(){
+  document.getElementById("oinput").value=""; document.getElementById("vresult").innerHTML="";
+})})();
+
+// ── GENERATE LIST ──
+function renderGenBrands(){
+  var wrap=document.getElementById("gb"); wrap.innerHTML="";
+  var all=document.createElement("div"); all.className="chip"+(genBrand==="all"?" on":""); all.textContent="All Brands";
+  all.addEventListener("click",function(){genBrand="all";renderGenBrands();});
+  wrap.appendChild(all);
+  BRANDS.forEach(function(br){
+    var d=document.createElement("div"); d.className="chip"+(genBrand===br?" on":""); d.textContent=br;
+    d.addEventListener("click",function(){genBrand=br;renderGenBrands();});
+    wrap.appendChild(d);
+  });
+}
+(function(){var __el=document.getElementById("gf-row");if(!__el)return;__el.addEventListener("click",function(e){
+  var c=e.target.closest("[data-gf]"); if(!c) return;
+  genFlt=c.getAttribute("data-gf");
+  document.querySelectorAll("#gf-row .fc").forEach(function(x){x.classList.remove("on");});
+  c.classList.add("on");
+})})();
+(function(){var __el=document.getElementById("btn-gen");if(!__el)return;__el.addEventListener("click",function(){
+  var brs=genBrand==="all"?BRANDS:[genBrand];
+  var lines=["*VAPE STOCK LIST*","Date: "+new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),""];
+  var hasAny=false;
+  brs.forEach(function(br){
+    var fls=(CATALOG[br]||[]).filter(function(fl){
+      var q=qty(br,fl);
+      if(genFlt==="all") return true;
+      if(genFlt==="in") return q>0;
+      if(genFlt==="low") return q>0&&q<=3;
+      return false;
+    });
+    if(!fls.length) return;
+    hasAny=true;
+    lines.push("*"+br+"*");
+    fls.forEach(function(fl){
+      var q=qty(br,fl);
+      lines.push("  "+(q===0?"[OUT]":q<=3?"[LOW]":"[OK] ")+" "+fl+" - "+q+" units");
+    });
+    lines.push("");
+  });
+  if(!hasAny) lines.push("(No stock to display)");
+  document.getElementById("gout").value=lines.join("\n");
+})})();
+(function(){var __el=document.getElementById("btn-wa");if(!__el)return;__el.addEventListener("click",function(){
+  var t=document.getElementById("gout").value;
+  if(!t.trim()){toast("Generate first","err");return;}
+  window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank");
+})})();
+(function(){var __el=document.getElementById("btn-copy");if(!__el)return;__el.addEventListener("click",function(){
+  var t=document.getElementById("gout").value;
+  if(!t.trim()){toast("Generate first","err");return;}
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){toast("Copied!","ok");});
+  else{ var ta=document.getElementById("gout");ta.select();document.execCommand("copy");toast("Copied!","ok");}
+})})();
+
+// ── HISTORY ──
+function renderHistory(){
+  var el=document.getElementById("hlist"); el.innerHTML="";
+  if(!txLog.length){
+    var empty=document.createElement("div"); empty.className="empty";
+    empty.innerHTML="<div class=\"ei\">&#128235;</div><div class=\"et\">No transactions yet</div>";
+    el.appendChild(empty); return;
+  }
+  txLog.slice(0,100).forEach(function(h){
+    var item=document.createElement("div"); item.className="hitem";
+    var meta=document.createElement("div"); meta.className="hmeta";
+    var tp=document.createElement("span"); tp.className="htype "+(h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
+    tp.textContent=h.type==="purchase"?"+ Purchase":h.type==="adj"?"~ Adjusted":"- Sale";
+    var dt=document.createElement("span"); dt.className="hdt"; dt.textContent=h.date;
+    meta.appendChild(tp); meta.appendChild(dt);
+    var det=document.createElement("div"); det.className="hdtl"; det.textContent=h.brand+" · "+h.flavor;
+    var st=document.createElement("strong");
+    var sign=h.type==="sale"?"-":(h.qty>0?"+":"");
+    st.textContent=" "+sign+h.qty+" units";
+    det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
+  });
+}
+(function(){var __el=document.getElementById("btn-clrhist");if(!__el)return;__el.addEventListener("click",function(){
+  if(!confirm("Clear all history?")) return;
+  txLog=[]; afterChange(); renderHistory();
+})})();
+
+// ── SYNC PAGE ──
+function renderSyncPage(){
+  if(gdUrl) document.getElementById("gd-url").value=gdUrl;
+  if(gdConnected){ document.getElementById("btn-gd-disc").style.display=""; showGdStatus("ok","Connected: "+gdUrl); }
+}
+(function(){var __el=document.getElementById("btn-copy-code");if(!__el)return;__el.addEventListener("click",function(){
+  var code=document.getElementById("gs-code").textContent;
+  if(navigator.clipboard) navigator.clipboard.writeText(code).then(function(){toast("Copied!","ok");});
+  else{ var ta=document.createElement("textarea");ta.value=code;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);toast("Copied!","ok");}
+})})();
+(function(){var __el=document.getElementById("btn-gd-connect");if(!__el)return;__el.addEventListener("click",function(){gdConnect(document.getElementById("gd-url").value.trim());})})();
+(function(){var __el=document.getElementById("btn-gd-disc");if(!__el)return;__el.addEventListener("click",function(){gdDisconnect();})})();
+(function(){var __el=document.getElementById("btn-reset");if(!__el)return;__el.addEventListener("click",function(){
+  if(!confirm("Reset ALL stock and history?")) return;
+  stock={};txLog=[];afterChange();renderStock();renderHistory();toast("All data cleared","warn");
+})})();
+
+// ── EXPORT ──
+function renderExportPage(){
+  var last=localStorage.getItem("vs5_lastexport");
+  document.getElementById("xl-last").textContent=last?"Last exported: "+last:"Never exported yet";
+}
+function exportToExcel(){
+  if(typeof XLSX==="undefined"){toast("Excel library not loaded","err");return;}
+  var wb=XLSX.utils.book_new();
+  var now=new Date();
+  var s1=[["Brand","Total Units","In Stock Flavors","Low Stock (<=3)","Out of Stock"]];
+  BRANDS.forEach(function(br){
+    var total=0,inS=0,low=0,out=0;
+    CATALOG[br].forEach(function(fl){var q=qty(br,fl);total+=q;if(q===0)out++;else if(q<=3)low++;else inS++;});
+    s1.push([br,total,inS,low,out]);
+  });
+  var ws1=XLSX.utils.aoa_to_sheet(s1); ws1["!cols"]=[{wch:22},{wch:14},{wch:18},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,"Summary");
+  var s2=[["Brand","Flavor","Stock Qty","Status"]];
+  BRANDS.forEach(function(br){
+    CATALOG[br].forEach(function(fl){var q=qty(br,fl);s2.push([br,fl,q,q===0?"OUT":q<=3?"LOW":"OK"]);});
+  });
+  var ws2=XLSX.utils.aoa_to_sheet(s2); ws2["!cols"]=[{wch:22},{wch:34},{wch:12},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,ws2,"Full Inventory");
+  var s3=[["Date","Type","Brand","Flavor","Qty"]];
+  if(txLog.length) txLog.forEach(function(h){s3.push([h.date,h.type==="purchase"?"Purchase":h.type==="adj"?"Adjusted":"Sale",h.brand,h.flavor,h.qty]);});
+  else s3.push(["No transactions recorded","","","",""]);
+  var ws3=XLSX.utils.aoa_to_sheet(s3); ws3["!cols"]=[{wch:22},{wch:12},{wch:22},{wch:34},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,ws3,"Transaction Log");
+  XLSX.writeFile(wb,"VapeStock_"+now.toISOString().slice(0,10)+".xlsx");
+  var ts=now.toLocaleString(); localStorage.setItem("vs5_lastexport",ts);
+  document.getElementById("xl-last").textContent="Last exported: "+ts;
+  toast("Excel file downloaded!","ok");
+}
+(function(){var __el=document.getElementById("btn-export-xl");if(!__el)return;__el.addEventListener("click",function(){
+  var s=document.getElementById("xl-status"); s.style.display="block"; s.textContent="Building...";
+  setTimeout(function(){exportToExcel();s.style.display="none";},80);
+})})();
+
+
+// ── CUSTOM FLAVORS ──
+// customFlavors: { brandName: [flavorName, ...] }
+var customFlavors = {};
+var addModalBrand = BRANDS[0];
+
+function loadCustomFlavors() {
+  try {
+    var c = localStorage.getItem("vs5_custom");
+    if (c) customFlavors = JSON.parse(c);
+  } catch(e) {}
+  // Add custom brands first
+  Object.keys(customFlavors).forEach(function(key) {
+    if (key.indexOf("__brand__") === 0) {
+      var br = key.replace("__brand__", "");
+      if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); }
+    }
+  });
+  // Merge custom flavors into CATALOG
+  Object.keys(customFlavors).forEach(function(br) {
+    if (br.indexOf("__") === 0) return; // skip __brand__, __deleted__ meta keys
+    if (!CATALOG[br]) CATALOG[br] = [];
+    customFlavors[br].forEach(function(fl) {
+      if (CATALOG[br].indexOf(fl) === -1) CATALOG[br].push(fl);
+    });
+  });
+  // Apply deletions — remove any flavor that was deleted by the user
+  var deleted = customFlavors["__deleted__"] || [];
+  deleted.forEach(function(delKey) {
+    var sep = delKey.indexOf("~~");
+    if (sep === -1) return;
+    var br = delKey.substring(0, sep);
+    var fl = delKey.substring(sep + 2);
+    if (CATALOG[br]) {
+      CATALOG[br] = CATALOG[br].filter(function(f) { return f !== fl; });
+    }
+  });
+}
+
+function saveCustomFlavors() {
+  try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(e) {}
+}
+
+function openAddFlavorModal() {
+  var modal = document.getElementById("add-flavor-modal");
+  modal.classList.add("open");
+  renderAddBrandScroll();
+  renderCustomFlavorList();
+  document.getElementById("add-flavor-input").value = "";
+  document.getElementById("add-flavor-qty").value = "0";
+  document.getElementById("add-flavor-input").focus();
+  // update subtitle to show selected brand
+  var sub = document.getElementById("modal-brand-hint");
+  if (sub) sub.textContent = "Adding to: " + addModalBrand;
+}
+
+function closeAddFlavorModal() {
+  document.getElementById("add-flavor-modal").classList.remove("open");
+  var inp = document.getElementById("add-flavor-input");
+  var qty = document.getElementById("add-flavor-qty");
+  if (inp) inp.value = "";
+  if (qty) qty.value = "0";
+}
+
+function renderAddBrandScroll() {
+  var wrap = document.getElementById("add-brand-scroll");
+  wrap.innerHTML = "";
+  BRANDS.forEach(function(br) {
+    var d = document.createElement("div");
+    d.className = "chip" + (br === addModalBrand ? " on" : "");
+    d.textContent = br;
+    d.addEventListener("click", function() { addModalBrand = br; renderAddBrandScroll(); });
+    wrap.appendChild(d);
+  });
+}
+
+function renderCustomFlavorList() {
+  var el = document.getElementById("custom-flavor-list");
+  var empty = document.getElementById("cfl-empty");
+  el.innerHTML = "";
+  var all = [];
+  Object.keys(customFlavors).forEach(function(br) {
+    customFlavors[br].forEach(function(fl) { all.push({ br: br, fl: fl }); });
+  });
+  empty.style.display = all.length ? "none" : "block";
+  all.forEach(function(item) {
+    var row = document.createElement("div"); row.className = "cfl-item";
+    var info = document.createElement("div");
+    var nm = document.createElement("div"); nm.className = "cfl-name"; nm.textContent = item.fl;
+    var br = document.createElement("div"); br.className = "cfl-brand"; br.textContent = item.br;
+    info.appendChild(nm); info.appendChild(br);
+    var del = document.createElement("span"); del.className = "cfl-del"; del.textContent = "×";
+    del.addEventListener("click", function() {
+      // remove from customFlavors
+      customFlavors[item.br] = (customFlavors[item.br] || []).filter(function(f) { return f !== item.fl; });
+      if (!customFlavors[item.br].length) delete customFlavors[item.br];
+      // remove from CATALOG
+      CATALOG[item.br] = (CATALOG[item.br] || []).filter(function(f) { return f !== item.fl; });
+      // remove from stock
+      delete stock[skey(item.br, item.fl)];
+      saveCustomFlavors(); saveLocal();
+      renderCustomFlavorList(); renderStock(); updateStats();
+      toast("Flavor removed", "warn");
+    });
+    row.appendChild(info); row.appendChild(del); el.appendChild(row);
+  });
+}
+
+(function(){var __el=document.getElementById("btn-add-flavor-confirm");if(!__el)return;__el.addEventListener("click", function() {
+  var name = document.getElementById("add-flavor-input").value.trim();
+  var qtyVal = Math.max(0, parseInt(document.getElementById("add-flavor-qty").value, 10) || 0);
+  if (!name) { toast("Enter a flavor name", "err"); return; }
+  var br = addModalBrand;
+  // check duplicate
+  if (CATALOG[br] && CATALOG[br].indexOf(name) !== -1) { toast("Flavor already exists in " + br, "warn"); return; }
+  // add to CATALOG
+  if (!CATALOG[br]) CATALOG[br] = [];
+  CATALOG[br].push(name);
+  // track in customFlavors
+  if (!customFlavors[br]) customFlavors[br] = [];
+  customFlavors[br].push(name);
+  // set stock
+  if (qtyVal > 0) {
+    stock[skey(br, name)] = qtyVal;
+    txLog.unshift({ type: "purchase", brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+  }
+  saveCustomFlavors(); saveLocal(); updateStats();
+  renderStock();
+  closeAddFlavorModal();
+  toast("\u2713 " + name + " added to " + br, "ok");
+})})();
+
+(function(){var __el=document.getElementById("btn-add-flavor-cancel");if(!__el)return;__el.addEventListener("click",closeAddFlavorModal);})();
+(function(){var __el=document.getElementById("modal-close-btn");if(!__el)return;__el.addEventListener("click", closeAddFlavorModal)})();
+(function(){var __el=document.getElementById("add-flavor-modal");if(!__el)return;__el.addEventListener("click", function(e) {
+  if (e.target === __el) closeAddFlavorModal();
+})})();
+
+// Show FAB only on stock page
+
+
+// ── SELL SUB-TABS ──
+(function(){
+  var el = document.getElementById("stabs");
+  if (!el) return;
+  el.addEventListener("click", function(e) {
+    var tab = e.target.closest("[data-st]");
+    if (!tab) return;
+    var st = tab.getAttribute("data-st");
+    document.querySelectorAll("#stabs .tab").forEach(function(t) { t.classList.remove("on"); });
+    tab.classList.add("on");
+    document.getElementById("sell-upload-pane").style.display = st === "upload" ? "block" : "none";
+    document.getElementById("sell-manual-pane").style.display = st === "manual" ? "block" : "none";
+    if (st === "manual") { renderSellBrands(); renderSellFlavors(); }
+  });
+})();
+
+// ── MANUAL SELL ──
+var sellBrand = BRANDS[0];
+var sellCart = {};
+
+function renderSellBrands() {
+  var wrap = document.getElementById("sell-brand-scroll");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  BRANDS.forEach(function(br) {
+    var d = document.createElement("div");
+    d.className = "chip" + (br === sellBrand ? " on" : "");
+    d.textContent = br;
+    d.addEventListener("click", function() { sellBrand = br; renderSellBrands(); renderSellFlavors(); });
+    wrap.appendChild(d);
+  });
+}
+
+(function(){
+  var el = document.getElementById("sell-search");
+  if (!el) return;
+  el.addEventListener("input", function() { renderSellFlavors(); });
+})();
+
+function renderSellFlavors() {
+  var q = (document.getElementById("sell-search") || {}).value || "";
+  q = q.toLowerCase();
+  var flavors = (CATALOG[sellBrand] || []).filter(function(f) {
+    return !q || f.toLowerCase().indexOf(q) !== -1;
+  });
+  var list = document.getElementById("sell-flavor-list");
+  if (!list) return;
+  list.innerHTML = "";
+  if (!flavors.length) {
+    var d = document.createElement("div");
+    d.className = "empty"; d.style.padding = "12px";
+    d.innerHTML = "<div class=\"et\">No match</div>";
+    list.appendChild(d); return;
+  }
+  flavors.forEach(function(fl) {
+    var k = skey(sellBrand, fl);
+    var inCart = sellCart[k] !== undefined;
+    var avail = qty(sellBrand, fl);
+    var item = document.createElement("div");
+    item.className = "fitem" + (inCart ? " sel" : "");
+    var info = document.createElement("div");
+    var ne = document.createElement("div"); ne.className = "fin"; ne.textContent = fl;
+    var se = document.createElement("div"); se.className = "fsub";
+    se.textContent = sellBrand + " \u00b7 Stock: " + avail;
+    se.style.color = avail === 0 ? "var(--red)" : avail <= 3 ? "var(--amb)" : "var(--txt3)";
+    info.appendChild(ne); info.appendChild(se);
+    var chk = document.createElement("div"); chk.className = "fchk";
+    if (inCart) chk.textContent = "\u2713";
+    item.appendChild(info); item.appendChild(chk);
+    item.addEventListener("click", function() {
+      if (avail === 0 && !inCart) { toast("No stock for " + fl, "err"); return; }
+      if (sellCart[k] !== undefined) delete sellCart[k];
+      else sellCart[k] = 1;
+      renderSellFlavors(); renderSellCart();
+    });
+    list.appendChild(item);
+  });
+}
+
+function renderSellCart() {
+  var keys = Object.keys(sellCart);
+  var wrap = document.getElementById("sell-cart-wrap");
+  if (wrap) wrap.style.display = keys.length ? "block" : "none";
+  var el = document.getElementById("sell-cart");
+  if (!el) return;
+  el.innerHTML = "";
+  keys.forEach(function(k) {
+    var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
+    var avail = qty(br, fl);
+    var item = document.createElement("div"); item.className = "citem";
+    var info = document.createElement("div"); info.className = "cinfo";
+    var ne = document.createElement("div"); ne.className = "cin"; ne.textContent = fl;
+    var be = document.createElement("div"); be.className = "cbr";
+    be.textContent = br + " \u00b7 Have: " + avail;
+    be.style.color = avail < (sellCart[k] || 1) ? "var(--red)" : "var(--txt3)";
+    info.appendChild(ne); info.appendChild(be);
+    var right = document.createElement("div"); right.className = "cqwrap";
+    var inp = document.createElement("input"); inp.type = "number"; inp.min = "1";
+    inp.max = String(avail || 99); inp.value = String(sellCart[k]);
+    inp.className = "cqinp";
+    inp.addEventListener("change", function() {
+      sellCart[k] = Math.max(1, parseInt(this.value, 10) || 1);
+      renderSellCart();
+    });
+    var rm = document.createElement("span"); rm.className = "crm"; rm.textContent = "\u00d7";
+    rm.addEventListener("click", function() { delete sellCart[k]; renderSellFlavors(); renderSellCart(); });
+    right.appendChild(inp); right.appendChild(rm);
+    item.appendChild(info); item.appendChild(right);
+    el.appendChild(item);
+  });
+}
+
+(function(){
+  var el = document.getElementById("btn-confirm-manual-sell");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var keys = Object.keys(sellCart);
+    if (!keys.length) { toast("No items in sale cart", "err"); return; }
+    var count = 0, warn = 0;
+    keys.forEach(function(k) {
+      var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
+      var q = parseInt(sellCart[k], 10) || 1;
+      var cur = stock[k] || 0;
+      if (q > cur) warn++;
+      stock[k] = Math.max(0, cur - q);
+      txLog.unshift({ type: "sale", brand: br, flavor: fl, qty: q, date: new Date().toLocaleString() });
+      count++;
+    });
+    afterChange();
+    sellCart = {};
+    renderSellCart(); renderSellFlavors();
+    if (warn > 0) toast(count + " sold. " + warn + " went below 0 \u2014 check stock", "warn");
+    else toast(count + " item(s) removed from stock", "ok");
+  });
+})();
+
+// ── CATALOG PAGE HOOK ──
+
+var catActiveBrand = null;
+var catSearchQ = "";
+
+function renderCatalogPage() {
+  catActiveBrand = catActiveBrand || BRANDS[0];
+  renderCatBrandScroll();
+  renderCatFlavorList();
+}
+
+function renderCatBrandScroll() {
+  var wrap = document.getElementById("cat-brand-scroll");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  BRANDS.forEach(function(br) {
+    var d = document.createElement("div");
+    d.className = "chip" + (br === catActiveBrand ? " on" : "");
+    d.textContent = br;
+    d.addEventListener("click", function() { catActiveBrand = br; renderCatBrandScroll(); renderCatFlavorList(); });
+    wrap.appendChild(d);
+  });
+}
+
+function renderCatFlavorList() {
+  var container = document.getElementById("cat-flavor-list");
+  if (!container) return;
+  container.innerHTML = "";
+  var q = catSearchQ.toLowerCase();
+  var flavors = (CATALOG[catActiveBrand] || []).filter(function(fl) {
+    return !q || fl.toLowerCase().indexOf(q) !== -1;
+  });
+
+  var block = document.createElement("div");
+  block.className = "cat-brand-block";
+
+  // Header
+  var header = document.createElement("div");
+  header.className = "cat-brand-header";
+  var nameWrap = document.createElement("div");
+  nameWrap.style.display = "flex";
+  nameWrap.style.alignItems = "center";
+  var nameEl = document.createElement("span");
+  nameEl.className = "cat-brand-name";
+  nameEl.textContent = catActiveBrand;
+  var countEl = document.createElement("span");
+  countEl.className = "cat-brand-count";
+  countEl.textContent = "(" + (CATALOG[catActiveBrand]||[]).length + " flavors)";
+  nameWrap.appendChild(nameEl);
+  nameWrap.appendChild(countEl);
+  var actions = document.createElement("div");
+  actions.className = "cat-brand-actions";
+  // Delete brand button (only for custom brands)
+  var isCustomBrand = customFlavors["__brand__" + catActiveBrand] !== undefined;
+  if (isCustomBrand) {
+    var delBrandBtn = document.createElement("button");
+    delBrandBtn.className = "cat-action-btn cat-action-del";
+    delBrandBtn.textContent = "Delete Brand";
+    delBrandBtn.addEventListener("click", function() { confirmDeleteBrand(catActiveBrand); });
+    actions.appendChild(delBrandBtn);
+  }
+  header.appendChild(nameWrap);
+  header.appendChild(actions);
+  block.appendChild(header);
+
+  // Flavor rows
+  if (!flavors.length) {
+    var empty = document.createElement("div");
+    empty.style.cssText = "padding:16px;text-align:center;font-size:12px;color:var(--txt3)";
+    empty.textContent = q ? "No flavors match your search" : "No flavors yet. Add one below.";
+    block.appendChild(empty);
+  } else {
+    flavors.forEach(function(fl) {
+      var row = document.createElement("div");
+      row.className = "cat-flavor-row";
+      var nm = document.createElement("span");
+      nm.className = "cat-flavor-name";
+      nm.textContent = fl;
+      var stk = document.createElement("span");
+      stk.className = "cat-flavor-stock";
+      var q2 = qty(catActiveBrand, fl);
+      stk.textContent = "stock: " + q2;
+      stk.style.color = q2 === 0 ? "var(--red)" : q2 <= 3 ? "var(--amb)" : "var(--txt3)";
+      var del = document.createElement("span");
+      del.className = "cat-flavor-del";
+      del.textContent = "×";
+      del.title = "Remove flavor";
+      (function(brand, flavor) {
+        del.addEventListener("click", function() { deleteCustomFlavor(brand, flavor); });
+      })(catActiveBrand, fl);
+      row.appendChild(nm);
+      row.appendChild(stk);
+      row.appendChild(del);
+      block.appendChild(row);
+    });
+  }
+
+  // Add flavor button at bottom
+  var addBtn = document.createElement("button");
+  addBtn.className = "cat-add-flavor-btn";
+  addBtn.innerHTML = "&#43; Add Flavor to " + catActiveBrand;
+  addBtn.addEventListener("click", function() { openCatFlavorModal(catActiveBrand); });
+  block.appendChild(addBtn);
+
+  container.appendChild(block);
+}
+
+// ── Search ──
+(function(){
+  var el = document.getElementById("cat-search");
+  if (!el) return;
+  el.addEventListener("input", function() {
+    catSearchQ = this.value;
+    renderCatFlavorList();
+  });
+})();
+
+// ── ADD BRAND ──
+function openAddBrandModal() {
+  var m = document.getElementById("add-brand-modal");
+  if (!m) return;
+  m.classList.add("open");
+  var inp = document.getElementById("add-brand-input");
+  if (inp) { inp.value = ""; inp.focus(); }
+}
+function closeAddBrandModal() {
+  var m = document.getElementById("add-brand-modal");
+  if (m) m.classList.remove("open");
+  var inp = document.getElementById("add-brand-input");
+  if (inp) inp.value = "";
+}
+
+(function(){var el=document.getElementById("btn-cat-add-brand");if(!el)return;el.addEventListener("click",openAddBrandModal);})();
+(function(){var el=document.getElementById("add-brand-close-btn");if(!el)return;el.addEventListener("click",closeAddBrandModal);})();
+(function(){var el=document.getElementById("btn-add-brand-cancel");if(!el)return;el.addEventListener("click",closeAddBrandModal);})();
+(function(){var el=document.getElementById("add-brand-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeAddBrandModal();});})();
+
+(function(){
+  var el = document.getElementById("btn-add-brand-confirm");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var inp = document.getElementById("add-brand-input");
+    var name = inp ? inp.value.trim() : "";
+    if (!name) { toast("Enter a brand name", "err"); return; }
+    if (CATALOG[name]) { toast("Brand already exists", "warn"); return; }
+    // Add to CATALOG
+    CATALOG[name] = [];
+    // Mark as custom brand
+    customFlavors["__brand__" + name] = true;
+    saveCustomFlavors();
+    // Update BRANDS
+    if (BRANDS.indexOf(name) === -1) BRANDS.push(name);
+    catActiveBrand = name;
+    closeAddBrandModal();
+    renderCatBrandScroll();
+    renderCatFlavorList();
+    renderStockBrands();
+    toast(name + " brand added!", "ok");
+  });
+})();
+
+// ── DELETE BRAND ──
+function confirmDeleteBrand(br) {
+  if (!confirm("Delete brand \"" + br + "\" and all its custom flavors? Built-in brands cannot be deleted.")) return;
+  if (!customFlavors["__brand__" + br]) { toast("Cannot delete built-in brand", "err"); return; }
+  // Remove from CATALOG
+  delete CATALOG[br];
+  // Remove from BRANDS
+  var idx = BRANDS.indexOf(br);
+  if (idx > -1) BRANDS.splice(idx, 1);
+  // Remove from customFlavors
+  delete customFlavors["__brand__" + br];
+  delete customFlavors[br];
+  // Remove stock entries
+  Object.keys(stock).forEach(function(k) {
+    if (k.indexOf(br + "~~") === 0) delete stock[k];
+  });
+  catActiveBrand = BRANDS[0] || null;
+  saveCustomFlavors(); saveLocal(); updateStats();
+  renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
+  toast(br + " deleted", "warn");
+}
+
+// ── ADD FLAVOR TO BRAND (catalog modal) ──
+var catFlavorModalBrand = null;
+
+function openCatFlavorModal(br) {
+  catFlavorModalBrand = br;
+  var m = document.getElementById("add-cat-flavor-modal");
+  if (!m) return;
+  m.classList.add("open");
+  var hint = document.getElementById("cat-flavor-modal-hint");
+  if (hint) hint.textContent = "Adding to: " + br;
+  var inp = document.getElementById("add-cat-flavor-input");
+  var q = document.getElementById("add-cat-flavor-qty");
+  if (inp) { inp.value = ""; inp.focus(); }
+  if (q) q.value = "0";
+}
+
+function closeCatFlavorModal() {
+  var m = document.getElementById("add-cat-flavor-modal");
+  if (m) m.classList.remove("open");
+  var inp = document.getElementById("add-cat-flavor-input");
+  var q = document.getElementById("add-cat-flavor-qty");
+  if (inp) inp.value = "";
+  if (q) q.value = "0";
+}
+
+(function(){var el=document.getElementById("add-cat-flavor-close-btn");if(!el)return;el.addEventListener("click",closeCatFlavorModal);})();
+(function(){var el=document.getElementById("btn-add-cat-flavor-cancel");if(!el)return;el.addEventListener("click",closeCatFlavorModal);})();
+(function(){var el=document.getElementById("add-cat-flavor-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeCatFlavorModal();});})();
+
+(function(){
+  var el = document.getElementById("btn-add-cat-flavor-confirm");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var inp = document.getElementById("add-cat-flavor-input");
+    var qEl = document.getElementById("add-cat-flavor-qty");
+    var name = inp ? inp.value.trim() : "";
+    var qtyVal = Math.max(0, parseInt(qEl ? qEl.value : "0", 10) || 0);
+    var br = catFlavorModalBrand;
+    if (!name) { toast("Enter a flavor name", "err"); return; }
+    if (!br) { toast("No brand selected", "err"); return; }
+    if (CATALOG[br] && CATALOG[br].indexOf(name) !== -1) { toast("Flavor already exists in " + br, "warn"); return; }
+    if (!CATALOG[br]) CATALOG[br] = [];
+    CATALOG[br].push(name);
+    if (!customFlavors[br]) customFlavors[br] = [];
+    customFlavors[br].push(name);
+    if (qtyVal > 0) {
+      stock[skey(br, name)] = qtyVal;
+      txLog.unshift({ type: "purchase", brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+    }
+    saveCustomFlavors(); saveLocal(); updateStats();
+    closeCatFlavorModal();
+    renderCatFlavorList();
+    renderStockBrands();
+    renderStockGrid();
+    toast("✓ " + name + " added to " + br, "ok");
+  });
+})();
+
+// ── DELETE FLAVOR (any flavor, built-in or custom) ──
+function deleteCustomFlavor(br, fl) {
+  if (!confirm("Remove \"" + fl + "\" from " + br + "?\n\nThis will also clear its stock. You can add it back later.")) return;
+  // Remove from CATALOG
+  CATALOG[br] = (CATALOG[br] || []).filter(function(f) { return f !== fl; });
+  // Remove from customFlavors tracking if it was there
+  if (customFlavors[br]) {
+    customFlavors[br] = customFlavors[br].filter(function(f) { return f !== fl; });
+  }
+  // Track deletions of built-in flavors so they stay removed after reload
+  if (!customFlavors["__deleted__"]) customFlavors["__deleted__"] = [];
+  var delKey = br + "~~" + fl;
+  if (customFlavors["__deleted__"].indexOf(delKey) === -1) {
+    customFlavors["__deleted__"].push(delKey);
+  }
+  // Remove stock entry
+  delete stock[skey(br, fl)];
+  saveCustomFlavors(); saveLocal(); updateStats();
+  renderCatFlavorList(); renderStockGrid();
+  toast(fl + " removed", "warn");
+}
+
+// ── Hook catalog page into main tab handler ──
+// ── INIT ──
+loadLocal();
+loadCustomFlavors();
+renderStock();
+updateStats();
+if(gdUrl){
+  gdConnected=true; setSyncDot("busy","connecting...");
+  document.getElementById("btn-gd-disc").style.display="";
+  gdPull(); gdPollTimer=setInterval(gdPull,10000);
+} else { setSyncDot("","local"); }
+
+})();
+</script>
+
+<!-- ADD FLAVOR MODAL -->
+<div class="modal-overlay" id="add-flavor-modal">
+  <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
+    <span class="modal-close" id="modal-close-btn">&#10005;</span>
+    <div class="modal-title">Add Custom Flavor</div>
+    <div class="modal-sub">Add any flavor not in the catalog. It becomes available everywhere in the app.</div>
+    <div id="modal-brand-hint" style="font-size:12px;font-weight:700;color:var(--acc);margin-bottom:12px;margin-top:-8px"></div>
+    <div class="igrp">
+      <div class="ilbl">Brand</div>
+      <div class="bscroll" id="add-brand-scroll"></div>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Flavor Name</div>
+      <input class="ifield" id="add-flavor-input" placeholder="e.g. Mango Grape Ice" autocomplete="off">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Initial Stock (optional)</div>
+      <input class="ifield" id="add-flavor-qty" type="number" min="0" value="0" placeholder="0">
+    </div>
+    <div class="brow" style="margin-bottom:14px">
+      <button class="btn bpri" id="btn-add-flavor-confirm">&#43; Add to Catalog</button>
+      <button class="btn bsec" id="btn-add-flavor-cancel">Cancel</button>
+    </div>
+    <div class="stitle" style="margin-top:4px">Custom Flavors Added</div>
+    <div id="custom-flavor-list" style="max-height:180px;overflow-y:auto"></div>
+    <div id="cfl-empty" style="font-size:12px;color:var(--txt3);text-align:center;padding:12px 0">No custom flavors yet</div>
+  </div>
+</div>
+
+
+</body>
+</html>
