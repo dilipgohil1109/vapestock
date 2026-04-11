@@ -155,6 +155,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .cat-brand-block{border-radius:var(--r);border:1px solid var(--brd);margin-bottom:14px;overflow:hidden}
 .cat-add-flavor-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;background:rgba(124,111,255,.08);border:none;width:100%;text-align:left;color:var(--acc);font-size:12px;font-weight:700;cursor:pointer;font-family:"Syne",sans-serif;border-top:1px solid var(--brd)}
 .cat-add-flavor-btn:active{background:rgba(124,111,255,.18)}
+
+.cat-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;scrollbar-width:none}
+.cat-chips::-webkit-scrollbar{display:none}
+.catc{flex-shrink:0;padding:5px 12px;border-radius:50px;background:var(--sur2);border:1.5px solid var(--acc);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;color:var(--acc);transition:all .2s;user-select:none}
+.catc.on{background:var(--acc);color:#fff}
+.catc:active{opacity:.8}
 </style>
 </head>
 <body>
@@ -185,6 +191,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 
 <!-- STOCK PAGE -->
 <div class="pg on" id="pg-stock">
+  <div class="cat-chips" id="s-cat-chips"></div>
   <div class="bscroll" id="sb"></div>
   <div class="frow" id="sf-row">
     <div class="fc on" data-sf="all">All <span class="fc-count" id="fc-all">0</span></div>
@@ -237,7 +244,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 
   <!-- MANUAL pane -->
   <div id="pur-manual-pane" style="display:none">
-    <div class="igrp"><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
+    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="pur-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
     <div class="igrp">
       <div class="ilbl">Select Flavors</div>
       <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="psearch" placeholder="Search flavor..."></div>
@@ -282,7 +289,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 
   <!-- MANUAL pane -->
   <div id="sell-manual-pane" style="display:none">
-    <div class="igrp"><div class="ilbl">Brand</div><div class="bscroll" id="sell-brand-scroll"></div></div>
+    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="sell-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="sell-brand-scroll"></div></div>
     <div class="igrp">
       <div class="ilbl">Select Flavors to Sell</div>
       <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="sell-search" placeholder="Search flavor..."></div>
@@ -314,7 +321,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
   <div id="og-pane" style="display:none">
     <p class="stitle">Generate Stock List</p>
-    <div class="igrp"><div class="ilbl">Brand Filter</div><div class="bscroll" id="gb"></div></div>
+    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="gen-cat-chips"></div><div class="ilbl">Brand Filter</div><div class="bscroll" id="gb"></div></div>
     <div class="frow" id="gf-row">
       <div class="fc on" data-gf="in">In Stock</div>
       <div class="fc" data-gf="low">Low Only</div>
@@ -333,20 +340,75 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <div class="pg" id="pg-history">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Transaction Log</p>
-    <button class="btn bdgr bsm" id="btn-clrhist">Clear</button>
+    <button class="btn bdgr bsm" id="btn-clrhist">Clear All</button>
   </div>
+
+  <!-- Filter tabs -->
+  <div class="frow" id="log-filter-row" style="margin-bottom:10px">
+    <div class="fc on" data-lf="all">All</div>
+    <div class="fc" data-lf="purchase">Buy</div>
+    <div class="fc" data-lf="sale">Sell</div>
+    <div class="fc" data-lf="adj">Adjust</div>
+  </div>
+
+  <!-- Search -->
+  <div class="swrap" style="margin-bottom:10px">
+    <span class="sico">&#128269;</span>
+    <input class="ifield" id="log-search" placeholder="Search brand or flavor...">
+  </div>
+
+  <!-- Totals summary bar -->
+  <div id="log-summary" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap"></div>
+
+  <!-- Log list -->
   <div id="hlist"></div>
+  <div id="log-load-more" style="display:none;text-align:center;margin-top:12px">
+    <button class="btn bsec bsm" id="btn-log-more">Load more</button>
+  </div>
 </div>
 
 <!-- CATALOG PAGE -->
 <div class="pg" id="pg-catalog">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Master Catalog</p>
-    <button class="btn bpri bsm" id="btn-cat-add-brand">+ Add Brand</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn bsec bsm" id="btn-cat-export">&#11015; Export</button>
+      <button class="btn bsec bsm" id="btn-cat-import-open">&#11014; Import</button>
+      <button class="btn bpri bsm" id="btn-cat-add-brand">+ Brand</button>
+    </div>
   </div>
   <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">All brands and flavors available in Stock, Buy and Sell. Add new brands or flavors here — they appear across the whole app instantly.</p>
 
+  <!-- Import panel (hidden by default) -->
+  <div id="cat-import-panel" style="display:none;background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px">Import Catalog</div>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Upload a CSV file with columns: <strong style="color:var(--txt)">Category, Brand, Flavor</strong>. You can <strong style="color:var(--txt)">merge</strong> (add to existing) or <strong style="color:var(--txt)">replace</strong> (wipe and reload). Download the export first to see the exact format.</p>
+    <input type="file" id="cat-import-file" accept=".csv,.txt" style="display:none">
+    <div class="brow" style="margin-bottom:10px">
+      <button class="btn bsec" id="btn-cat-pick-file">&#128193; Choose JSON File</button>
+    </div>
+    <div id="cat-import-filename" style="font-size:12px;color:var(--txt3);margin-bottom:10px;display:none"></div>
+    <div id="cat-import-preview" style="display:none;background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;font-size:12px;color:var(--txt2);line-height:1.7"></div>
+    <div class="brow" id="cat-import-actions" style="display:none">
+      <button class="btn bpri" id="btn-cat-do-merge">Merge into existing</button>
+      <button class="btn bamb" id="btn-cat-do-replace">Replace all</button>
+      <button class="btn bsec bsm" id="btn-cat-import-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Category section -->
+  <div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="ilbl" style="margin-bottom:0">Categories</div>
+      <button class="btn bpri bsm" id="btn-cat-add-category" style="font-size:11px">+ Category</button>
+    </div>
+    <div id="cat-category-chips"></div>
+  </div>
+
   <!-- Brand filter chips -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <div class="ilbl" style="margin-bottom:0">Brands in <span id="cat-active-cat-label" style="color:var(--acc)">Vape</span></div>
+  </div>
   <div class="bscroll" id="cat-brand-scroll"></div>
 
   <!-- Search -->
@@ -358,12 +420,29 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   <!-- Flavor list for selected brand -->
   <div id="cat-flavor-list"></div>
 
+  <!-- Add Category Modal -->
+  <div class="modal-overlay" id="add-category-modal">
+    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
+      <span class="modal-close" id="add-cat-modal-close">&#10005;</span>
+      <div class="modal-title">Add New Category</div>
+      <div class="modal-sub">Create a category to group related brands (e.g. "Vape", "Nicotine Pouches", "E-Liquid").</div>
+      <div class="igrp">
+        <div class="ilbl">Category Name</div>
+        <input class="ifield" id="add-category-input" placeholder="e.g. E-Liquid" autocomplete="off">
+      </div>
+      <div class="brow">
+        <button class="btn bpri" id="btn-add-category-confirm">+ Create Category</button>
+        <button class="btn bsec" id="btn-add-category-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Brand Modal -->
   <div class="modal-overlay" id="add-brand-modal">
     <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
       <span class="modal-close" id="add-brand-close-btn">&#10005;</span>
       <div class="modal-title">Add New Brand</div>
-      <div class="modal-sub">Create a new vape brand. You can add flavors to it after.</div>
+      <div class="modal-sub">Adding brand to category: <span id="add-brand-cat-label" style="color:var(--acc);font-weight:700">Vape</span>. You can add flavors after.</div>
       <div class="igrp">
         <div class="ilbl">Brand Name</div>
         <input class="ifield" id="add-brand-input" placeholder="e.g. Elf Bar Pro" autocomplete="off">
@@ -401,8 +480,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <div class="pg" id="pg-sync">
   <p class="stitle">Google Drive Sync</p>
   <div class="info-box">
-    <p><strong style="color:var(--acc)">How it works:</strong> Stock data is saved as a JSON file in your Google Drive. Both phones read and write to the same file — any change syncs within seconds.</p>
-    <p>One Google account. Both phones use the same Web App URL.</p>
+    <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
+    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
+    <p style="color:var(--grn)">&#10003; The Google Apps Script code has not changed — no update needed if you already set it up.</p>
   </div>
   <div class="scard">
     <div class="scard-t">Step 1 &mdash; One-time Setup</div>
@@ -481,13 +561,29 @@ function getFile() {
 
 var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
 var BRANDS = Object.keys(CATALOG);
+// CATEGORIES: { catName: [brandName, ...] }
+// All built-in brands start under "Vape"
+var CATEGORIES = { "Vape": Object.keys(CATALOG).slice() };
+var CATEGORY_NAMES = Object.keys(CATEGORIES);
+
+// Helper: get brands for a category
+function brandsForCat(cat) { return cat === "all" ? BRANDS : (CATEGORIES[cat] || []); }
+// Helper: get category of a brand
+function catOfBrand(br) {
+  var found = "Vape";
+  CATEGORY_NAMES.forEach(function(cat) { if ((CATEGORIES[cat]||[]).indexOf(br) !== -1) found = cat; });
+  return found;
+}
 
 var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}";
 
 var stock = {};
 var txLog = [];
+var activeCategory = "Vape";
 var activeBrand = BRANDS[0];
+var purCategory = "Vape";
 var purBrand = BRANDS[0];
+var sellCategory = "Vape";
 var cart = {};
 var stockFlt = "all";
 var genBrand = "all";
@@ -631,10 +727,31 @@ function setSyncDot(state, label) {
 }
 
 // ── STATS ──
+
+// ── CATEGORY CHIP RENDERER ──
+function renderCatChips(containerId, activeCat, onSelect) {
+  var wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  // "All" chip
+  var all = document.createElement("div");
+  all.className = "catc" + (activeCat === "all" ? " on" : "");
+  all.textContent = "All";
+  all.addEventListener("click", function() { onSelect("all"); });
+  wrap.appendChild(all);
+  CATEGORY_NAMES.forEach(function(cat) {
+    var d = document.createElement("div");
+    d.className = "catc" + (cat === activeCat ? " on" : "");
+    d.textContent = cat;
+    d.addEventListener("click", function() { onSelect(cat); });
+    wrap.appendChild(d);
+  });
+}
+
 function updateStats() {
   var tot=0, low=0, out=0;
   BRANDS.forEach(function(br) {
-    CATALOG[br].forEach(function(fl) {
+    (CATALOG[br]||[]).forEach(function(fl) {
       var q = qty(br, fl); tot += q;
       if (q===0) out++; else if (q<=3) low++;
     });
@@ -650,7 +767,7 @@ function afterChange() { saveLocal(); updateStats(); if(gdConnected){ clearTimeo
 function gdPush() {
   if(!gdConnected) return;
   setSyncDot("busy","saving...");
-  fetch(gdUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({stock:stock,txLog:txLog.slice(0,300),ts:Date.now()})})
+  fetch(gdUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,ts:Date.now()})})
   .then(function(r){return r.json();}).then(function(d){ setSyncDot(d.ok?"ok":"err",d.ok?"synced":"error"); })
   .catch(function(){ setSyncDot("err","offline"); });
 }
@@ -659,7 +776,19 @@ function gdPull() {
   fetch(gdUrl+"?t="+Date.now()).then(function(r){return r.json();})
   .then(function(d){
     if(!d||!d.ts) return;
-    if(d.ts>gdLastTs){ gdLastTs=d.ts; if(d.stock) stock=d.stock; if(d.txLog) txLog=d.txLog; saveLocal(); renderStockGrid(); renderHistory(); updateStats(); }
+    if(d.ts>gdLastTs){
+      gdLastTs=d.ts;
+      if(d.stock) stock=d.stock;
+      if(d.txLog) txLog=d.txLog;
+      if(d.customFlavors) {
+        customFlavors=d.customFlavors;
+        // Rebuild CATEGORIES and BRANDS from the synced customFlavors
+        // Reset to built-in state first, then reapply
+        loadCustomFlavors();
+      }
+      saveLocal();
+      renderStockGrid(); renderHistory(); updateStats();
+    }
     setSyncDot("ok","live");
   }).catch(function(){ setSyncDot("err","offline"); });
 }
@@ -720,10 +849,17 @@ document.getElementById("mtabs").addEventListener("click",function(e){
 
 // ── STOCK PAGE ──
 function renderStockBrands() {
+  renderCatChips("s-cat-chips", activeCategory, function(cat) {
+    activeCategory = cat;
+    var brands = brandsForCat(cat);
+    activeBrand = brands[0] || BRANDS[0];
+    renderStockBrands(); renderStockGrid(); updateFilterCounts();
+  });
   var wrap=document.getElementById("sb"); wrap.innerHTML="";
-  BRANDS.forEach(function(br) {
+  var brs = brandsForCat(activeCategory);
+  brs.forEach(function(br) {
     var d=document.createElement("div"); d.className="chip"+(br===activeBrand?" on":""); d.textContent=br;
-    d.addEventListener("click",function(){ activeBrand=br; renderStock(); });
+    d.addEventListener("click",function(){ activeBrand=br; renderStockBrands(); renderStockGrid(); updateFilterCounts(); });
     wrap.appendChild(d);
   });
 }
@@ -787,7 +923,7 @@ function renderStockGrid() {
         var nv=Math.max(0,parseInt(inp.value,10)||0);
         var old=stock[skey(activeBrand,fl)]||0;
         stock[skey(activeBrand,fl)]=nv;
-        if(nv!==old) txLog.unshift({type:"adj",brand:activeBrand,flavor:fl,qty:nv-old,date:new Date().toLocaleString()});
+        if(nv!==old) txLog.unshift({type:"adj",category:catOfBrand(activeBrand),brand:activeBrand,flavor:fl,qty:nv-old,date:new Date().toLocaleString()});
         afterChange(); renderStockGrid();
       });
       inp.addEventListener("keydown",function(e){ if(e.key==="Enter") inp.blur(); });
@@ -805,7 +941,7 @@ function renderStockGrid() {
   var br=btn.getAttribute("data-br"), fl=btn.getAttribute("data-fl"), d=parseInt(btn.getAttribute("data-d"),10);
   var k=skey(br,fl), cur=stock[k]||0, nxt=Math.max(0,cur+d);
   stock[k]=nxt;
-  if(d<0&&cur>0) txLog.unshift({type:"sale",brand:br,flavor:fl,qty:1,date:new Date().toLocaleString()});
+  if(d<0&&cur>0) txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:1,date:new Date().toLocaleString()});
   afterChange(); renderStockGrid();
 })})();
 
@@ -991,7 +1127,7 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
     }
     var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
     stock[k] = (stock[k] || 0) + item.qty;
-    txLog.unshift({ type: "purchase", brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString() });
+    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString() });
     count++;
   });
   afterChange();
@@ -1021,8 +1157,15 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
 
 // ── MANUAL PURCHASE ──
 function renderPurBrands(){
+  renderCatChips("pur-cat-chips", purCategory, function(cat) {
+    purCategory = cat;
+    var brs = brandsForCat(cat);
+    purBrand = brs[0] || BRANDS[0];
+    renderPurBrands(); renderPurFlavors();
+  });
   var wrap=document.getElementById("pb"); wrap.innerHTML="";
-  BRANDS.forEach(function(br){
+  var brs = brandsForCat(purCategory);
+  brs.forEach(function(br){
     var d=document.createElement("div"); d.className="chip"+(br===purBrand?" on":""); d.textContent=br;
     d.addEventListener("click",function(){purBrand=br;renderPurBrands();renderPurFlavors();});
     wrap.appendChild(d);
@@ -1076,7 +1219,7 @@ function renderCart(){
   keys.forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~"),q=parseInt(cart[k],10)||1;
     stock[k]=(stock[k]||0)+q;
-    txLog.unshift({type:"purchase",brand:br,flavor:fl,qty:q,date:new Date().toLocaleString()});
+    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,date:new Date().toLocaleString()});
   });
   afterChange(); cart={}; renderCart(); renderPurFlavors();
   toast(keys.length+" item(s) added to stock","ok");
@@ -1108,7 +1251,7 @@ function renderCart(){
     var deduct=Math.min(item.qty,cur);
     stock[k]=Math.max(0,cur-item.qty);
     if(item.qty>cur) warn++;
-    txLog.unshift({type:"sale",brand:br,flavor:fl,qty:deduct,date:new Date().toLocaleString()});
+    txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:deduct,date:new Date().toLocaleString()});
     count++;
   });
   afterChange();
@@ -1151,11 +1294,15 @@ function renderCart(){
 
 // ── GENERATE LIST ──
 function renderGenBrands(){
+  renderCatChips("gen-cat-chips", genCategory, function(cat) {
+    genCategory = cat; genBrand = "all"; renderGenBrands();
+  });
   var wrap=document.getElementById("gb"); wrap.innerHTML="";
   var all=document.createElement("div"); all.className="chip"+(genBrand==="all"?" on":""); all.textContent="All Brands";
   all.addEventListener("click",function(){genBrand="all";renderGenBrands();});
   wrap.appendChild(all);
-  BRANDS.forEach(function(br){
+  var brs = brandsForCat(genCategory);
+  brs.forEach(function(br){
     var d=document.createElement("div"); d.className="chip"+(genBrand===br?" on":""); d.textContent=br;
     d.addEventListener("click",function(){genBrand=br;renderGenBrands();});
     wrap.appendChild(d);
@@ -1168,7 +1315,8 @@ function renderGenBrands(){
   c.classList.add("on");
 })})();
 (function(){var __el=document.getElementById("btn-gen");if(!__el)return;__el.addEventListener("click",function(){
-  var brs=genBrand==="all"?BRANDS:[genBrand];
+  var allBrsInCat = genCategory === "all" ? BRANDS : brandsForCat(genCategory);
+  var brs=genBrand==="all"?allBrsInCat:[genBrand];
   var lines=["*VAPE STOCK LIST*","Date: "+new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),""];
   var hasAny=false;
   brs.forEach(function(br){
@@ -1204,27 +1352,104 @@ function renderGenBrands(){
 })})();
 
 // ── HISTORY ──
-function renderHistory(){
-  var el=document.getElementById("hlist"); el.innerHTML="";
-  if(!txLog.length){
-    var empty=document.createElement("div"); empty.className="empty";
-    empty.innerHTML="<div class=\"ei\">&#128235;</div><div class=\"et\">No transactions yet</div>";
-    el.appendChild(empty); return;
+var logFilter = "all";
+var logSearch = "";
+var logShowing = 50;
+
+function renderHistory() {
+  // Apply filters
+  var filtered = txLog.filter(function(h) {
+    if (logFilter !== "all" && h.type !== logFilter) return false;
+    if (logSearch) {
+      var q = logSearch.toLowerCase();
+      return (h.brand||"").toLowerCase().indexOf(q) !== -1 ||
+             (h.flavor||"").toLowerCase().indexOf(q) !== -1 ||
+             (h.category||"").toLowerCase().indexOf(q) !== -1;
+    }
+    return true;
+  });
+
+  // Summary bar
+  var sumEl = document.getElementById("log-summary");
+  if (sumEl) {
+    var totBuy=0, totSell=0, totAdj=0;
+    filtered.forEach(function(h) {
+      if (h.type==="purchase") totBuy += h.qty||0;
+      else if (h.type==="sale") totSell += h.qty||0;
+      else if (h.type==="adj") totAdj += Math.abs(h.qty||0);
+    });
+    sumEl.innerHTML =
+      "<div style='background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);border-radius:8px;padding:6px 12px;font-size:12px'>" +
+        "<span style='color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.5px'>Bought</span><br>" +
+        "<span style='font-family:DM Mono,monospace;font-weight:700;color:var(--grn)'>" + totBuy + " units</span></div>" +
+      "<div style='background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.3);border-radius:8px;padding:6px 12px;font-size:12px'>" +
+        "<span style='color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.5px'>Sold</span><br>" +
+        "<span style='font-family:DM Mono,monospace;font-weight:700;color:var(--red)'>" + totSell + " units</span></div>" +
+      "<div style='background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.3);border-radius:8px;padding:6px 12px;font-size:12px'>" +
+        "<span style='color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.5px'>" + filtered.length + " entries</span><br>" +
+        "<span style='font-family:DM Mono,monospace;font-weight:700;color:var(--amb)'>of " + txLog.length + " total</span></div>";
   }
-  txLog.slice(0,100).forEach(function(h){
-    var item=document.createElement("div"); item.className="hitem";
-    var meta=document.createElement("div"); meta.className="hmeta";
-    var tp=document.createElement("span"); tp.className="htype "+(h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
-    tp.textContent=h.type==="purchase"?"+ Purchase":h.type==="adj"?"~ Adjusted":"- Sale";
-    var dt=document.createElement("span"); dt.className="hdt"; dt.textContent=h.date;
+
+  var el = document.getElementById("hlist"); el.innerHTML = "";
+  if (!filtered.length) {
+    var empty = document.createElement("div"); empty.className = "empty";
+    empty.innerHTML = "<div class='ei'>&#128235;</div><div class='et'>No entries match</div>";
+    el.appendChild(empty);
+    var lm = document.getElementById("log-load-more"); if (lm) lm.style.display = "none";
+    return;
+  }
+
+  var toShow = filtered.slice(0, logShowing);
+  toShow.forEach(function(h) {
+    var item = document.createElement("div"); item.className = "hitem";
+    // Color left border by type
+    var borderColor = h.type==="purchase" ? "rgba(0,229,160,.5)" : h.type==="adj" ? "rgba(255,184,0,.5)" : "rgba(255,77,109,.5)";
+    item.style.borderLeft = "3px solid " + borderColor;
+    item.style.paddingLeft = "11px";
+    var meta = document.createElement("div"); meta.className = "hmeta";
+    var tp = document.createElement("span");
+    tp.className = "htype " + (h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
+    tp.textContent = h.type==="purchase" ? "+ Purchase" : h.type==="adj" ? "~ Adjusted" : "- Sale";
+    var dt = document.createElement("span"); dt.className = "hdt"; dt.textContent = h.date;
     meta.appendChild(tp); meta.appendChild(dt);
-    var det=document.createElement("div"); det.className="hdtl"; det.textContent=h.brand+" · "+h.flavor;
-    var st=document.createElement("strong");
-    var sign=h.type==="sale"?"-":(h.qty>0?"+":"");
-    st.textContent=" "+sign+h.qty+" units";
+    var det = document.createElement("div"); det.className = "hdtl";
+    var cat = h.category || catOfBrand(h.brand) || "";
+    det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
+    var st = document.createElement("strong");
+    var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
+    st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
+    st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
     det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
   });
+
+  var lm = document.getElementById("log-load-more");
+  if (lm) lm.style.display = filtered.length > logShowing ? "block" : "none";
 }
+
+// ── LOG TAB LISTENERS ──
+(function(){
+  var el = document.getElementById("log-filter-row");
+  if (!el) return;
+  el.addEventListener("click", function(e) {
+    var c = e.target.closest("[data-lf]"); if (!c) return;
+    logFilter = c.getAttribute("data-lf");
+    logShowing = 50;
+    document.querySelectorAll("#log-filter-row .fc").forEach(function(x) { x.classList.remove("on"); });
+    c.classList.add("on");
+    renderHistory();
+  });
+})();
+(function(){
+  var el = document.getElementById("log-search");
+  if (!el) return;
+  el.addEventListener("input", function() { logSearch = this.value; logShowing = 50; renderHistory(); });
+})();
+(function(){
+  var el = document.getElementById("btn-log-more");
+  if (!el) return;
+  el.addEventListener("click", function() { logShowing += 50; renderHistory(); });
+})();
+
 (function(){var __el=document.getElementById("btn-clrhist");if(!__el)return;__el.addEventListener("click",function(){
   if(!confirm("Clear all history?")) return;
   txLog=[]; afterChange(); renderHistory();
@@ -1256,19 +1481,19 @@ function exportToExcel(){
   if(typeof XLSX==="undefined"){toast("Excel library not loaded","err");return;}
   var wb=XLSX.utils.book_new();
   var now=new Date();
-  var s1=[["Brand","Total Units","In Stock Flavors","Low Stock (<=3)","Out of Stock"]];
+  var s1=[["Category","Brand","Total Units","In Stock Flavors","Low Stock (<=3)","Out of Stock"]];
   BRANDS.forEach(function(br){
     var total=0,inS=0,low=0,out=0;
-    CATALOG[br].forEach(function(fl){var q=qty(br,fl);total+=q;if(q===0)out++;else if(q<=3)low++;else inS++;});
-    s1.push([br,total,inS,low,out]);
+    (CATALOG[br]||[]).forEach(function(fl){var q=qty(br,fl);total+=q;if(q===0)out++;else if(q<=3)low++;else inS++;});
+    s1.push([catOfBrand(br),br,total,inS,low,out]);
   });
-  var ws1=XLSX.utils.aoa_to_sheet(s1); ws1["!cols"]=[{wch:22},{wch:14},{wch:18},{wch:16},{wch:16}];
+  var ws1=XLSX.utils.aoa_to_sheet(s1); ws1["!cols"]=[{wch:16},{wch:22},{wch:14},{wch:18},{wch:16},{wch:16}];
   XLSX.utils.book_append_sheet(wb,ws1,"Summary");
-  var s2=[["Brand","Flavor","Stock Qty","Status"]];
+  var s2=[["Category","Brand","Flavor","Stock Qty","Status"]];
   BRANDS.forEach(function(br){
-    CATALOG[br].forEach(function(fl){var q=qty(br,fl);s2.push([br,fl,q,q===0?"OUT":q<=3?"LOW":"OK"]);});
+    (CATALOG[br]||[]).forEach(function(fl){var q=qty(br,fl);s2.push([catOfBrand(br),br,fl,q,q===0?"OUT":q<=3?"LOW":"OK"]);});
   });
-  var ws2=XLSX.utils.aoa_to_sheet(s2); ws2["!cols"]=[{wch:22},{wch:34},{wch:12},{wch:8}];
+  var ws2=XLSX.utils.aoa_to_sheet(s2); ws2["!cols"]=[{wch:16},{wch:22},{wch:34},{wch:12},{wch:8}];
   XLSX.utils.book_append_sheet(wb,ws2,"Full Inventory");
   var s3=[["Date","Type","Brand","Flavor","Qty"]];
   if(txLog.length) txLog.forEach(function(h){s3.push([h.date,h.type==="purchase"?"Purchase":h.type==="adj"?"Adjusted":"Sale",h.brand,h.flavor,h.qty]);});
@@ -1296,11 +1521,23 @@ function loadCustomFlavors() {
     var c = localStorage.getItem("vs5_custom");
     if (c) customFlavors = JSON.parse(c);
   } catch(e) {}
-  // Add custom brands first
+  // Restore custom categories
+  Object.keys(customFlavors).forEach(function(key) {
+    if (key.indexOf("__cat__") === 0) {
+      var cat = key.replace("__cat__", "");
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; CATEGORY_NAMES.push(cat); }
+    }
+  });
+  // Restore custom brands and assign to their category
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__brand__") === 0) {
       var br = key.replace("__brand__", "");
       if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); }
+      // Find which category this brand belongs to
+      var catKey = "__catbrand__" + br;
+      var cat = customFlavors[catKey] || "Vape";
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; }
+      if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
     }
   });
   // Merge custom flavors into CATALOG
@@ -1409,7 +1646,7 @@ function renderCustomFlavorList() {
   // set stock
   if (qtyVal > 0) {
     stock[skey(br, name)] = qtyVal;
-    txLog.unshift({ type: "purchase", brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
   }
   saveCustomFlavors(); saveLocal(); updateStats();
   renderStock();
@@ -1444,13 +1681,21 @@ function renderCustomFlavorList() {
 
 // ── MANUAL SELL ──
 var sellBrand = BRANDS[0];
+var genCategory = "all";
 var sellCart = {};
 
 function renderSellBrands() {
+  renderCatChips("sell-cat-chips", sellCategory, function(cat) {
+    sellCategory = cat;
+    var brs = brandsForCat(cat);
+    sellBrand = brs[0] || BRANDS[0];
+    renderSellBrands(); renderSellFlavors();
+  });
   var wrap = document.getElementById("sell-brand-scroll");
   if (!wrap) return;
   wrap.innerHTML = "";
-  BRANDS.forEach(function(br) {
+  var brs = brandsForCat(sellCategory);
+  brs.forEach(function(br) {
     var d = document.createElement("div");
     d.className = "chip" + (br === sellBrand ? " on" : "");
     d.textContent = br;
@@ -1551,7 +1796,7 @@ function renderSellCart() {
       var cur = stock[k] || 0;
       if (q > cur) warn++;
       stock[k] = Math.max(0, cur - q);
-      txLog.unshift({ type: "sale", brand: br, flavor: fl, qty: q, date: new Date().toLocaleString() });
+      txLog.unshift({ type: "sale", category: catOfBrand(br), brand: br, flavor: fl, qty: q, date: new Date().toLocaleString() });
       count++;
     });
     afterChange();
@@ -1562,22 +1807,363 @@ function renderSellCart() {
   });
 })();
 
+
+// ── ADD CATEGORY ──
+function openAddCategoryModal() {
+  var m = document.getElementById("add-category-modal");
+  if (m) m.classList.add("open");
+  var inp = document.getElementById("add-category-input");
+  if (inp) { inp.value = ""; inp.focus(); }
+}
+function closeAddCategoryModal() {
+  var m = document.getElementById("add-category-modal");
+  if (m) m.classList.remove("open");
+  var inp = document.getElementById("add-category-input");
+  if (inp) inp.value = "";
+}
+(function(){var el=document.getElementById("btn-cat-add-category");if(!el)return;el.addEventListener("click",openAddCategoryModal);})();
+(function(){var el=document.getElementById("add-cat-modal-close");if(!el)return;el.addEventListener("click",closeAddCategoryModal);})();
+(function(){var el=document.getElementById("btn-add-category-cancel");if(!el)return;el.addEventListener("click",closeAddCategoryModal);})();
+(function(){var el=document.getElementById("add-category-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeAddCategoryModal();});})();
+(function(){
+  var el = document.getElementById("btn-add-category-confirm");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var inp = document.getElementById("add-category-input");
+    var name = inp ? inp.value.trim() : "";
+    if (!name) { toast("Enter a category name", "err"); return; }
+    if (CATEGORIES[name]) { toast("Category already exists", "warn"); return; }
+    CATEGORIES[name] = [];
+    CATEGORY_NAMES.push(name);
+    customFlavors["__cat__" + name] = true;
+    saveCustomFlavors();
+    catActiveCategory = name;
+    closeAddCategoryModal();
+    renderCatalogPage();
+    toast(name + " category created!", "ok");
+  });
+})();
+
+// ── DELETE CATEGORY ──
+function confirmDeleteCategory(cat) {
+  var brs = CATEGORIES[cat] || [];
+  if (brs.length > 0) {
+    if (!confirm("Delete category \"" + cat + "\"?\nThe " + brs.length + " brand(s) inside will be moved to \"Vape\".")) return;
+    // Move brands to Vape
+    brs.forEach(function(br) {
+      if (!CATEGORIES["Vape"]) CATEGORIES["Vape"] = [];
+      if (CATEGORIES["Vape"].indexOf(br) === -1) CATEGORIES["Vape"].push(br);
+      customFlavors["__catbrand__" + br] = "Vape";
+    });
+  } else {
+    if (!confirm("Delete empty category \"" + cat + "\"?")) return;
+  }
+  delete CATEGORIES[cat];
+  var ci = CATEGORY_NAMES.indexOf(cat);
+  if (ci > -1) CATEGORY_NAMES.splice(ci, 1);
+  delete customFlavors["__cat__" + cat];
+  saveCustomFlavors();
+  catActiveCategory = "Vape";
+  catActiveBrand = brandsForCat("Vape")[0] || BRANDS[0] || null;
+  renderCatalogPage(); renderStockBrands();
+  toast(cat + " category deleted", "warn");
+}
+
+// ── CATALOG EXPORT (CSV) ──
+(function(){
+  var el = document.getElementById("btn-cat-export");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    // CSV format: Category,Brand,Flavor
+    // One row per flavor. Deleted flavors tracked in a comment at the bottom.
+    var rows = ["Category,Brand,Flavor"];
+    CATEGORY_NAMES.forEach(function(cat) {
+      var brands = CATEGORIES[cat] || [];
+      brands.forEach(function(br) {
+        (CATALOG[br] || []).forEach(function(fl) {
+          // Escape fields that contain commas or quotes
+          function csvCell(v) {
+            v = String(v);
+            if (v.indexOf(',') !== -1 || v.indexOf('"') !== -1 || v.indexOf('\n') !== -1) {
+              return '"' + v.replace(/"/g, '""') + '"';
+            }
+            return v;
+          }
+          rows.push(csvCell(cat) + "," + csvCell(br) + "," + csvCell(fl));
+        });
+      });
+    });
+    // Append deleted flavors as a comment section so imports can skip them
+    var deleted = customFlavors["__deleted__"] || [];
+    if (deleted.length) {
+      rows.push("");
+      rows.push("# Deleted flavors (do not remove this section)");
+      deleted.forEach(function(d) {
+        var parts = d.split("~~");
+        var br = parts[0], fl = parts.slice(1).join("~~");
+        rows.push("# DELETED," + br + "," + fl);
+      });
+    }
+    var csv = rows.join("\n");
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "VapeStock_Catalog_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast("Catalog exported as CSV!", "ok");
+  });
+})();
+
+// ── CATALOG IMPORT ──
+var importedCatalogData = null;
+
+(function(){
+  var el = document.getElementById("btn-cat-import-open");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var panel = document.getElementById("cat-import-panel");
+    if (!panel) return;
+    var isOpen = panel.style.display !== "none";
+    panel.style.display = isOpen ? "none" : "block";
+    if (isOpen) resetImportUI();
+  });
+})();
+
+(function(){
+  var el = document.getElementById("btn-cat-pick-file");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var fi = document.getElementById("cat-import-file");
+    if (fi) fi.click();
+  });
+})();
+
+(function(){
+  var el = document.getElementById("cat-import-file");
+  if (!el) return;
+  el.addEventListener("change", function() {
+    var file = el.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var text = e.target.result;
+        // Parse CSV: Category,Brand,Flavor
+        var lines = text.split(/\r?\n/);
+        var parsed = { categories: {}, catalog: {}, deletedFlavors: [] };
+        var hasHeader = false;
+        lines.forEach(function(line) {
+          line = line.trim();
+          if (!line) return;
+          // Skip comment lines starting with #
+          if (line.charAt(0) === "#") {
+            // But capture deleted flavor markers
+            if (line.indexOf("# DELETED,") === 0) {
+              var delParts = parseCsvLine(line.replace("# DELETED,", ""));
+              if (delParts.length >= 2) {
+                parsed.deletedFlavors.push(delParts[0] + "~~" + delParts[1]);
+              }
+            }
+            return;
+          }
+          var parts = parseCsvLine(line);
+          if (parts.length < 3) return;
+          var cat = parts[0].trim(), br = parts[1].trim(), fl = parts[2].trim();
+          // Skip header row
+          if (!hasHeader && cat.toLowerCase() === "category" && br.toLowerCase() === "brand") {
+            hasHeader = true; return;
+          }
+          if (!cat || !br || !fl) return;
+          // Build categories
+          if (!parsed.categories[cat]) parsed.categories[cat] = [];
+          if (parsed.categories[cat].indexOf(br) === -1) parsed.categories[cat].push(br);
+          // Build catalog
+          if (!parsed.catalog[br]) parsed.catalog[br] = [];
+          if (parsed.catalog[br].indexOf(fl) === -1) parsed.catalog[br].push(fl);
+        });
+        if (Object.keys(parsed.catalog).length === 0) {
+          toast("No valid data found — check CSV format: Category,Brand,Flavor", "err"); return;
+        }
+        importedCatalogData = parsed;
+        var fn = document.getElementById("cat-import-filename");
+        if (fn) { fn.textContent = "\u2714 " + file.name; fn.style.display = "block"; }
+        var brands = Object.keys(parsed.catalog);
+        var cats = Object.keys(parsed.categories);
+        var totalFl = brands.reduce(function(s,b){ return s+(parsed.catalog[b]||[]).length; },0);
+        var preview = document.getElementById("cat-import-preview");
+        if (preview) {
+          var lines2 = ["<strong style='color:var(--txt)'>" + cats.length + " categories &middot; " + brands.length + " brands &middot; " + totalFl + " flavors</strong>"];
+          cats.slice(0,4).forEach(function(cat) {
+            var brs = parsed.categories[cat] || [];
+            lines2.push("&bull; <strong>" + cat + "</strong> &mdash; " + brs.slice(0,3).join(", ") + (brs.length > 3 ? "..." : ""));
+          });
+          if (cats.length > 4) lines2.push("&hellip; and " + (cats.length-4) + " more categories");
+          preview.innerHTML = lines2.join("<br>"); preview.style.display = "block";
+        }
+        var act = document.getElementById("cat-import-actions");
+        if (act) act.style.display = "flex";
+      } catch(err) { toast("Could not parse file — check it is a valid CSV", "err"); }
+    };
+    reader.readAsText(file);
+    el.value = "";
+  });
+})();
+
+function resetImportUI() {
+  var fn = document.getElementById("cat-import-filename");
+  var prev = document.getElementById("cat-import-preview");
+  var act = document.getElementById("cat-import-actions");
+  if (fn) { fn.textContent = ""; fn.style.display = "none"; }
+  if (prev) { prev.innerHTML = ""; prev.style.display = "none"; }
+  if (act) act.style.display = "none";
+  importedCatalogData = null;
+}
+
+// ── CSV LINE PARSER ──
+function parseCsvLine(line) {
+  var result = [], cur = "", inQuote = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (inQuote) {
+      if (c === '"' && line[i+1] === '"') { cur += '"'; i++; }
+      else if (c === '"') inQuote = false;
+      else cur += c;
+    } else {
+      if (c === '"') inQuote = true;
+      else if (c === ',') { result.push(cur); cur = ""; }
+      else cur += c;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+function applyCatalogImport(mode) {
+  if (!importedCatalogData || !importedCatalogData.catalog) { toast("No file loaded", "err"); return; }
+  var data = importedCatalogData;
+  if (mode === "replace") {
+    customFlavors = { "__deleted__": data.deletedFlavors || [] };
+    Object.keys(CATALOG).forEach(function(br) { delete CATALOG[br]; });
+    BRANDS.length = 0;
+    Object.keys(CATEGORIES).forEach(function(cat) { delete CATEGORIES[cat]; });
+    CATEGORY_NAMES.length = 0;
+    // Restore categories
+    var importedCats = data.categories || { "Vape": Object.keys(data.catalog) };
+    Object.keys(importedCats).forEach(function(cat) {
+      CATEGORIES[cat] = (importedCats[cat] || []).slice();
+      CATEGORY_NAMES.push(cat);
+      customFlavors["__cat__" + cat] = true;
+    });
+    Object.keys(data.catalog).forEach(function(br) {
+      CATALOG[br] = (data.catalog[br] || []).slice(); BRANDS.push(br);
+      customFlavors["__brand__" + br] = true;
+    });
+  } else {
+    var importedCats = data.categories || { "Vape": Object.keys(data.catalog) };
+    Object.keys(importedCats).forEach(function(cat) {
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; CATEGORY_NAMES.push(cat); customFlavors["__cat__"+cat]=true; }
+      (importedCats[cat]||[]).forEach(function(br){ if(CATEGORIES[cat].indexOf(br)===-1) CATEGORIES[cat].push(br); });
+    });
+    Object.keys(data.catalog).forEach(function(br) {
+      if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); customFlavors["__brand__" + br] = true; }
+      (data.catalog[br] || []).forEach(function(fl) {
+        if (CATALOG[br].indexOf(fl) === -1) {
+          CATALOG[br].push(fl);
+          if (!customFlavors[br]) customFlavors[br] = [];
+          if (customFlavors[br].indexOf(fl) === -1) customFlavors[br].push(fl);
+        }
+      });
+    });
+  }
+  saveCustomFlavors(); saveLocal(); updateStats();
+  catActiveBrand = BRANDS[0] || null;
+  renderCatalogPage(); renderStockBrands(); renderStockGrid();
+  var panel = document.getElementById("cat-import-panel");
+  if (panel) panel.style.display = "none";
+  resetImportUI();
+  toast(mode === "replace" ? "Catalog replaced!" : "Catalog merged!", "ok");
+}
+
+(function(){
+  var el = document.getElementById("btn-cat-do-merge");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    if (confirm("Merge into existing catalog?\nNew brands/flavors added, existing ones kept.")) applyCatalogImport("merge");
+  });
+})();
+
+(function(){
+  var el = document.getElementById("btn-cat-do-replace");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    if (confirm("Replace ENTIRE catalog with imported one?\nAll current brands and flavors will be removed.")) applyCatalogImport("replace");
+  });
+})();
+
+(function(){
+  var el = document.getElementById("btn-cat-import-cancel");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var panel = document.getElementById("cat-import-panel");
+    if (panel) panel.style.display = "none";
+    resetImportUI();
+  });
+})();
+
 // ── CATALOG PAGE HOOK ──
 
 var catActiveBrand = null;
 var catSearchQ = "";
 
+var catActiveCategory = "Vape";
+
 function renderCatalogPage() {
-  catActiveBrand = catActiveBrand || BRANDS[0];
+  catActiveBrand = catActiveBrand || brandsForCat(catActiveCategory)[0] || BRANDS[0];
+  renderCatCategorySection();
   renderCatBrandScroll();
   renderCatFlavorList();
+}
+
+function renderCatCategorySection() {
+  var lbl = document.getElementById("cat-active-cat-label");
+  if (lbl) lbl.textContent = catActiveCategory;
+  var wrap = document.getElementById("cat-category-chips");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  CATEGORY_NAMES.forEach(function(cat) {
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px";
+    var chip = document.createElement("div");
+    chip.className = "catc" + (cat === catActiveCategory ? " on" : "");
+    chip.textContent = cat;
+    chip.addEventListener("click", function() {
+      catActiveCategory = cat;
+      var brs = brandsForCat(cat);
+      catActiveBrand = brs[0] || null;
+      renderCatCategorySection(); renderCatBrandScroll(); renderCatFlavorList();
+    });
+    row.appendChild(chip);
+    // Delete button for custom categories
+    var isCustomCat = !!customFlavors["__cat__" + cat];
+    if (isCustomCat) {
+      var del = document.createElement("span");
+      del.style.cssText = "font-size:11px;color:var(--red);cursor:pointer;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3)";
+      del.textContent = "Delete Category";
+      del.addEventListener("click", function() { confirmDeleteCategory(cat); });
+      row.appendChild(del);
+    }
+    wrap.appendChild(row);
+  });
 }
 
 function renderCatBrandScroll() {
   var wrap = document.getElementById("cat-brand-scroll");
   if (!wrap) return;
   wrap.innerHTML = "";
-  BRANDS.forEach(function(br) {
+  var brs = brandsForCat(catActiveCategory);
+  brs.forEach(function(br) {
     var d = document.createElement("div");
     d.className = "chip" + (br === catActiveBrand ? " on" : "");
     d.textContent = br;
@@ -1684,6 +2270,8 @@ function openAddBrandModal() {
   var m = document.getElementById("add-brand-modal");
   if (!m) return;
   m.classList.add("open");
+  var lbl = document.getElementById("add-brand-cat-label");
+  if (lbl) lbl.textContent = catActiveCategory;
   var inp = document.getElementById("add-brand-input");
   if (inp) { inp.value = ""; inp.focus(); }
 }
@@ -1732,16 +2320,22 @@ function confirmDeleteBrand(br) {
   // Remove from BRANDS
   var idx = BRANDS.indexOf(br);
   if (idx > -1) BRANDS.splice(idx, 1);
+  // Remove from CATEGORIES
+  CATEGORY_NAMES.forEach(function(cat) {
+    var brs = CATEGORIES[cat];
+    if (brs) { var bi = brs.indexOf(br); if (bi > -1) brs.splice(bi, 1); }
+  });
   // Remove from customFlavors
   delete customFlavors["__brand__" + br];
+  delete customFlavors["__catbrand__" + br];
   delete customFlavors[br];
   // Remove stock entries
   Object.keys(stock).forEach(function(k) {
     if (k.indexOf(br + "~~") === 0) delete stock[k];
   });
-  catActiveBrand = BRANDS[0] || null;
+  catActiveBrand = brandsForCat(catActiveCategory)[0] || BRANDS[0] || null;
   saveCustomFlavors(); saveLocal(); updateStats();
-  renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
+  renderCatCategorySection(); renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
   toast(br + " deleted", "warn");
 }
 
@@ -1792,7 +2386,7 @@ function closeCatFlavorModal() {
     customFlavors[br].push(name);
     if (qtyVal > 0) {
       stock[skey(br, name)] = qtyVal;
-      txLog.unshift({ type: "purchase", brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+      txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
     }
     saveCustomFlavors(); saveLocal(); updateStats();
     closeCatFlavorModal();
