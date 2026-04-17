@@ -734,11 +734,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     var data = JSON.parse(e.postData.contents);
     var file = getFile();
     file.setContent(JSON.stringify(data));
-    // Return the file ID so the app can read via Drive's public URL
     return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId()}))
       .setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.toString()}))
+    return ContentService.createTextOutput(JSON.stringify({ok:false, error:err.toString()}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -746,12 +745,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 function doGet(e) {
   var file = getFile();
   var content = file.getContent() || '{}';
-  // Support JSONP callback
-  var cb = e && e.parameter && e.parameter.callback;
-  if (cb) {
-    return ContentService.createTextOutput(cb + '(' + content + ')')
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
   return ContentService.createTextOutput(content)
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -765,8 +758,9 @@ function getFile() {
   } else {
     file = folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);
   }
-  // Make file publicly readable so we can fetch it directly with CORS
-  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e){}
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch(e) {}
   return file;
 }</pre>
     </div>
@@ -834,7 +828,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  try {\n    var data = JSON.parse(e.postData.contents);\n    var file = getFile();\n    file.setContent(JSON.stringify(data));\n    // Return the file ID so the app can read via Drive's public URL\n    return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId()}))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.toString()}))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent() || '{}';\n  // Support JSONP callback\n  var cb = e && e.parameter && e.parameter.callback;\n  if (cb) {\n    return ContentService.createTextOutput(cb + '(' + content + ')')\n      .setMimeType(ContentService.MimeType.JAVASCRIPT);\n  }\n  return ContentService.createTextOutput(content)\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  var file;\n  if (files.hasNext()) {\n    file = files.next();\n  } else {\n    file = folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n  }\n  // Make file publicly readable so we can fetch it directly with CORS\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e){}\n  return file;\n}"
+var GAS_CODE = "function doPost(e) {\n  try {\n    var data = JSON.parse(e.postData.contents);\n    var file = getFile();\n    file.setContent(JSON.stringify(data));\n    return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId()}))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ok:false, error:err.toString()}))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent() || '{}';\n  return ContentService.createTextOutput(content)\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  var file;\n  if (files.hasNext()) {\n    file = files.next();\n  } else {\n    file = folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n  }\n  try {\n    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);\n  } catch(e) {}\n  return file;\n}"
 
 var stock = {};
 var gdFileId = "";  // Google Drive file ID for direct CORS-friendly reading
@@ -3547,33 +3541,96 @@ function gdSave(onDone) {
 }
 
 
-// ── JSONP FETCH (bypasses CORS completely) ──
-function jsonpFetch(url, callbackName, timeoutMs) {
-  return new Promise(function(resolve, reject) {
-    var cbName = callbackName || ('_cb' + Date.now());
-    var timer;
-    var script = document.createElement('script');
-    window[cbName] = function(data) {
-      clearTimeout(timer);
-      document.body.removeChild(script);
-      delete window[cbName];
-      resolve(data);
-    };
-    timer = setTimeout(function() {
-      document.body.removeChild(script);
-      delete window[cbName];
-      reject(new Error('Timeout — Drive did not respond in time'));
-    }, timeoutMs || 10000);
-    script.onerror = function() {
-      clearTimeout(timer);
-      document.body.removeChild(script);
-      delete window[cbName];
-      reject(new Error('Script load error — check your GAS URL'));
-    };
-    script.src = url + '&callback=' + cbName;
-    document.body.appendChild(script);
+// ── PROXY FETCH (bypasses CORS using public CORS proxies) ──
+function proxyFetch(url) {
+  // Try multiple CORS proxies in sequence until one works
+  var proxies = [
+    "https://corsproxy.io/?url=" + encodeURIComponent(url),
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+    "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url)
+  ];
+  
+  function tryProxy(index) {
+    if(index >= proxies.length) {
+      return Promise.reject(new Error("All proxies failed. Check your internet connection."));
+    }
+    return fetch(proxies[index])
+    .then(function(r) {
+      if(!r.ok) throw new Error("Proxy " + index + " returned " + r.status);
+      return r.text();
+    })
+    .then(function(text) {
+      text = text.trim();
+      if(!text || text.charAt(0) === '<') throw new Error("Proxy returned HTML not JSON");
+      return JSON.parse(text);
+    })
+    .catch(function(err) {
+      console.warn("Proxy " + index + " failed:", err.message);
+      return tryProxy(index + 1);
+    });
+  }
+  
+  return tryProxy(0);
+}
+
+// Keep jsonpFetch name as alias so existing calls work
+function jsonpFetch(url) {
+  return proxyFetch(url);
+}
+
+
+// ── SAVE TO DRIVE ──
+function gdSave(onDone) {
+  if(!gdConnected) { toast("Not connected to Google Drive","err"); return; }
+  var saveBtn = document.getElementById("btn-save-drive");
+  if(saveBtn) { saveBtn.textContent = "⏳ Saving..."; saveBtn.disabled = true; }
+  setSyncDot("busy","saving...");
+  var ts = Date.now();
+  var payload = JSON.stringify({
+    stock: stock,
+    txLog: txLog.slice(0,2000),
+    customFlavors: customFlavors,
+    customers: customers,
+    defaultPrices: defaultPrices,
+    customerPrices: customerPrices,
+    ts: ts
+  });
+
+  function onSaveDone() {
+    setSyncDot("ok","saved ✓");
+    addSyncLog("push");
+    toast("Saved to Google Drive ✓","ok");
+    if(saveBtn) { saveBtn.textContent = "⬆ Save"; saveBtn.disabled = false; }
+    if(onDone) onDone();
+  }
+  function onSaveFail(err) {
+    setSyncDot("err","error");
+    if(saveBtn) { saveBtn.textContent = "⬆ Save"; saveBtn.disabled = false; }
+    toast("Save failed — check connection","err");
+    console.warn("gdSave:", err);
+  }
+
+  // Try POST with CORS first (to read fileId from response)
+  fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload})
+  .then(function(r){ return r.json(); })
+  .then(function(resp) {
+    if(resp && resp.fileId) {
+      gdFileId = resp.fileId;
+      try { localStorage.setItem("vs5_gdfileid", gdFileId); } catch(e){}
+    }
+    onSaveDone();
+  })
+  .catch(function() {
+    // CORS blocked — fall back to no-cors (data still saves, just can't read response)
+    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
+    .then(function(){ onSaveDone(); })
+    .catch(function(err){ onSaveFail(err); });
   });
 }
+
+
+// ── JSONP FETCH (bypasses CORS completely) ──
+
 
 // ── REFRESH FROM DRIVE ──
 function gdRefresh() {
@@ -3581,14 +3638,10 @@ function gdRefresh() {
   var refreshBtn = document.getElementById("btn-refresh-drive");
   if(refreshBtn) { refreshBtn.textContent = "⏳ Loading..."; refreshBtn.disabled = true; }
   setSyncDot("busy","loading...");
-  
-  // Method 1: Direct Drive file URL (has CORS headers) - if we have fileId
-  // Method 2: JSONP via script tag - if no fileId yet
-  // Method 3: Fall back to no-cors and show instructions
-  
+
   function applyData(d) {
     if(!d || typeof d !== 'object') throw new Error("Invalid data from Drive");
-    if(!d.stock && !d.customFlavors && !d.ts) throw new Error("Drive file empty — Save from other device first");
+    if(!d.stock && !d.customFlavors && !d.ts) throw new Error("Drive file is empty — tap Save on the other device first");
     if(d.stock) stock = d.stock;
     if(d.txLog) txLog = d.txLog;
     if(d.customFlavors) {
@@ -3611,40 +3664,35 @@ function gdRefresh() {
     setSyncDot("ok","updated ✓");
     toast("Updated from Google Drive ✓","ok");
   }
-  
-  function onError(msg) {
+
+  function onFail(msg) {
     if(refreshBtn) { refreshBtn.textContent = "⬇ Refresh"; refreshBtn.disabled = false; }
     setSyncDot("err","error");
     toast(msg.substring(0,80),"err");
     console.error("gdRefresh:", msg);
   }
-  
-  // Try direct Drive file URL first (has proper CORS headers)
+
+  // Method 1: Direct Drive file URL (has CORS headers, works if we have fileId)
   if(gdFileId) {
     var driveUrl = "https://drive.google.com/uc?export=download&id=" + gdFileId + "&t=" + Date.now();
     fetch(driveUrl)
     .then(function(r){ return r.text(); })
     .then(function(text){
       text = text.trim();
-      var d = JSON.parse(text);
-      applyData(d);
+      if(text.charAt(0) !== '{') throw new Error("not json");
+      applyData(JSON.parse(text));
     })
-    .catch(function(err) {
-      console.warn("Direct Drive failed, trying JSONP:", err.message);
-      tryJsonp();
+    .catch(function() {
+      // Method 2: CORS proxy
+      proxyFetch(gdUrl + "?t=" + Date.now())
+      .then(applyData)
+      .catch(function(err){ onFail(err.message || String(err)); });
     });
   } else {
-    tryJsonp();
-  }
-  
-  function tryJsonp() {
-    jsonpFetch(gdUrl + "?t=" + Date.now(), '_gdRefresh' + Date.now(), 12000)
-    .then(function(d) {
-      applyData(d);
-    })
-    .catch(function(err) {
-      onError((err && err.message) ? err.message : String(err));
-    });
+    // No fileId yet — use CORS proxy directly
+    proxyFetch(gdUrl + "?t=" + Date.now())
+    .then(applyData)
+    .catch(function(err){ onFail(err.message || String(err)); });
   }
 }
 
@@ -3664,31 +3712,26 @@ function gdRefresh() {
     if(!gdConnected) { toast("Connect first","err"); return; }
     el.textContent = "⏳ Testing...";
     var result = document.getElementById("test-drive-result");
-    if(result) { result.style.display="block"; result.textContent = "Testing methods...\n"; }
-    // Test 1: JSONP
-    jsonpFetch(gdUrl + "?t=" + Date.now(), '_gdTest' + Date.now(), 8000)
+    if(result) { result.style.display="block"; result.textContent = "Testing CORS proxies...\n"; }
+    proxyFetch(gdUrl + "?t=" + Date.now())
     .then(function(d){
       el.textContent = "🔍 Test Drive Response";
-      var fid = d && d.fileId ? d.fileId : gdFileId;
-      if(result) result.textContent = "✓ JSONP works!\nFileId: " + (fid||"(none yet - save first)") + "\nData keys: " + Object.keys(d||{}).join(", ");
+      if(result) result.textContent = "✓ PROXY WORKS!\nKeys: " + Object.keys(d||{}).join(", ") + (d.fileId ? "\nFile ID: "+d.fileId : "\n(No fileId yet — tap Save first)");
     })
     .catch(function(err){
-      if(result) result.textContent += "JSONP failed: " + (err.message||err) + "\n";
-      // Test 2: Direct Drive URL
+      el.textContent = "🔍 Test Drive Response";
       if(gdFileId) {
+        // Try direct Drive URL
         fetch("https://drive.google.com/uc?export=download&id=" + gdFileId)
         .then(function(r){ return r.text(); })
-        .then(function(t){ 
-          el.textContent = "🔍 Test Drive Response";
-          if(result) result.textContent += "✓ Direct Drive URL works!\n" + t.substring(0,100);
+        .then(function(t){
+          if(result) result.textContent = "✓ DIRECT DRIVE URL WORKS!\n" + t.substring(0,200);
         })
         .catch(function(e2){
-          el.textContent = "🔍 Test Drive Response";
-          if(result) result.textContent += "Direct Drive also failed: " + e2.message + "\nSave first to get file ID.";
+          if(result) result.textContent = "✗ All methods failed:\n- Proxy: " + (err.message||err) + "\n- Direct: " + e2.message;
         });
       } else {
-        el.textContent = "🔍 Test Drive Response";
-        if(result) result.textContent += "No file ID yet — tap Save first, then test again.";
+        if(result) result.textContent = "✗ Proxy failed: " + (err.message||err) + "\nTap Save first to get Drive file ID, then test again.";
       }
     });
   });
