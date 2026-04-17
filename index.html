@@ -1758,34 +1758,57 @@ function loadCustomFlavors() {
     var c = localStorage.getItem("vs5_custom");
     if (c) customFlavors = JSON.parse(c);
   } catch(e) {}
-  // Restore custom categories
+  // Restore custom categories (empty shells first)
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__cat__") === 0) {
       var cat = key.replace("__cat__", "");
       if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; CATEGORY_NAMES.push(cat); }
     }
   });
-  // Restore custom brands and assign to their category
+  // Restore custom brands and assign to their saved category
+  // Also track which brands have an explicit category assignment
+  var assignedBrands = {};
+  Object.keys(customFlavors).forEach(function(key) {
+    if (key.indexOf("__catbrand__") === 0) {
+      var br = key.replace("__catbrand__", "");
+      assignedBrands[br] = customFlavors[key];
+    }
+  });
+  // Rebuild CATEGORIES["Vape"] to only include brands NOT assigned elsewhere
+  // Remove from Vape any brand that has an explicit assignment to another category
+  Object.keys(assignedBrands).forEach(function(br) {
+    var cat = assignedBrands[br];
+    if (cat !== "Vape") {
+      // Remove from Vape if it's there
+      CATEGORIES["Vape"] = (CATEGORIES["Vape"] || []).filter(function(b) { return b !== br; });
+      // Add to its correct category
+      if (!CATEGORIES[cat]) CATEGORIES[cat] = [];
+      if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
+    }
+  });
+  // Restore custom brands
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__brand__") === 0) {
       var br = key.replace("__brand__", "");
       if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); }
-      // Find which category this brand belongs to
-      var catKey = "__catbrand__" + br;
-      var cat = customFlavors[catKey] || "Vape";
-      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; }
+      var cat = assignedBrands[br] || "Vape";
+      if (!CATEGORIES[cat]) CATEGORIES[cat] = [];
       if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
+      // Make sure it's not duplicated in Vape if assigned elsewhere
+      if (cat !== "Vape") {
+        CATEGORIES["Vape"] = (CATEGORIES["Vape"] || []).filter(function(b) { return b !== br; });
+      }
     }
   });
   // Merge custom flavors into CATALOG
   Object.keys(customFlavors).forEach(function(br) {
-    if (br.indexOf("__") === 0) return; // skip __brand__, __deleted__ meta keys
+    if (br.indexOf("__") === 0) return;
     if (!CATALOG[br]) CATALOG[br] = [];
     customFlavors[br].forEach(function(fl) {
       if (CATALOG[br].indexOf(fl) === -1) CATALOG[br].push(fl);
     });
   });
-  // Apply deletions — remove any flavor that was deleted by the user
+  // Apply deletions
   var deleted = customFlavors["__deleted__"] || [];
   deleted.forEach(function(delKey) {
     var sep = delKey.indexOf("~~");
@@ -2357,7 +2380,11 @@ var catSearchQ = "";
 var catActiveCategory = "Vape";
 
 function renderCatalogPage() {
-  catActiveBrand = catActiveBrand || brandsForCat(catActiveCategory)[0] || BRANDS[0];
+  // Make sure catActiveBrand belongs to catActiveCategory
+  var brsInCat = brandsForCat(catActiveCategory);
+  if (!catActiveBrand || brsInCat.indexOf(catActiveBrand) === -1) {
+    catActiveBrand = brsInCat[0] || null;
+  }
   renderCatCategorySection();
   renderCatBrandScroll();
   renderCatFlavorList();
@@ -2413,6 +2440,16 @@ function renderCatFlavorList() {
   var container = document.getElementById("cat-flavor-list");
   if (!container) return;
   container.innerHTML = "";
+  // No brand selected (empty category)
+  if (!catActiveBrand) {
+    var brs = brandsForCat(catActiveCategory);
+    if (!brs.length) {
+      container.innerHTML = "<div class='empty' style='padding:24px 0'><div class='ei'>&#128230;</div><div class='et'>No brands yet in \"" + catActiveCategory + "\".<br>Tap + Brand to add one.</div></div>";
+    } else {
+      container.innerHTML = "<div class='empty' style='padding:24px 0'><div class='et'>Select a brand above to manage its flavors.</div></div>";
+    }
+    return;
+  }
   var q = catSearchQ.toLowerCase();
   var flavors = (CATALOG[catActiveBrand] || []).filter(function(fl) {
     return !q || fl.toLowerCase().indexOf(q) !== -1;
@@ -2532,19 +2569,21 @@ function closeAddBrandModal() {
     var name = inp ? inp.value.trim() : "";
     if (!name) { toast("Enter a brand name", "err"); return; }
     if (CATALOG[name]) { toast("Brand already exists", "warn"); return; }
-    // Add to CATALOG
+    // Add to CATALOG with empty flavor list
     CATALOG[name] = [];
-    // Mark as custom brand
+    // Mark as custom brand and record which category it belongs to
     customFlavors["__brand__" + name] = true;
-    saveCustomFlavors();
-    // Update BRANDS
+    customFlavors["__catbrand__" + name] = catActiveCategory;
+    // Add to the current active category
+    if (!CATEGORIES[catActiveCategory]) CATEGORIES[catActiveCategory] = [];
+    if (CATEGORIES[catActiveCategory].indexOf(name) === -1) CATEGORIES[catActiveCategory].push(name);
+    // Add to global BRANDS list
     if (BRANDS.indexOf(name) === -1) BRANDS.push(name);
     catActiveBrand = name;
+    saveCustomFlavors(); saveLocal();
     closeAddBrandModal();
-    renderCatBrandScroll();
-    renderCatFlavorList();
-    renderStockBrands();
-    toast(name + " brand added!", "ok");
+    renderCatCategorySection(); renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
+    toast(name + " added to " + catActiveCategory, "ok");
   });
 })();
 
