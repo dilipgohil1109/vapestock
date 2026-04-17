@@ -765,6 +765,10 @@ function getFile() {
       <button class="btn bdgr bsm" id="btn-gd-disc" style="display:none">Disconnect</button>
     </div>
     <div class="status-box" id="gd-status"></div>
+    <div style="margin-top:10px;display:none" id="test-drive-wrap">
+      <button class="btn bsec bsm" id="btn-test-drive">🔍 Test Drive Response</button>
+      <div id="test-drive-result" style="margin-top:8px;font-size:11px;font-family:'DM Mono',monospace;background:var(--sur2);border-radius:var(--rs);padding:8px;display:none;word-break:break-all;color:var(--txt2);max-height:120px;overflow-y:auto"></div>
+    </div>
   </div>
   <div class="scard">
     <div class="scard-t" style="color:var(--red)">Reset All Data</div>
@@ -1095,6 +1099,8 @@ function gdConnect(url) {
   var refreshBtn = document.getElementById("btn-refresh-drive");
   if(saveBtn) saveBtn.style.display = "inline-block";
   if(refreshBtn) refreshBtn.style.display = "inline-block";
+  var testWrap = document.getElementById("test-drive-wrap");
+  if(testWrap) testWrap.style.display = "block";
   clearInterval(gdPollTimer);
   // Test with a simple GET — GAS GET requests are always CORS-free
   fetch(gdUrl + "?ping=" + Date.now())
@@ -3546,23 +3552,20 @@ function gdRefresh() {
   var refreshBtn = document.getElementById("btn-refresh-drive");
   if(refreshBtn) { refreshBtn.textContent = "⏳ Loading..."; refreshBtn.disabled = true; }
   setSyncDot("busy","loading...");
-  // Google Apps Script GET — must follow redirects and allow cross-origin
-  fetch(gdUrl + "?t=" + Date.now(), {
-    method: "GET",
-    redirect: "follow"
-  })
-  .then(function(r){
-    if(!r.ok) throw new Error("Server returned " + r.status);
-    return r.text();
-  })
+  // Simple fetch — same as connection test which already works
+  fetch(gdUrl + "?t=" + Date.now())
+  .then(function(r){ return r.text(); })
   .then(function(text){
-    // Strip any BOM or whitespace
     text = text.trim().replace(/^\uFEFF/, "");
-    if(!text || text === "null" || text === "undefined") throw new Error("Drive returned empty response");
+    if(!text || text === "{}" || text === "null") {
+      throw new Error("Drive file is empty. Save from the other device first.");
+    }
     var d;
-    try { d = JSON.parse(text); } catch(e) { throw new Error("Invalid data from Drive: " + text.substring(0,80)); }
-    if(!d || typeof d !== "object") throw new Error("Drive file is empty — save from the other device first");
-    // Apply ALL fields unconditionally — explicit user-requested refresh
+    try { d = JSON.parse(text); } catch(e) {
+      // Show first 120 chars so we know what GAS is returning
+      throw new Error("Bad response: " + text.substring(0,120));
+    }
+    // Apply everything unconditionally
     if(d.stock) stock = d.stock;
     if(d.txLog) txLog = d.txLog;
     if(d.customFlavors) {
@@ -3587,9 +3590,9 @@ function gdRefresh() {
   .catch(function(err){
     if(refreshBtn) { refreshBtn.textContent = "⬇ Refresh"; refreshBtn.disabled = false; }
     setSyncDot("err","error");
-    var msg = err.message || "Refresh failed";
-    toast(msg, "err");
-    console.error("gdRefresh error:", err);
+    var msg = (err && err.message) ? err.message : String(err);
+    toast(msg.substring(0,80), "err");
+    console.error("gdRefresh error:", msg);
   });
 }
 
@@ -3598,6 +3601,32 @@ function gdRefresh() {
   if(s) s.addEventListener("click", function(){ gdSave(); });
   var r = document.getElementById("btn-refresh-drive");
   if(r) r.addEventListener("click", function(){ gdRefresh(); });
+})();
+
+
+// ── TEST DRIVE BUTTON ──
+(function(){
+  var el = document.getElementById("btn-test-drive");
+  if(!el) return;
+  el.addEventListener("click", function(){
+    if(!gdConnected) { toast("Connect first","err"); return; }
+    el.textContent = "⏳ Testing...";
+    var result = document.getElementById("test-drive-result");
+    if(result) { result.style.display="block"; result.textContent = "Fetching..."; }
+    fetch(gdUrl + "?t=" + Date.now())
+    .then(function(r){
+      var status = r.status + " " + r.statusText;
+      return r.text().then(function(text){ return {status:status, text:text}; });
+    })
+    .then(function(d){
+      el.textContent = "🔍 Test Drive Response";
+      if(result) result.textContent = "Status: " + d.status + "\nResponse: " + d.text.substring(0,300);
+    })
+    .catch(function(err){
+      el.textContent = "🔍 Test Drive Response";
+      if(result) result.textContent = "FETCH ERROR: " + (err.message||String(err));
+    });
+  });
 })();
 
 // ── INIT ──
@@ -3614,6 +3643,8 @@ if(gdUrl){
   var refreshBtn = document.getElementById("btn-refresh-drive");
   if(saveBtn) saveBtn.style.display = "inline-block";
   if(refreshBtn) refreshBtn.style.display = "inline-block";
+  var testWrap = document.getElementById("test-drive-wrap");
+  if(testWrap) testWrap.style.display = "block";
   // Try to pull — if it works we show online, if not we'll keep trying via poll
   gdPull();
   // auto-poll removed
