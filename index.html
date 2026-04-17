@@ -1045,18 +1045,33 @@ function gdPull() {
   .then(function(text){
     var d;
     try { d = JSON.parse(text); } catch(e) { throw new Error("Invalid JSON from Drive"); }
-    if(d && d.ts && d.ts>gdLastTs){
-      gdLastTs=d.ts;
-      if(d.stock) stock=d.stock;
-      if(d.txLog) txLog=d.txLog;
-      if(d.customFlavors) { customFlavors=d.customFlavors; loadCustomFlavors(); }
-      if(d.customers) customers=d.customers;
-      if(d.defaultPrices) defaultPrices=d.defaultPrices;
-      if(d.customerPrices) customerPrices=d.customerPrices;
+    // Accept data if ts is newer OR if we have no local ts yet (fresh device)
+    var shouldApply = d && d.ts && (d.ts > gdLastTs || gdLastTs === 0);
+    if(shouldApply){
+      gdLastTs = d.ts;
+      if(d.stock) stock = d.stock;
+      if(d.txLog) txLog = d.txLog;
+      if(d.customFlavors) {
+        // Apply Drive's customFlavors directly then rebuild catalog
+        customFlavors = d.customFlavors;
+        rebuildCatalogFromFlavors();
+        // Persist to localStorage so it survives refresh
+        try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(e){}
+      }
+      if(d.customers) customers = d.customers;
+      if(d.defaultPrices) defaultPrices = d.defaultPrices;
+      if(d.customerPrices) customerPrices = d.customerPrices;
       savePricing(); saveLocal();
-      renderStockGrid(); renderHistory(); updateStats();
+      // Re-render everything
+      renderStock(); renderHistory(); updateStats();
+      // Re-render catalog if open
+      if(document.getElementById("pg-catalog") && document.getElementById("pg-catalog").classList.contains("on")) {
+        renderCatalogPage();
+      }
       addSyncLog("pull");
       toast("Synced from Drive ✓","ok");
+    } else if(d && !d.ts) {
+      // Drive file exists but has no ts — still show online
     }
     setSyncDot("ok","online ✓");
   })
@@ -1836,52 +1851,68 @@ var customFlavors = {};
 var addModalBrand = BRANDS[0];
 
 function loadCustomFlavors() {
+  // Read from localStorage if not already set by Drive pull
   try {
     var c = localStorage.getItem("vs5_custom");
     if (c) customFlavors = JSON.parse(c);
   } catch(e) {}
-  // Restore custom categories (empty shells first)
+  rebuildCatalogFromFlavors();
+}
+
+function rebuildCatalogFromFlavors() {
+  // Fully reset CATEGORIES to prevent stale data
+  CATEGORY_NAMES.length = 0;
+  var keys = Object.keys(CATEGORIES);
+  for (var i = 0; i < keys.length; i++) delete CATEGORIES[keys[i]];
+
+  // Start with Vape containing only built-in brands
+  var builtInBrands = Object.keys(CATALOG).filter(function(br) {
+    return !customFlavors["__brand__"+br];
+  });
+  CATEGORIES["Vape"] = builtInBrands.slice();
+  CATEGORY_NAMES.push("Vape");
+
+  // Add custom categories
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__cat__") === 0) {
       var cat = key.replace("__cat__", "");
       if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; CATEGORY_NAMES.push(cat); }
     }
   });
-  // Restore custom brands and assign to their saved category
-  // Also track which brands have an explicit category assignment
+
+  // Build brand assignment map
   var assignedBrands = {};
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__catbrand__") === 0) {
-      var br = key.replace("__catbrand__", "");
-      assignedBrands[br] = customFlavors[key];
+      assignedBrands[key.replace("__catbrand__", "")] = customFlavors[key];
     }
   });
-  // Rebuild CATEGORIES["Vape"] to only include brands NOT assigned elsewhere
-  // Remove from Vape any brand that has an explicit assignment to another category
+
+  // Move built-in brands that are explicitly assigned away from Vape
   Object.keys(assignedBrands).forEach(function(br) {
     var cat = assignedBrands[br];
     if (cat !== "Vape") {
-      // Remove from Vape if it's there
-      CATEGORIES["Vape"] = (CATEGORIES["Vape"] || []).filter(function(b) { return b !== br; });
-      // Add to its correct category
-      if (!CATEGORIES[cat]) CATEGORIES[cat] = [];
+      CATEGORIES["Vape"] = (CATEGORIES["Vape"]||[]).filter(function(b){ return b !== br; });
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; }
       if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
     }
   });
-  // Restore custom brands
+
+  // Add custom brands to BRANDS and CATALOG
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__brand__") === 0) {
       var br = key.replace("__brand__", "");
-      if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); }
+      if (!CATALOG[br]) CATALOG[br] = [];
+      if (BRANDS.indexOf(br) === -1) BRANDS.push(br);
       var cat = assignedBrands[br] || "Vape";
-      if (!CATEGORIES[cat]) CATEGORIES[cat] = [];
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; }
       if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
-      // Make sure it's not duplicated in Vape if assigned elsewhere
       if (cat !== "Vape") {
-        CATEGORIES["Vape"] = (CATEGORIES["Vape"] || []).filter(function(b) { return b !== br; });
+        CATEGORIES["Vape"] = (CATEGORIES["Vape"]||[]).filter(function(b){ return b !== br; });
       }
     }
   });
+
   // Merge custom flavors into CATALOG
   Object.keys(customFlavors).forEach(function(br) {
     if (br.indexOf("__") === 0) return;
@@ -1890,19 +1921,17 @@ function loadCustomFlavors() {
       if (CATALOG[br].indexOf(fl) === -1) CATALOG[br].push(fl);
     });
   });
+
   // Apply deletions
   var deleted = customFlavors["__deleted__"] || [];
   deleted.forEach(function(delKey) {
     var sep = delKey.indexOf("~~");
     if (sep === -1) return;
     var br = delKey.substring(0, sep);
-    var fl = delKey.substring(sep + 2);
-    if (CATALOG[br]) {
-      CATALOG[br] = CATALOG[br].filter(function(f) { return f !== fl; });
-    }
+    var fl = delKey.substring(sep+2);
+    if (CATALOG[br]) CATALOG[br] = CATALOG[br].filter(function(f){ return f !== fl; });
   });
 }
-
 function saveCustomFlavors() {
   try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(e) {}
 }
