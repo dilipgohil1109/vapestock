@@ -217,6 +217,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
+      <button id="btn-sync-now" title="Sync Now" style="display:none;margin-left:4px;padding:3px 8px;border-radius:50px;border:1px solid var(--acc);background:transparent;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">&#8635; Sync</button>
       <div class="hstats">
         <div class="hs"><div class="hsv" id="hs-tot">0</div><div class="hsl">Units</div></div>
         <div class="hs"><div class="hsv" style="color:var(--amb)" id="hs-low">0</div><div class="hsl">Low</div></div>
@@ -711,7 +712,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   <p class="stitle">Google Drive Sync</p>
   <div class="info-box">
     <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
-    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
+    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors &middot; Customers &middot; Prices</p>
+    <p><strong style="color:var(--txt)">Auto-sync:</strong> Pulls from Drive every <strong>5 seconds</strong> automatically. Pushes any change within 1.5 seconds. Use the <strong style="color:var(--acc)">⟳ Sync</strong> button in the header to force an immediate sync anytime.</p>
     <p style="color:var(--grn)">&#10003; The Google Apps Script code has not changed — no update needed if you already set it up.</p>
   </div>
   <div class="scard">
@@ -1021,8 +1023,12 @@ function gdPull() {
       savePricing();
       saveLocal();
       renderStockGrid(); renderHistory(); updateStats();
+      toast("Data updated from Drive","ok");
     }
-    setSyncDot("ok","live");
+    // Show last synced time
+    var now = new Date();
+    var t = now.getHours().toString().padStart(2,"0")+":"+now.getMinutes().toString().padStart(2,"0")+":"+now.getSeconds().toString().padStart(2,"0");
+    setSyncDot("ok","synced "+t);
   }).catch(function(){ setSyncDot("err","offline"); });
 }
 function gdConnect(url) {
@@ -1030,13 +1036,18 @@ function gdConnect(url) {
   gdUrl=url.trim(); gdConnected=true; saveLocal();
   setSyncDot("busy","connecting..."); showGdStatus("busy","Connecting...");
   document.getElementById("btn-gd-disc").style.display="";
-  gdPull(); clearInterval(gdPollTimer); gdPollTimer=setInterval(gdPull,10000);
+  // Show Sync Now button
+  var syncBtn = document.getElementById("btn-sync-now");
+  if (syncBtn) syncBtn.style.display = "inline-block";
+  gdPull(); clearInterval(gdPollTimer); gdPollTimer=setInterval(gdPull,5000);
   toast("Google Drive connected!","ok");
 }
 function gdDisconnect() {
   gdConnected=false; gdUrl=""; clearInterval(gdPollTimer);
   setSyncDot("","local"); document.getElementById("btn-gd-disc").style.display="none";
   document.getElementById("gd-url").value=""; hideGdStatus(); saveLocal();
+  var syncBtn = document.getElementById("btn-sync-now");
+  if (syncBtn) syncBtn.style.display = "none";
   toast("Disconnected","warn");
 }
 function showGdStatus(type,msg){ var el=document.getElementById("gd-status"); el.textContent=msg; el.className="status-box "+type; el.style.display="block"; }
@@ -3349,6 +3360,25 @@ function renderPsPage() {
   });
 })();
 
+// ── SYNC NOW BUTTON ──
+(function(){
+  var el = document.getElementById("btn-sync-now");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    if (!gdConnected) { toast("Not connected to Google Drive", "err"); return; }
+    setSyncDot("busy", "syncing...");
+    el.textContent = "⟳ ...";
+    // Push first then pull
+    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({stock:stock, txLog:txLog.slice(0,2000), customFlavors:customFlavors,
+        customers:customers, defaultPrices:defaultPrices, customerPrices:customerPrices, ts:Date.now()})
+    }).then(function(r){ return r.json(); })
+    .then(function(){ gdPull(); })
+    .catch(function(){ setSyncDot("err","offline"); })
+    .finally(function(){ el.textContent = "⟳ Sync"; });
+  });
+})();
+
 // ── INIT ──
 loadLocal();
 loadPricing();
@@ -3358,7 +3388,9 @@ updateStats();
 if(gdUrl){
   gdConnected=true; setSyncDot("busy","connecting...");
   document.getElementById("btn-gd-disc").style.display="";
-  gdPull(); gdPollTimer=setInterval(gdPull,10000);
+  var syncBtn = document.getElementById("btn-sync-now");
+  if (syncBtn) syncBtn.style.display = "inline-block";
+  gdPull(); gdPollTimer=setInterval(gdPull,5000);
 } else { setSyncDot("","local"); }
 
 })();
