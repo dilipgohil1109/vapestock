@@ -220,7 +220,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
-      <button id="btn-sync-now" title="Sync Now" style="display:none;margin-left:4px;padding:3px 8px;border-radius:50px;border:1px solid var(--acc);background:transparent;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">&#8635; Sync</button>
+      <button id="btn-save-drive" title="Save to Google Drive" style="display:none;margin-left:4px;padding:3px 8px;border-radius:50px;border:1px solid var(--grn);background:transparent;color:var(--grn);font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">&#11014; Save</button>
+      <button id="btn-refresh-drive" title="Refresh from Google Drive" style="display:none;margin-left:4px;padding:3px 8px;border-radius:50px;border:1px solid var(--acc);background:transparent;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">&#11015; Refresh</button>
       <div class="hstats">
         <div class="hs"><div class="hsv" id="hs-tot">0</div><div class="hsl">Units</div></div>
         <div class="hs"><div class="hsv" style="color:var(--amb)" id="hs-low">0</div><div class="hsl">Low</div></div>
@@ -714,10 +715,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <div class="pg" id="pg-sync">
   <p class="stitle">Google Drive Sync</p>
   <div class="info-box">
-    <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
-    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors &middot; Customers &middot; Prices</p>
-    <p><strong style="color:var(--txt)">Auto-sync:</strong> Pulls from Drive every <strong>5 seconds</strong> automatically. Pushes any change within 1.5 seconds. Use the <strong style="color:var(--acc)">⟳ Sync</strong> button in the header to force an immediate sync anytime.</p>
-    <p style="color:var(--grn)">&#10003; No changes needed to your Apps Script — the original code still works.</p>
+    <p><strong style="color:var(--acc)">How it works:</strong> Your data is stored in a JSON file in your Google Drive. Use the two buttons in the header to control sync manually.</p>
+    <p><strong style="color:var(--grn)">&#11014; Save</strong> — pushes all your current data to Google Drive. Do this after making changes so the other device can see them.</p>
+    <p><strong style="color:var(--acc)">&#11015; Refresh</strong> — pulls the latest data from Google Drive and updates this device. Tap this on the other device after someone has saved.</p>
+    <p style="color:var(--txt3);font-size:11px">Both devices must be connected with the same Google Apps Script URL.</p>
   </div>
   <div class="scard">
     <div class="scard-t">Step 1 &mdash; One-time Setup</div>
@@ -997,7 +998,7 @@ function updateStats() {
   document.getElementById("hs-out").textContent = out;
 }
 
-function afterChange() { saveLocal(); updateStats(); if(gdConnected){ clearTimeout(gdPushTimer); gdPushTimer=setTimeout(gdPush,1500); } }
+function afterChange() { saveLocal(); updateStats(); }
 
 // ── GOOGLE DRIVE ──
 function gdPush() {
@@ -1090,8 +1091,10 @@ function gdConnect(url) {
   setSyncDot("busy","connecting...");
   showGdStatus("busy","Testing connection...");
   document.getElementById("btn-gd-disc").style.display="";
-  var syncBtn = document.getElementById("btn-sync-now");
-  if(syncBtn) syncBtn.style.display = "inline-block";
+  var saveBtn = document.getElementById("btn-save-drive");
+  var refreshBtn = document.getElementById("btn-refresh-drive");
+  if(saveBtn) saveBtn.style.display = "inline-block";
+  if(refreshBtn) refreshBtn.style.display = "inline-block";
   clearInterval(gdPollTimer);
   // Test with a simple GET — GAS GET requests are always CORS-free
   fetch(gdUrl + "?ping=" + Date.now())
@@ -1105,7 +1108,7 @@ function gdConnect(url) {
     showGdStatus("ok","✓ Connected! Google Drive sync is active.");
     toast("Google Drive connected ✓","ok");
     gdPull();
-    gdPollTimer = setInterval(gdPull, 5000);
+    // auto-poll removed
   })
   .catch(function(err){
     // Connection test failed — but this may be a CORS error on the test itself
@@ -1115,7 +1118,7 @@ function gdConnect(url) {
     showGdStatus("ok","✓ Connected — syncing in background.");
     toast("Google Drive connected ✓","ok");
     gdPull();
-    gdPollTimer = setInterval(gdPull, 5000);
+    // auto-poll removed
     console.warn("Connection test warning:", err.message);
   });
 }
@@ -1123,8 +1126,10 @@ function gdDisconnect() {
   gdConnected=false; gdUrl=""; clearInterval(gdPollTimer);
   setSyncDot("","local"); document.getElementById("btn-gd-disc").style.display="none";
   document.getElementById("gd-url").value=""; hideGdStatus(); saveLocal();
-  var syncBtn = document.getElementById("btn-sync-now");
-  if (syncBtn) syncBtn.style.display = "none";
+  var saveBtn2 = document.getElementById("btn-save-drive");
+  var refreshBtn2 = document.getElementById("btn-refresh-drive");
+  if(saveBtn2) saveBtn2.style.display = "none";
+  if(refreshBtn2) refreshBtn2.style.display = "none";
   toast("Disconnected","warn");
 }
 function showGdStatus(type,msg){ var el=document.getElementById("gd-status"); el.textContent=msg; el.className="status-box "+type; el.style.display="block"; }
@@ -3476,36 +3481,84 @@ function addSyncLog(direction) {
   if (histEl && document.getElementById("pg-history").classList.contains("on")) renderHistory();
 }
 
-// ── SYNC NOW BUTTON ──
-(function(){
-  var el = document.getElementById("btn-sync-now");
-  if (!el) return;
-  el.addEventListener("click", function() {
-    if (!gdConnected) { toast("Not connected to Google Drive", "err"); return; }
-    setSyncDot("busy", "syncing...");
-    el.textContent = "⟳ ...";
-    // Push first then pull
-    var payload = JSON.stringify({stock:stock, txLog:txLog.slice(0,2000), customFlavors:customFlavors,
-      customers:customers, defaultPrices:defaultPrices, customerPrices:customerPrices, ts:Date.now()});
-    var ts = Date.now();
-    var encoded = encodeURIComponent(payload);
-    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
-    .then(function(){
-      setSyncDot("busy","verifying...");
-      // Wait 2s then pull to verify save worked
-      setTimeout(function(){
-        gdPull();
-        el.textContent = "⟳ Sync";
-        addSyncLog("push");
-        toast("Saved to Drive ✓","ok");
-      }, 2000);
-    })
-    .catch(function(err){
-      el.textContent = "⟳ Sync";
-      setSyncDot("err","offline");
-      toast("Sync failed — check connection","err");
-    });
+// ── SAVE TO DRIVE ──
+function gdSave(onDone) {
+  if(!gdConnected) { toast("Not connected to Google Drive","err"); return; }
+  var saveBtn = document.getElementById("btn-save-drive");
+  if(saveBtn) { saveBtn.textContent = "⏳ Saving..."; saveBtn.disabled = true; }
+  setSyncDot("busy","saving...");
+  var payload = JSON.stringify({
+    stock: stock,
+    txLog: txLog.slice(0,2000),
+    customFlavors: customFlavors,
+    customers: customers,
+    defaultPrices: defaultPrices,
+    customerPrices: customerPrices,
+    ts: Date.now()
   });
+  fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
+  .then(function(){
+    setSyncDot("ok","saved ✓");
+    if(saveBtn) { saveBtn.textContent = "⬆ Save"; saveBtn.disabled = false; }
+    addSyncLog("push");
+    toast("Saved to Google Drive ✓","ok");
+    if(onDone) onDone();
+  })
+  .catch(function(err){
+    setSyncDot("err","error");
+    if(saveBtn) { saveBtn.textContent = "⬆ Save"; saveBtn.disabled = false; }
+    toast("Save failed — check connection","err");
+    console.warn("gdSave:", err);
+  });
+}
+
+// ── REFRESH FROM DRIVE ──
+function gdRefresh() {
+  if(!gdConnected) { toast("Not connected to Google Drive","err"); return; }
+  var refreshBtn = document.getElementById("btn-refresh-drive");
+  if(refreshBtn) { refreshBtn.textContent = "⏳ Loading..."; refreshBtn.disabled = true; }
+  setSyncDot("busy","loading...");
+  fetch(gdUrl + "?t=" + Date.now())
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    var d;
+    try { d = JSON.parse(text); } catch(e) { throw new Error("Could not read Drive data — save from the other device first"); }
+    if(!d || Object.keys(d).length === 0) throw new Error("Drive file is empty — save from the other device first");
+    // Apply ALL fields unconditionally — this is an explicit user-requested refresh
+    if(d.stock) stock = d.stock;
+    if(d.txLog) txLog = d.txLog;
+    if(d.customFlavors) {
+      customFlavors = d.customFlavors;
+      rebuildCatalogFromFlavors();
+      try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(e){}
+    }
+    if(d.customers) customers = d.customers;
+    if(d.defaultPrices) defaultPrices = d.defaultPrices;
+    if(d.customerPrices) customerPrices = d.customerPrices;
+    if(d.ts) gdLastTs = d.ts;
+    savePricing(); saveLocal();
+    renderStock(); renderHistory(); updateStats();
+    if(document.getElementById("pg-catalog").classList.contains("on")) renderCatalogPage();
+    if(document.getElementById("pg-customers").classList.contains("on")) renderCustomers();
+    if(document.getElementById("pg-pricing").classList.contains("on")) renderPricingPage();
+    addSyncLog("pull");
+    if(refreshBtn) { refreshBtn.textContent = "⬇ Refresh"; refreshBtn.disabled = false; }
+    setSyncDot("ok","updated ✓");
+    toast("Updated from Google Drive ✓","ok");
+  })
+  .catch(function(err){
+    if(refreshBtn) { refreshBtn.textContent = "⬇ Refresh"; refreshBtn.disabled = false; }
+    setSyncDot("err","error");
+    toast(err.message || "Refresh failed","err");
+    console.warn("gdRefresh:", err);
+  });
+}
+
+(function(){
+  var s = document.getElementById("btn-save-drive");
+  if(s) s.addEventListener("click", function(){ gdSave(); });
+  var r = document.getElementById("btn-refresh-drive");
+  if(r) r.addEventListener("click", function(){ gdRefresh(); });
 })();
 
 // ── INIT ──
@@ -3518,11 +3571,13 @@ if(gdUrl){
   gdConnected=true;
   setSyncDot("busy","connecting...");
   document.getElementById("btn-gd-disc").style.display="";
-  var syncBtn = document.getElementById("btn-sync-now");
-  if(syncBtn) syncBtn.style.display = "inline-block";
+  var saveBtn = document.getElementById("btn-save-drive");
+  var refreshBtn = document.getElementById("btn-refresh-drive");
+  if(saveBtn) saveBtn.style.display = "inline-block";
+  if(refreshBtn) refreshBtn.style.display = "inline-block";
   // Try to pull — if it works we show online, if not we'll keep trying via poll
   gdPull();
-  gdPollTimer = setInterval(gdPull, 5000);
+  // auto-poll removed
 } else { setSyncDot("","local"); }
 
 })();
