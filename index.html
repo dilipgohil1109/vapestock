@@ -239,7 +239,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="tab" data-pg="pricing">Pricing</div>
     <div class="tab" data-pg="export">Excel</div>
     <div class="tab" data-pg="sync">Sync</div>
-  </div>xport">Excel</div>
   </div>
 </div>
 
@@ -1009,7 +1008,7 @@ function gdPush() {
   // Use no-cors mode to avoid CORS preflight — response is opaque but data is sent
   fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
   .then(function(){
-    setSyncDot("ok","saved");
+    setSyncDot("ok","saved ✓");
     // After push, pull to confirm and get latest timestamp
     setTimeout(gdPull, 1000);
   })
@@ -1026,38 +1025,34 @@ function gdPull() {
     try { return JSON.parse(text); } catch(e) { throw new Error("Invalid JSON"); }
   })
   .then(function(d){
-    if(!d||!d.ts) return;
-    if(d.ts>gdLastTs){
+    if(d && d.ts && d.ts>gdLastTs){
       gdLastTs=d.ts;
       if(d.stock) stock=d.stock;
       if(d.txLog) txLog=d.txLog;
-      if(d.customFlavors) {
-        customFlavors=d.customFlavors;
-        loadCustomFlavors();
-      }
+      if(d.customFlavors) { customFlavors=d.customFlavors; loadCustomFlavors(); }
       if(d.customers) customers=d.customers;
       if(d.defaultPrices) defaultPrices=d.defaultPrices;
       if(d.customerPrices) customerPrices=d.customerPrices;
-      savePricing();
-      saveLocal();
+      savePricing(); saveLocal();
       renderStockGrid(); renderHistory(); updateStats();
-      toast("Data updated from Drive","ok");
+      toast("Data synced from Drive","ok");
     }
-    // Show last synced time
-    var now = new Date();
-    var t = now.getHours().toString().padStart(2,"0")+":"+now.getMinutes().toString().padStart(2,"0")+":"+now.getSeconds().toString().padStart(2,"0");
-    setSyncDot("ok","synced "+t);
-  }).catch(function(err){ 
+    setSyncDot("ok","online ✓");
+  })
+  .catch(function(err){
     console.error("gdPull error:", err);
-    setSyncDot("err","offline"); 
+    // Only show offline if we were previously showing online
+    // Don't change to offline just because of a single failed poll
+    if(document.getElementById("slbl").textContent.indexOf("online") === -1) {
+      setSyncDot("err","offline");
+    }
   });
 }
 function gdConnect(url) {
   if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL"); return; }
   gdUrl=url.trim(); gdConnected=true; saveLocal();
-  setSyncDot("busy","connecting..."); showGdStatus("busy","Connecting...");
+  setSyncDot("ok","online"); showGdStatus("busy","Connecting...");
   document.getElementById("btn-gd-disc").style.display="";
-  // Show Sync Now button
   var syncBtn = document.getElementById("btn-sync-now");
   if (syncBtn) syncBtn.style.display = "inline-block";
   gdPull(); clearInterval(gdPollTimer); gdPollTimer=setInterval(gdPull,5000);
@@ -3412,7 +3407,7 @@ loadCustomFlavors();
 renderStock();
 updateStats();
 if(gdUrl){
-  gdConnected=true; setSyncDot("busy","connecting...");
+  gdConnected=true; setSyncDot("ok","online");
   document.getElementById("btn-gd-disc").style.display="";
   var syncBtn = document.getElementById("btn-sync-now");
   if (syncBtn) syncBtn.style.display = "inline-block";
