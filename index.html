@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Krazy Wholesale</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -213,7 +216,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <body>
 <div class="hdr">
   <div class="hdr-top">
-    <div class="logo">Vape<b>Stock</b></div>
+    <div class="logo">Krazy<b>Stock</b> <span style="font-size:9px;color:var(--txt3);font-weight:400">v2.1</span></div>
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
@@ -809,7 +812,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  var output = ContentService.createTextOutput(JSON.stringify({ok:true}));\n  output.setMimeType(ContentService.MimeType.JSON);\n  return output;\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  var output = ContentService.createTextOutput(content || '{}');\n  output.setMimeType(ContentService.MimeType.JSON);\n  return output;\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}"";
+var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}"
 
 var stock = {};
 var txLog = [];
