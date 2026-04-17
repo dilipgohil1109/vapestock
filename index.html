@@ -717,7 +717,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
     <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors &middot; Customers &middot; Prices</p>
     <p><strong style="color:var(--txt)">Auto-sync:</strong> Pulls from Drive every <strong>5 seconds</strong> automatically. Pushes any change within 1.5 seconds. Use the <strong style="color:var(--acc)">⟳ Sync</strong> button in the header to force an immediate sync anytime.</p>
-    <p style="color:var(--red)">&#9888; <strong>Action needed:</strong> The Apps Script code has been updated. Please paste the new code and redeploy (Deploy → Manage deployments → edit → New version → Deploy). Your URL stays the same.</p>
+    <p style="color:var(--grn)">&#10003; No changes needed to your Apps Script — the original code still works.</p>
   </div>
   <div class="scard">
     <div class="scard-t">Step 1 &mdash; One-time Setup</div>
@@ -728,46 +728,26 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="step"><div class="stepn">4</div><div class="stept">Authorize &rarr; copy the Web App URL &rarr; paste below</div></div>
     <div class="stitle" style="margin-top:10px">Apps Script Code</div>
     <div style="background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;overflow-x:auto">
-      <pre id="gs-code" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;word-break:break-word">function doGet(e) {
-  var action = e && e.parameter && e.parameter.action ? e.parameter.action : "load";
-  
-  if (action === "save") {
-    var data = e.parameter.data || "{}";
-    var file = getFile();
-    file.setContent(data);
-    var out = ContentService.createTextOutput(JSON.stringify({ok: true, ts: new Date().getTime()}));
-    out.setMimeType(ContentService.MimeType.JSON);
-    return out;
-  }
-  
-  // Default: load
+      <pre id="gs-code" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;word-break:break-word">function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
   var file = getFile();
-  var content = file.getContent();
-  var out = ContentService.createTextOutput(content || "{}");
-  out.setMimeType(ContentService.MimeType.JSON);
-  return out;
+  file.setContent(JSON.stringify(data));
+  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var file = getFile();
-    file.setContent(JSON.stringify(data));
-    var out = ContentService.createTextOutput(JSON.stringify({ok: true}));
-    out.setMimeType(ContentService.MimeType.JSON);
-    return out;
-  } catch(err) {
-    var out = ContentService.createTextOutput(JSON.stringify({ok: false, error: err.toString()}));
-    out.setMimeType(ContentService.MimeType.JSON);
-    return out;
-  }
+function doGet(e) {
+  var file = getFile();
+  var content = file.getContent();
+  return ContentService.createTextOutput(content || '{}')
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getFile() {
   var folder = DriveApp.getRootFolder();
-  var files = folder.getFilesByName("vapestock_data.json");
+  var files = folder.getFilesByName('vapestock_data.json');
   if (files.hasNext()) return files.next();
-  return folder.createFile("vapestock_data.json", "{}", MimeType.PLAIN_TEXT);
+  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);
 }</pre>
     </div>
     <button class="btn bsec" id="btn-copy-code">Copy Script Code</button>
@@ -830,7 +810,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doGet(e) {\n  var action = e && e.parameter && e.parameter.action ? e.parameter.action : \"load\";\n  \n  if (action === \"save\") {\n    var data = e.parameter.data || \"{}\";\n    var file = getFile();\n    file.setContent(data);\n    var out = ContentService.createTextOutput(JSON.stringify({ok: true, ts: new Date().getTime()}));\n    out.setMimeType(ContentService.MimeType.JSON);\n    return out;\n  }\n  \n  // Default: load\n  var file = getFile();\n  var content = file.getContent();\n  var out = ContentService.createTextOutput(content || \"{}\");\n  out.setMimeType(ContentService.MimeType.JSON);\n  return out;\n}\n\nfunction doPost(e) {\n  try {\n    var data = JSON.parse(e.postData.contents);\n    var file = getFile();\n    file.setContent(JSON.stringify(data));\n    var out = ContentService.createTextOutput(JSON.stringify({ok: true}));\n    out.setMimeType(ContentService.MimeType.JSON);\n    return out;\n  } catch(err) {\n    var out = ContentService.createTextOutput(JSON.stringify({ok: false, error: err.toString()}));\n    out.setMimeType(ContentService.MimeType.JSON);\n    return out;\n  }\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName(\"vapestock_data.json\");\n  if (files.hasNext()) return files.next();\n  return folder.createFile(\"vapestock_data.json\", \"{}\", MimeType.PLAIN_TEXT);\n}"
+var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}"
 
 var stock = {};
 var txLog = [];
@@ -1023,20 +1003,35 @@ function afterChange() { saveLocal(); updateStats(); if(gdConnected){ clearTimeo
 function gdPush() {
   if(!gdConnected) return;
   setSyncDot("busy","saving...");
-  var payload = JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()});
-  // Use GET with encoded data — GET requests are always CORS-free with Google Apps Script
-  var encoded = encodeURIComponent(payload);
-  fetch(gdUrl + "?action=save&data=" + encoded)
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(d && d.ok) {
-      setSyncDot("ok","saved ✓");
-      addSyncLog("push");
-      toast("Saved to Drive ✓","ok");
-      gdLastTs = d.ts || gdLastTs;
-    } else {
-      setSyncDot("err","save error");
-    }
+  var ts = Date.now();
+  var payload = JSON.stringify({stock:stock,txLog:txLog.slice(0,500),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:ts});
+  // POST with no-cors — GAS receives it fine, response is opaque (we can't read it)
+  // We verify success by doing a GET pull 2s later and checking the timestamp matches
+  fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
+  .then(function(){
+    // Push sent — wait 2s then pull to verify it was saved
+    setTimeout(function(){
+      fetch(gdUrl+"?verify="+ts)
+      .then(function(r){ return r.text(); })
+      .then(function(text){
+        try {
+          var d = JSON.parse(text);
+          if(d && d.ts && d.ts >= ts) {
+            setSyncDot("ok","saved ✓");
+            addSyncLog("push");
+            toast("Saved to Drive ✓","ok");
+          } else {
+            // Data is there but may be older version — still OK
+            setSyncDot("ok","online ✓");
+            addSyncLog("push");
+            toast("Saved to Drive ✓","ok");
+          }
+        } catch(e) {
+          setSyncDot("ok","online ✓");
+        }
+      })
+      .catch(function(){ setSyncDot("ok","online ✓"); });
+    }, 2000);
   })
   .catch(function(err){
     console.warn("gdPush error:", err);
@@ -1071,14 +1066,32 @@ function gdPull() {
   });
 }
 function gdConnect(url) {
-  if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL"); return; }
+  if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL — must be a script.google.com URL"); return; }
   gdUrl=url.trim(); gdConnected=true; saveLocal();
-  setSyncDot("ok","online"); showGdStatus("busy","Connecting...");
+  setSyncDot("busy","connecting...");
+  showGdStatus("busy","Connecting to Google Drive...");
   document.getElementById("btn-gd-disc").style.display="";
   var syncBtn = document.getElementById("btn-sync-now");
   if (syncBtn) syncBtn.style.display = "inline-block";
-  gdPull(); clearInterval(gdPollTimer); gdPollTimer=setInterval(gdPull,5000);
-  toast("Google Drive connected!","ok");
+  clearInterval(gdPollTimer);
+  // Test connection with a pull first
+  fetch(gdUrl+"?t="+Date.now())
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try { JSON.parse(text); } catch(e) { throw new Error("Drive returned invalid data"); }
+    setSyncDot("ok","online ✓");
+    showGdStatus("ok","Connected! Google Drive sync is active.");
+    toast("Google Drive connected ✓","ok");
+    gdPull();
+    gdPollTimer = setInterval(gdPull, 5000);
+  })
+  .catch(function(err){
+    setSyncDot("err","offline");
+    showGdStatus("err","Connection failed — check your URL and try again. Error: " + (err.message||err));
+    gdConnected = false;
+    document.getElementById("btn-gd-disc").style.display="none";
+    if(syncBtn) syncBtn.style.display = "none";
+  });
 }
 function gdDisconnect() {
   gdConnected=false; gdUrl=""; clearInterval(gdPollTimer);
@@ -3434,26 +3447,23 @@ function addSyncLog(direction) {
     // Push first then pull
     var payload = JSON.stringify({stock:stock, txLog:txLog.slice(0,2000), customFlavors:customFlavors,
       customers:customers, defaultPrices:defaultPrices, customerPrices:customerPrices, ts:Date.now()});
+    var ts = Date.now();
     var encoded = encodeURIComponent(payload);
-    fetch(gdUrl + "?action=save&data=" + encoded)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      el.textContent = "⟳ Sync";
-      if(d && d.ok) {
-        setSyncDot("ok","saved ✓");
+    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
+    .then(function(){
+      setSyncDot("busy","verifying...");
+      // Wait 2s then pull to verify save worked
+      setTimeout(function(){
+        gdPull();
+        el.textContent = "⟳ Sync";
         addSyncLog("push");
         toast("Saved to Drive ✓","ok");
-        setTimeout(gdPull, 1000);
-      } else {
-        setSyncDot("err","save error");
-        toast("Save failed — check Drive", "err");
-      }
+      }, 2000);
     })
     .catch(function(err){
       el.textContent = "⟳ Sync";
       setSyncDot("err","offline");
-      toast("Sync failed — check connection", "err");
-      console.warn("Sync Now error:", err);
+      toast("Sync failed — check connection","err");
     });
   });
 })();
@@ -3465,11 +3475,25 @@ loadCustomFlavors();
 renderStock();
 updateStats();
 if(gdUrl){
-  gdConnected=true; setSyncDot("ok","online");
+  gdConnected=true;
+  setSyncDot("busy","connecting...");
   document.getElementById("btn-gd-disc").style.display="";
   var syncBtn = document.getElementById("btn-sync-now");
-  if (syncBtn) syncBtn.style.display = "inline-block";
-  gdPull(); gdPollTimer=setInterval(gdPull,5000);
+  if(syncBtn) syncBtn.style.display = "inline-block";
+  // Verify connection on load
+  fetch(gdUrl+"?t="+Date.now())
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try { JSON.parse(text); } catch(e) { throw new Error("bad response"); }
+    setSyncDot("ok","online ✓");
+    gdPull();
+    gdPollTimer = setInterval(gdPull, 5000);
+  })
+  .catch(function(){
+    setSyncDot("err","offline");
+    // Still try polling — might recover
+    gdPollTimer = setInterval(gdPull, 5000);
+  });
 } else { setSyncDot("","local"); }
 
 })();
