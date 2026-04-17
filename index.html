@@ -730,17 +730,28 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="stitle" style="margin-top:10px">Apps Script Code</div>
     <div style="background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;overflow-x:auto">
       <pre id="gs-code" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;word-break:break-word">function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var file = getFile();
-  file.setContent(JSON.stringify(data));
-  return ContentService.createTextOutput(JSON.stringify({ok:true}))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var file = getFile();
+    file.setContent(JSON.stringify(data));
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 function doGet(e) {
   var file = getFile();
-  var content = file.getContent();
-  return ContentService.createTextOutput(content || '{}')
+  var content = file.getContent() || '{}';
+  // Support JSONP callback for cross-origin browser requests
+  var cb = e && e.parameter && e.parameter.callback;
+  if (cb) {
+    return ContentService.createTextOutput(cb + '(' + content + ')')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(content)
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -815,7 +826,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}"
+var GAS_CODE = "function doPost(e) {\n  try {\n    var data = JSON.parse(e.postData.contents);\n    var file = getFile();\n    file.setContent(JSON.stringify(data));\n    return ContentService.createTextOutput(JSON.stringify({ok:true}))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.toString()}))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent() || '{}';\n  // Support JSONP callback for cross-origin browser requests\n  var cb = e && e.parameter && e.parameter.callback;\n  if (cb) {\n    return ContentService.createTextOutput(cb + '(' + content + ')')\n      .setMimeType(ContentService.MimeType.JAVASCRIPT);\n  }\n  return ContentService.createTextOutput(content)\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}"
 
 var stock = {};
 var txLog = [];
@@ -1045,11 +1056,8 @@ function gdPush() {
 }
 function gdPull() {
   if(!gdConnected) return;
-  fetch(gdUrl+"?t="+Date.now(), {mode:"cors"})
-  .then(function(r){ return r.text(); })
-  .then(function(text){
-    var d;
-    try { d = JSON.parse(text); } catch(e) { throw new Error("Invalid JSON from Drive"); }
+  jsonpFetch(gdUrl+"?t="+Date.now(), '_gdPull'+Date.now(), 10000)
+  .then(function(d){
     // Accept data if ts is newer OR if we have no local ts yet (fresh device)
     var shouldApply = d && d.ts && (d.ts > gdLastTs || gdLastTs === 0);
     if(shouldApply){
@@ -1102,30 +1110,22 @@ function gdConnect(url) {
   var testWrap = document.getElementById("test-drive-wrap");
   if(testWrap) testWrap.style.display = "block";
   clearInterval(gdPollTimer);
-  // Test with a simple GET — GAS GET requests are always CORS-free
-  fetch(gdUrl + "?ping=" + Date.now())
-  .then(function(r){
-    if(!r.ok) throw new Error("HTTP " + r.status);
-    return r.text();
-  })
-  .then(function(text){
-    // Any response (even {}) means we reached the script
+  // Test with JSONP — bypasses CORS completely
+  jsonpFetch(gdUrl + "?t=" + Date.now(), '_gdConnect' + Date.now(), 10000)
+  .then(function(data){
     setSyncDot("ok","online ✓");
     showGdStatus("ok","✓ Connected! Google Drive sync is active.");
     toast("Google Drive connected ✓","ok");
-    gdPull();
-    // auto-poll removed
   })
   .catch(function(err){
-    // Connection test failed — but this may be a CORS error on the test itself
-    // GAS GET requests should never fail CORS — if they do, the URL may need redeployment
-    // Try anyway — set as connected and let the polling sort it out
-    setSyncDot("ok","online");
-    showGdStatus("ok","✓ Connected — syncing in background.");
-    toast("Google Drive connected ✓","ok");
-    gdPull();
-    // auto-poll removed
-    console.warn("Connection test warning:", err.message);
+    // JSONP failed — URL may be wrong or GAS not deployed correctly
+    setSyncDot("err","offline");
+    showGdStatus("err","Connection failed: " + (err.message||err) + " — Check your GAS is deployed with Who has access: Anyone");
+    gdConnected = false;
+    document.getElementById("btn-gd-disc").style.display="none";
+    var sb=document.getElementById("btn-save-drive"); if(sb) sb.style.display="none";
+    var rb=document.getElementById("btn-refresh-drive"); if(rb) rb.style.display="none";
+    var tw=document.getElementById("test-drive-wrap"); if(tw) tw.style.display="none";
   });
 }
 function gdDisconnect() {
@@ -3509,11 +3509,8 @@ function gdSave(onDone) {
     // POST sent (no-cors = opaque, can't read response)
     // Verify by doing a GET 2 seconds later to confirm Drive has the data
     setTimeout(function(){
-      fetch(gdUrl + "?v=" + ts, {method:"GET", redirect:"follow"})
-      .then(function(r){ return r.text(); })
-      .then(function(text){
-        var d;
-        try { d = JSON.parse(text.trim()); } catch(e) { d = null; }
+      jsonpFetch(gdUrl + "?v=" + ts, '_gdVerify'+Date.now(), 8000)
+      .then(function(d){
         if(d && d.ts && d.ts >= ts) {
           // Confirmed — data is in Drive
           setSyncDot("ok","saved ✓");
@@ -3546,25 +3543,46 @@ function gdSave(onDone) {
   });
 }
 
+
+// ── JSONP FETCH (bypasses CORS completely) ──
+function jsonpFetch(url, callbackName, timeoutMs) {
+  return new Promise(function(resolve, reject) {
+    var cbName = callbackName || ('_cb' + Date.now());
+    var timer;
+    var script = document.createElement('script');
+    window[cbName] = function(data) {
+      clearTimeout(timer);
+      document.body.removeChild(script);
+      delete window[cbName];
+      resolve(data);
+    };
+    timer = setTimeout(function() {
+      document.body.removeChild(script);
+      delete window[cbName];
+      reject(new Error('Timeout — Drive did not respond in time'));
+    }, timeoutMs || 10000);
+    script.onerror = function() {
+      clearTimeout(timer);
+      document.body.removeChild(script);
+      delete window[cbName];
+      reject(new Error('Script load error — check your GAS URL'));
+    };
+    script.src = url + '&callback=' + cbName;
+    document.body.appendChild(script);
+  });
+}
+
 // ── REFRESH FROM DRIVE ──
 function gdRefresh() {
   if(!gdConnected) { toast("Not connected to Google Drive","err"); return; }
   var refreshBtn = document.getElementById("btn-refresh-drive");
   if(refreshBtn) { refreshBtn.textContent = "⏳ Loading..."; refreshBtn.disabled = true; }
   setSyncDot("busy","loading...");
-  // Simple fetch — same as connection test which already works
-  fetch(gdUrl + "?t=" + Date.now())
-  .then(function(r){ return r.text(); })
-  .then(function(text){
-    text = text.trim().replace(/^\uFEFF/, "");
-    if(!text || text === "{}" || text === "null") {
-      throw new Error("Drive file is empty. Save from the other device first.");
-    }
-    var d;
-    try { d = JSON.parse(text); } catch(e) {
-      // Show first 120 chars so we know what GAS is returning
-      throw new Error("Bad response: " + text.substring(0,120));
-    }
+  var cbName = '_gdRefresh' + Date.now();
+  jsonpFetch(gdUrl + "?t=" + Date.now(), cbName, 12000)
+  .then(function(d) {
+    if(!d || typeof d !== 'object') throw new Error("Empty or invalid data from Drive");
+    if(!d.stock && !d.customFlavors && !d.ts) throw new Error("Drive file is empty — save from the other device first");
     // Apply everything unconditionally
     if(d.stock) stock = d.stock;
     if(d.txLog) txLog = d.txLog;
@@ -3587,12 +3605,12 @@ function gdRefresh() {
     setSyncDot("ok","updated ✓");
     toast("Updated from Google Drive ✓","ok");
   })
-  .catch(function(err){
+  .catch(function(err) {
     if(refreshBtn) { refreshBtn.textContent = "⬇ Refresh"; refreshBtn.disabled = false; }
     setSyncDot("err","error");
     var msg = (err && err.message) ? err.message : String(err);
     toast(msg.substring(0,80), "err");
-    console.error("gdRefresh error:", msg);
+    console.error("gdRefresh:", msg);
   });
 }
 
@@ -3612,19 +3630,15 @@ function gdRefresh() {
     if(!gdConnected) { toast("Connect first","err"); return; }
     el.textContent = "⏳ Testing...";
     var result = document.getElementById("test-drive-result");
-    if(result) { result.style.display="block"; result.textContent = "Fetching..."; }
-    fetch(gdUrl + "?t=" + Date.now())
-    .then(function(r){
-      var status = r.status + " " + r.statusText;
-      return r.text().then(function(text){ return {status:status, text:text}; });
-    })
+    if(result) { result.style.display="block"; result.textContent = "Testing JSONP fetch..."; }
+    jsonpFetch(gdUrl + "?t=" + Date.now(), '_gdTest' + Date.now(), 10000)
     .then(function(d){
       el.textContent = "🔍 Test Drive Response";
-      if(result) result.textContent = "Status: " + d.status + "\nResponse: " + d.text.substring(0,300);
+      if(result) result.textContent = "✓ SUCCESS\n" + JSON.stringify(d).substring(0,300);
     })
     .catch(function(err){
       el.textContent = "🔍 Test Drive Response";
-      if(result) result.textContent = "FETCH ERROR: " + (err.message||String(err));
+      if(result) result.textContent = "✗ ERROR: " + (err.message||String(err));
     });
   });
 })();
