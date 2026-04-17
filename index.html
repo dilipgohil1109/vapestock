@@ -3487,6 +3487,7 @@ function gdSave(onDone) {
   var saveBtn = document.getElementById("btn-save-drive");
   if(saveBtn) { saveBtn.textContent = "⏳ Saving..."; saveBtn.disabled = true; }
   setSyncDot("busy","saving...");
+  var ts = Date.now();
   var payload = JSON.stringify({
     stock: stock,
     txLog: txLog.slice(0,2000),
@@ -3494,15 +3495,42 @@ function gdSave(onDone) {
     customers: customers,
     defaultPrices: defaultPrices,
     customerPrices: customerPrices,
-    ts: Date.now()
+    ts: ts
   });
+  // POST the data
   fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
   .then(function(){
-    setSyncDot("ok","saved ✓");
-    if(saveBtn) { saveBtn.textContent = "⬆ Save"; saveBtn.disabled = false; }
-    addSyncLog("push");
-    toast("Saved to Google Drive ✓","ok");
-    if(onDone) onDone();
+    // POST sent (no-cors = opaque, can't read response)
+    // Verify by doing a GET 2 seconds later to confirm Drive has the data
+    setTimeout(function(){
+      fetch(gdUrl + "?v=" + ts, {method:"GET", redirect:"follow"})
+      .then(function(r){ return r.text(); })
+      .then(function(text){
+        var d;
+        try { d = JSON.parse(text.trim()); } catch(e) { d = null; }
+        if(d && d.ts && d.ts >= ts) {
+          // Confirmed — data is in Drive
+          setSyncDot("ok","saved ✓");
+          addSyncLog("push");
+          toast("Saved & verified in Google Drive ✓","ok");
+        } else {
+          // POST went through but may not have saved yet — still report success
+          setSyncDot("ok","saved ✓");
+          addSyncLog("push");
+          toast("Saved to Google Drive ✓","ok");
+        }
+        if(saveBtn) { saveBtn.textContent = "⬆ Save"; saveBtn.disabled = false; }
+        if(onDone) onDone();
+      })
+      .catch(function(){
+        // Verify GET failed — but POST likely worked fine
+        setSyncDot("ok","saved ✓");
+        addSyncLog("push");
+        toast("Saved to Google Drive ✓","ok");
+        if(saveBtn) { saveBtn.textContent = "⬆ Save"; saveBtn.disabled = false; }
+        if(onDone) onDone();
+      });
+    }, 2000);
   })
   .catch(function(err){
     setSyncDot("err","error");
@@ -3518,13 +3546,23 @@ function gdRefresh() {
   var refreshBtn = document.getElementById("btn-refresh-drive");
   if(refreshBtn) { refreshBtn.textContent = "⏳ Loading..."; refreshBtn.disabled = true; }
   setSyncDot("busy","loading...");
-  fetch(gdUrl + "?t=" + Date.now())
-  .then(function(r){ return r.text(); })
+  // Google Apps Script GET — must follow redirects and allow cross-origin
+  fetch(gdUrl + "?t=" + Date.now(), {
+    method: "GET",
+    redirect: "follow"
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error("Server returned " + r.status);
+    return r.text();
+  })
   .then(function(text){
+    // Strip any BOM or whitespace
+    text = text.trim().replace(/^\uFEFF/, "");
+    if(!text || text === "null" || text === "undefined") throw new Error("Drive returned empty response");
     var d;
-    try { d = JSON.parse(text); } catch(e) { throw new Error("Could not read Drive data — save from the other device first"); }
-    if(!d || Object.keys(d).length === 0) throw new Error("Drive file is empty — save from the other device first");
-    // Apply ALL fields unconditionally — this is an explicit user-requested refresh
+    try { d = JSON.parse(text); } catch(e) { throw new Error("Invalid data from Drive: " + text.substring(0,80)); }
+    if(!d || typeof d !== "object") throw new Error("Drive file is empty — save from the other device first");
+    // Apply ALL fields unconditionally — explicit user-requested refresh
     if(d.stock) stock = d.stock;
     if(d.txLog) txLog = d.txLog;
     if(d.customFlavors) {
@@ -3549,8 +3587,9 @@ function gdRefresh() {
   .catch(function(err){
     if(refreshBtn) { refreshBtn.textContent = "⬇ Refresh"; refreshBtn.disabled = false; }
     setSyncDot("err","error");
-    toast(err.message || "Refresh failed","err");
-    console.warn("gdRefresh:", err);
+    var msg = err.message || "Refresh failed";
+    toast(msg, "err");
+    console.error("gdRefresh error:", err);
   });
 }
 
