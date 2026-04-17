@@ -101,7 +101,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .hitem{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:12px;margin-bottom:9px}
 .hmeta{display:flex;justify-content:space-between;margin-bottom:6px}
 .htype{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
-.htype.pur{color:var(--grn)}.htype.sal{color:#c0396a}.htype.adj{color:var(--amb)}
+.htype.pur{color:var(--grn)}.htype.sal{color:#c0396a}.htype.adj{color:var(--amb)}.htype.syn{color:var(--acc)}
 .hdt{font-size:11px;color:var(--txt3);font-family:"DM Mono",monospace}
 .hdtl{font-size:12px;color:var(--txt2);line-height:1.6}
 .scard{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:15px;margin-bottom:11px}
@@ -433,6 +433,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="fc" data-lf="purchase">Buy</div>
     <div class="fc" data-lf="sale">Sell</div>
     <div class="fc" data-lf="adj">Adjust</div>
+    <div class="fc" data-lf="sync">Sync</div>
   </div>
 
   <!-- Search -->
@@ -1009,22 +1010,18 @@ function gdPush() {
   fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
   .then(function(){
     setSyncDot("ok","saved ✓");
-    // After push, pull to confirm and get latest timestamp
-    setTimeout(gdPull, 1000);
+    addSyncLog("push");
+    setTimeout(gdPull, 1500);
   })
   .catch(function(){ setSyncDot("err","offline"); });
 }
 function gdPull() {
   if(!gdConnected) return;
-  fetch(gdUrl+"?t="+Date.now())
-  .then(function(r){
-    if(!r.ok && r.status !== 0) throw new Error("HTTP "+r.status);
-    return r.text();
-  })
+  fetch(gdUrl+"?t="+Date.now(), {mode:"cors"})
+  .then(function(r){ return r.text(); })
   .then(function(text){
-    try { return JSON.parse(text); } catch(e) { throw new Error("Invalid JSON"); }
-  })
-  .then(function(d){
+    var d;
+    try { d = JSON.parse(text); } catch(e) { throw new Error("Invalid JSON from Drive"); }
     if(d && d.ts && d.ts>gdLastTs){
       gdLastTs=d.ts;
       if(d.stock) stock=d.stock;
@@ -1035,17 +1032,14 @@ function gdPull() {
       if(d.customerPrices) customerPrices=d.customerPrices;
       savePricing(); saveLocal();
       renderStockGrid(); renderHistory(); updateStats();
-      toast("Data synced from Drive","ok");
+      addSyncLog("pull");
+      toast("Synced from Drive ✓","ok");
     }
     setSyncDot("ok","online ✓");
   })
   .catch(function(err){
-    console.error("gdPull error:", err);
-    // Only show offline if we were previously showing online
-    // Don't change to offline just because of a single failed poll
-    if(document.getElementById("slbl").textContent.indexOf("online") === -1) {
-      setSyncDot("err","offline");
-    }
+    console.warn("gdPull:", err.message||err);
+    setSyncDot("err","offline");
   });
 }
 function gdConnect(url) {
@@ -1641,6 +1635,7 @@ function renderHistory() {
       if (h.type==="purchase") totBuy += h.qty||0;
       else if (h.type==="sale") totSell += h.qty||0;
       else if (h.type==="adj") totAdj += Math.abs(h.qty||0);
+      // sync entries excluded from totals
     });
     sumEl.innerHTML =
       "<div style='background:rgba(0,168,112,.1);border:1px solid rgba(0,168,112,.3);border-radius:8px;padding:6px 12px;font-size:12px'>" +
@@ -1667,23 +1662,31 @@ function renderHistory() {
   toShow.forEach(function(h) {
     var item = document.createElement("div"); item.className = "hitem";
     // Color left border by type
-    var borderColor = h.type==="purchase" ? "rgba(0,229,160,.5)" : h.type==="adj" ? "rgba(255,184,0,.5)" : "rgba(255,77,109,.5)";
+    var borderColor = h.type==="purchase" ? "rgba(0,168,112,.5)" : h.type==="adj" ? "rgba(196,125,0,.5)" : h.type==="sync" ? "rgba(91,79,232,.4)" : "rgba(224,57,74,.5)";
     item.style.borderLeft = "3px solid " + borderColor;
     item.style.paddingLeft = "11px";
     var meta = document.createElement("div"); meta.className = "hmeta";
     var tp = document.createElement("span");
-    tp.className = "htype " + (h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
-    tp.textContent = h.type==="purchase" ? "+ Purchase" : h.type==="adj" ? "~ Adjusted" : "- Sale";
+    var typeClass = h.type==="purchase"?"pur":h.type==="adj"?"adj":h.type==="sync"?"syn":"sal";
+    tp.className = "htype " + typeClass;
+    var typeLabel = h.type==="purchase"?"+ Buy":h.type==="adj"?"~ Adjust":h.type==="sync"?(h.direction==="push"?"⟳ Synced ↑":"⟳ Synced ↓"):"- Sale";
+    tp.textContent = typeLabel;
     var dt = document.createElement("span"); dt.className = "hdt"; dt.textContent = h.date;
     meta.appendChild(tp); meta.appendChild(dt);
     var det = document.createElement("div"); det.className = "hdtl";
-    var cat = h.category || catOfBrand(h.brand) || "";
-    det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
-    var st = document.createElement("strong");
-    var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
-    st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
-    st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
-    det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
+    if(h.type === "sync") {
+      det.textContent = h.direction === "push" ? "Data pushed to Google Drive" : "Data pulled from Google Drive";
+      det.style.color = "var(--txt3)";
+    } else {
+      var cat = h.category || catOfBrand(h.brand) || "";
+      det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
+      var st = document.createElement("strong");
+      var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
+      st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
+      st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
+      det.appendChild(st);
+    }
+    item.appendChild(meta); item.appendChild(det); el.appendChild(item);
   });
 
   var lm = document.getElementById("log-load-more");
@@ -2135,16 +2138,10 @@ function closeAddCategoryModal() {
 function confirmDeleteCategory(cat) {
   var brs = CATEGORIES[cat] || [];
   if (brs.length > 0) {
-    if (!confirm("Delete category \"" + cat + "\"?\nThe " + brs.length + " brand(s) inside will be moved to \"Vape\".")) return;
-    // Move brands to Vape
-    brs.forEach(function(br) {
-      if (!CATEGORIES["Vape"]) CATEGORIES["Vape"] = [];
-      if (CATEGORIES["Vape"].indexOf(br) === -1) CATEGORIES["Vape"].push(br);
-      customFlavors["__catbrand__" + br] = "Vape";
-    });
-  } else {
-    if (!confirm("Delete empty category \"" + cat + "\"?")) return;
+    toast("Remove all " + brs.length + " brand(s) from \"" + cat + "\" first", "err");
+    return;
   }
+  if (!confirm("Delete empty category \"" + cat + "\"?")) return;
   delete CATEGORIES[cat];
   var ci = CATEGORY_NAMES.indexOf(cat);
   if (ci > -1) CATEGORY_NAMES.splice(ci, 1);
@@ -2616,8 +2613,14 @@ function closeAddBrandModal() {
 
 // ── DELETE BRAND ──
 function confirmDeleteBrand(br) {
-  if (!confirm("Delete brand \"" + br + "\" and all its custom flavors? Built-in brands cannot be deleted.")) return;
   if (!customFlavors["__brand__" + br]) { toast("Cannot delete built-in brand", "err"); return; }
+  // Block if brand still has flavors
+  var flavors = CATALOG[br] || [];
+  if (flavors.length > 0) {
+    toast("Delete all " + flavors.length + " flavor(s) from " + br + " first", "err");
+    return;
+  }
+  if (!confirm("Delete brand \"" + br + "\"?")) return;
   // Remove from CATALOG
   delete CATALOG[br];
   // Remove from BRANDS
@@ -3375,6 +3378,22 @@ function renderPsPage() {
     }, 150);
   });
 })();
+
+
+// ── SYNC LOG ──
+function addSyncLog(direction) {
+  txLog.unshift({
+    type: "sync",
+    direction: direction, // "push" or "pull"
+    date: new Date().toLocaleString(),
+    qty: 0
+  });
+  if (txLog.length > 2000) txLog.length = 2000;
+  saveLocal();
+  // Re-render if log tab is open
+  var histEl = document.getElementById("hlist");
+  if (histEl && document.getElementById("pg-history").classList.contains("on")) renderHistory();
+}
 
 // ── SYNC NOW BUTTON ──
 (function(){
