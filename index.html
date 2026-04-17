@@ -729,22 +729,24 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   var data = JSON.parse(e.postData.contents);
   var file = getFile();
   file.setContent(JSON.stringify(data));
-  return ContentService.createTextOutput(JSON.stringify({ok:true}))
-    .setMimeType(ContentService.MimeType.JSON);
+  var output = ContentService.createTextOutput(JSON.stringify({ok:true}));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
 }
 
 function doGet(e) {
   var file = getFile();
   var content = file.getContent();
-  return ContentService.createTextOutput(content || &#x27;{}&#x27;)
-    .setMimeType(ContentService.MimeType.JSON);
+  var output = ContentService.createTextOutput(content || '{}');
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
 }
 
 function getFile() {
   var folder = DriveApp.getRootFolder();
-  var files = folder.getFilesByName(&#x27;vapestock_data.json&#x27;);
+  var files = folder.getFilesByName('vapestock_data.json');
   if (files.hasNext()) return files.next();
-  return folder.createFile(&#x27;vapestock_data.json&#x27;, &#x27;{}&#x27;, MimeType.PLAIN_TEXT);
+  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);
 }</pre>
     </div>
     <button class="btn bsec" id="btn-copy-code">Copy Script Code</button>
@@ -807,7 +809,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}";
+var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  var output = ContentService.createTextOutput(JSON.stringify({ok:true}));\n  output.setMimeType(ContentService.MimeType.JSON);\n  return output;\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  var output = ContentService.createTextOutput(content || '{}');\n  output.setMimeType(ContentService.MimeType.JSON);\n  return output;\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}"";
 
 var stock = {};
 var txLog = [];
@@ -1000,7 +1002,7 @@ function afterChange() { saveLocal(); updateStats(); if(gdConnected){ clearTimeo
 function gdPush() {
   if(!gdConnected) return;
   setSyncDot("busy","saving...");
-  fetch(gdUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()})})
+  fetch(gdUrl,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()})})
   .then(function(r){return r.json();}).then(function(d){ setSyncDot(d.ok?"ok":"err",d.ok?"synced":"error"); })
   .catch(function(){ setSyncDot("err","offline"); });
 }
@@ -3369,7 +3371,7 @@ function renderPsPage() {
     setSyncDot("busy", "syncing...");
     el.textContent = "⟳ ...";
     // Push first then pull
-    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"application/json"},
+    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"},
       body: JSON.stringify({stock:stock, txLog:txLog.slice(0,2000), customFlavors:customFlavors,
         customers:customers, defaultPrices:defaultPrices, customerPrices:customerPrices, ts:Date.now()})
     }).then(function(r){ return r.json(); })
