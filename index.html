@@ -1005,13 +1005,26 @@ function afterChange() { saveLocal(); updateStats(); if(gdConnected){ clearTimeo
 function gdPush() {
   if(!gdConnected) return;
   setSyncDot("busy","saving...");
-  fetch(gdUrl,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()})})
-  .then(function(r){return r.json();}).then(function(d){ setSyncDot(d.ok?"ok":"err",d.ok?"synced":"error"); })
+  var payload = JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()});
+  // Use no-cors mode to avoid CORS preflight — response is opaque but data is sent
+  fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
+  .then(function(){
+    setSyncDot("ok","saved");
+    // After push, pull to confirm and get latest timestamp
+    setTimeout(gdPull, 1000);
+  })
   .catch(function(){ setSyncDot("err","offline"); });
 }
 function gdPull() {
   if(!gdConnected) return;
-  fetch(gdUrl+"?t="+Date.now()).then(function(r){return r.json();})
+  fetch(gdUrl+"?t="+Date.now())
+  .then(function(r){
+    if(!r.ok && r.status !== 0) throw new Error("HTTP "+r.status);
+    return r.text();
+  })
+  .then(function(text){
+    try { return JSON.parse(text); } catch(e) { throw new Error("Invalid JSON"); }
+  })
   .then(function(d){
     if(!d||!d.ts) return;
     if(d.ts>gdLastTs){
@@ -1034,7 +1047,10 @@ function gdPull() {
     var now = new Date();
     var t = now.getHours().toString().padStart(2,"0")+":"+now.getMinutes().toString().padStart(2,"0")+":"+now.getSeconds().toString().padStart(2,"0");
     setSyncDot("ok","synced "+t);
-  }).catch(function(){ setSyncDot("err","offline"); });
+  }).catch(function(err){ 
+    console.error("gdPull error:", err);
+    setSyncDot("err","offline"); 
+  });
 }
 function gdConnect(url) {
   if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL"); return; }
@@ -3374,13 +3390,18 @@ function renderPsPage() {
     setSyncDot("busy", "syncing...");
     el.textContent = "⟳ ...";
     // Push first then pull
-    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"},
-      body: JSON.stringify({stock:stock, txLog:txLog.slice(0,2000), customFlavors:customFlavors,
-        customers:customers, defaultPrices:defaultPrices, customerPrices:customerPrices, ts:Date.now()})
-    }).then(function(r){ return r.json(); })
-    .then(function(){ gdPull(); })
-    .catch(function(){ setSyncDot("err","offline"); })
-    .finally(function(){ el.textContent = "⟳ Sync"; });
+    var payload = JSON.stringify({stock:stock, txLog:txLog.slice(0,2000), customFlavors:customFlavors,
+      customers:customers, defaultPrices:defaultPrices, customerPrices:customerPrices, ts:Date.now()});
+    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
+    .then(function(){
+      // Push succeeded (opaque response), now pull to get confirmed state
+      setTimeout(function(){ gdPull(); el.textContent = "⟳ Sync"; }, 1500);
+    })
+    .catch(function(){
+      setSyncDot("err","offline");
+      el.textContent = "⟳ Sync";
+      toast("Sync failed — check connection", "err");
+    });
   });
 })();
 
