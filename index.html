@@ -213,7 +213,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <body>
 <div class="hdr">
   <div class="hdr-top">
-    <div class="logo">Vape<b>Stock</b></div>
+    <div class="logo">Krazy<b>Stock</b> <span style="font-size:9px;font-weight:400;color:var(--txt3)">v3.0</span></div>
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
@@ -432,6 +432,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="fc" data-lf="purchase">Buy</div>
     <div class="fc" data-lf="sale">Sell</div>
     <div class="fc" data-lf="adj">Adjust</div>
+    <div class="fc" data-lf="sync">Sync</div>
   </div>
 
   <!-- Search -->
@@ -711,6 +712,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <!-- SYNC PAGE -->
 <div class="pg" id="pg-sync">
   <p class="stitle">Google Drive Sync</p>
+  <div style="text-align:center;margin:0 0 16px">
+    <div id="conn-status-pill" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;background:var(--sur2);border:1.5px solid var(--brd);font-size:13px;font-weight:700">
+      <span id="conn-status-dot" style="width:10px;height:10px;border-radius:50%;background:#aaa;display:inline-block"></span>
+      <span id="conn-status-text">Not connected</span>
+    </div>
+  </div>
   <div class="info-box">
     <p><strong style="color:var(--acc)">How it works:</strong> Data is saved to Google Drive when you tap Save. Tap Refresh on any other device to load the latest data. Every device reads and writes the same file — changes sync within seconds.</p>
     <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
@@ -972,6 +979,21 @@ function toast(msg, t) {
 function setSyncDot(state, label) {
   document.getElementById("sdot").className = "sdot " + (state||"");
   document.getElementById("slbl").textContent = label || "local";
+  // Update connection pill in Sync tab
+  var dot = document.getElementById("conn-status-dot");
+  var txt = document.getElementById("conn-status-text");
+  if(dot && txt) {
+    var colors = { ok:"#00a870", busy:"#c87c00", err:"#c0392b", "":"#aaa" };
+    dot.style.background = colors[state||""] || "#aaa";
+    txt.textContent = state==="ok" ? (label||"Connected")
+                    : state==="busy" ? (label||"Connecting...")
+                    : state==="err" ? (label||"Error")
+                    : "Not connected";
+    txt.style.color = state==="ok" ? "#00a870"
+                    : state==="err" ? "#c0392b"
+                    : state==="busy" ? "#c87c00"
+                    : "var(--txt3)";
+  }
 }
 
 // ── STATS ──
@@ -1020,15 +1042,18 @@ function gdSave(onDone) {
   if(sb) { sb.textContent = "⏳..."; sb.disabled = true; }
   setSyncDot("busy","saving...");
   var payload = JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()});
-  function onSuccess() {
+  function onSuccess(detail) {
     setSyncDot("ok","saved ✓");
+    addSyncLog("push", detail || "Data saved to Google Drive");
     toast("Saved to Google Drive ✓","ok");
     if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
     if(onDone) onDone();
   }
   function onFail(e) {
+    var msg = e && e.message ? e.message : String(e);
     setSyncDot("err","error");
-    toast("Save failed — check connection","err");
+    addSyncLog("error", "Save failed: " + msg, true);
+    toast("Save failed: " + msg.substring(0,40),"err");
     if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
     console.warn("gdSave:", e);
   }
@@ -1040,13 +1065,15 @@ function gdSave(onDone) {
     if(resp && resp.fileId) {
       gdFileId = resp.fileId;
       try { localStorage.setItem("vs5_gdfileid", gdFileId); } catch(e) {}
+      onSuccess("Saved & verified (fileId: " + gdFileId.substring(0,12) + "...)");
+    } else {
+      onSuccess("Saved to Google Drive");
     }
-    onSuccess();
   })
   .catch(function() {
     // CORS blocked on response — fall back to no-cors (data still reaches GAS)
     fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
-    .then(function() { onSuccess(); })
+    .then(function() { onSuccess("Saved (no-cors fallback — fileId not captured yet)"); })
     .catch(function(e) { onFail(e); });
   });
 }
@@ -1125,13 +1152,17 @@ function gdRefresh() {
     if(document.getElementById("pg-pricing")&&document.getElementById("pg-pricing").classList.contains("on")) renderPricingPage();
     if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
     setSyncDot("ok","updated ✓");
+    var srcLabel = gdFileId ? "Drive URL (id:"+gdFileId.substring(0,10)+"...)" : "GAS script";
+    addSyncLog("pull", "Data loaded from " + srcLabel + (d.ts ? " · saved " + new Date(d.ts).toLocaleString() : ""));
     toast("Updated from Google Drive ✓","ok");
   })
   .catch(function(err) {
     if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
     setSyncDot("err","error");
-    toast((err&&err.message ? err.message : "Refresh failed"),"err");
-    console.error("gdRefresh:", err);
+    var errMsg = (err&&err.message) ? err.message : String(err);
+    addSyncLog("error", "Refresh failed: " + errMsg, true);
+    toast(errMsg.substring(0,60),"err");
+    console.error("gdRefresh:", errMsg);
   });
 }
 function gdConnect(url) {
@@ -1753,23 +1784,45 @@ function renderHistory() {
   toShow.forEach(function(h) {
     var item = document.createElement("div"); item.className = "hitem";
     // Color left border by type
-    var borderColor = h.type==="purchase" ? "rgba(0,229,160,.5)" : h.type==="adj" ? "rgba(255,184,0,.5)" : "rgba(255,77,109,.5)";
+    var borderColor = h.type==="purchase" ? "rgba(0,229,160,.5)" : h.type==="adj" ? "rgba(255,184,0,.5)" : h.type==="sync" ? "rgba(91,79,232,.5)" : "rgba(255,77,109,.5)";
     item.style.borderLeft = "3px solid " + borderColor;
     item.style.paddingLeft = "11px";
     var meta = document.createElement("div"); meta.className = "hmeta";
     var tp = document.createElement("span");
-    tp.className = "htype " + (h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
-    tp.textContent = h.type==="purchase" ? "+ Purchase" : h.type==="adj" ? "~ Adjusted" : "- Sale";
-    var dt = document.createElement("span"); dt.className = "hdt"; dt.textContent = h.date;
-    meta.appendChild(tp); meta.appendChild(dt);
-    var det = document.createElement("div"); det.className = "hdtl";
-    var cat = h.category || catOfBrand(h.brand) || "";
-    det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
-    var st = document.createElement("strong");
-    var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
-    st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
-    st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
-    det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
+
+    if(h.type === "sync") {
+      // Sync entry — show direction and detail/error
+      var isErr = h.isError || h.direction === "error";
+      tp.className = "htype " + (isErr ? "sal" : "adj");
+      var dirLabel = h.direction === "push" ? "⬆ Saved to Drive"
+                   : h.direction === "pull" ? "⬇ Refreshed from Drive"
+                   : "⚠ Sync Error";
+      tp.textContent = dirLabel;
+      item.style.borderLeft = "3px solid " + (isErr ? "rgba(224,57,74,.6)" : "rgba(91,79,232,.5)");
+      var dt2 = document.createElement("span"); dt2.className = "hdt"; dt2.textContent = h.date;
+      meta.appendChild(tp); meta.appendChild(dt2);
+      var det2 = document.createElement("div"); det2.className = "hdtl";
+      if(h.detail) {
+        det2.textContent = h.detail;
+        det2.style.color = isErr ? "var(--red)" : "var(--txt3)";
+        det2.style.fontFamily = "'DM Mono', monospace";
+        det2.style.fontSize = "11px";
+      }
+      item.appendChild(meta); item.appendChild(det2); el.appendChild(item);
+    } else {
+      tp.className = "htype " + (h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
+      tp.textContent = h.type==="purchase" ? "+ Purchase" : h.type==="adj" ? "~ Adjusted" : "- Sale";
+      var dt = document.createElement("span"); dt.className = "hdt"; dt.textContent = h.date;
+      meta.appendChild(tp); meta.appendChild(dt);
+      var det = document.createElement("div"); det.className = "hdtl";
+      var cat = h.category || catOfBrand(h.brand) || "";
+      det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
+      var st = document.createElement("strong");
+      var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
+      st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
+      st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
+      det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
+    }
   });
 
   var lm = document.getElementById("log-load-more");
@@ -3422,6 +3475,23 @@ function renderPsPage() {
     }, 150);
   });
 })();
+
+// ── SYNC LOG HELPER ──
+function addSyncLog(direction, detail, isError) {
+  txLog.unshift({
+    type: "sync",
+    direction: direction,
+    detail: detail || "",
+    isError: isError || false,
+    date: new Date().toLocaleString(),
+    qty: 0
+  });
+  if(txLog.length > 2000) txLog.length = 2000;
+  saveLocal();
+  // Refresh log tab if open
+  var histEl = document.getElementById("hlist");
+  if(histEl && document.getElementById("pg-history") && document.getElementById("pg-history").classList.contains("on")) renderHistory();
+}
 
 // ── SAVE / REFRESH BUTTONS ──
 (function(){
