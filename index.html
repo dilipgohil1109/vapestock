@@ -1196,27 +1196,16 @@ function gdRefresh() {
     console.error("gdRefresh:", errMsg);
   }
 
-  // Try POST action=read first (new GAS), fall back to GET (old GAS)
-  fetch(gdUrl, {
-    method: "POST",
-    headers: {"Content-Type": "text/plain"},
-    body: JSON.stringify({action: "read"})
-  })
+  // Simple GET fetch — GAS doGet returns the stored data directly
+  // We know POST CORS works (Save succeeds), so GET same-domain also works
+  fetch(gdUrl + "?t=" + Date.now(), {method: "GET"})
   .then(function(r) { return r.json(); })
   .then(function(d) {
     var keys = d ? Object.keys(d) : [];
-    // If GAS returned an error or doesn't have our data fields,
-    // it means old GAS is running — fall back to GET
-    if(d && (d.error || (!d.stock && !d.ts && !d.customFlavors))) {
-      var reason = d.error ? ("GAS: " + d.error) : "no data fields";
-      addSyncLog("pull", "POST-read failed (" + reason + "), trying GET...");
-      return fetch(gdUrl + "?t=" + Date.now())
-        .then(function(r2) { return r2.json(); });
+    if(d && d.error) {
+      onFail("GAS error: " + d.error);
+      return;
     }
-    return d;
-  })
-  .then(function(d) {
-    var keys = d ? Object.keys(d) : [];
     addSyncLog("pull", "Drive returned: {" + keys.join(", ") + "}" + (d&&d.ts ? " · saved " + new Date(d.ts).toLocaleString() : ""));
     applyData(d);
   })
