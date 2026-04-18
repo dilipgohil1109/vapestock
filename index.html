@@ -1165,7 +1165,13 @@ function gdRefresh() {
       });
       if(txLog.length > 2000) txLog.length = 2000;
     }
-    if(d.customFlavors) { customFlavors = d.customFlavors; loadCustomFlavors(); }
+    if(d.customFlavors) {
+      customFlavors = d.customFlavors;
+      // Save to localStorage so next page load picks it up
+      try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(e) {}
+      // Rebuild catalog from scratch using Drive data (not localStorage)
+      rebuildCatalogFromCustomFlavors();
+    }
     if(d.customers) customers = d.customers;
     if(d.defaultPrices) defaultPrices = d.defaultPrices;
     if(d.customerPrices) customerPrices = d.customerPrices;
@@ -1967,34 +1973,72 @@ function loadCustomFlavors() {
     var c = localStorage.getItem("vs5_custom");
     if (c) customFlavors = JSON.parse(c);
   } catch(e) {}
-  // Restore custom categories
+  rebuildCatalogFromCustomFlavors();
+}
+
+function rebuildCatalogFromCustomFlavors() {
+  // Step 1: Reset CATEGORIES — start with only Vape containing built-in brands
+  // Built-in brands = brands that exist in the original CATALOG but NOT marked as custom
+  var originalBrands = Object.keys(CATALOG).filter(function(br) {
+    return !customFlavors["__brand__" + br];
+  });
+  // Clear all categories
+  CATEGORY_NAMES.length = 0;
+  Object.keys(CATEGORIES).forEach(function(k) { delete CATEGORIES[k]; });
+  // Restore Vape with only built-in brands
+  CATEGORIES["Vape"] = originalBrands.slice();
+  CATEGORY_NAMES.push("Vape");
+
+  // Step 2: Restore custom categories (start EMPTY — brands are assigned separately)
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__cat__") === 0) {
       var cat = key.replace("__cat__", "");
       if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; CATEGORY_NAMES.push(cat); }
     }
   });
-  // Restore custom brands and assign to their category
+
+  // Step 3: Restore custom brands into their assigned category
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__brand__") === 0) {
       var br = key.replace("__brand__", "");
-      if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); }
-      // Find which category this brand belongs to
-      var catKey = "__catbrand__" + br;
-      var cat = customFlavors[catKey] || "Vape";
+      if (!CATALOG[br]) CATALOG[br] = [];
+      if (BRANDS.indexOf(br) === -1) BRANDS.push(br);
+      var cat = customFlavors["__catbrand__" + br] || "Vape";
       if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; }
       if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
+      // Remove from Vape if it's been assigned elsewhere
+      if (cat !== "Vape") {
+        CATEGORIES["Vape"] = CATEGORIES["Vape"].filter(function(b) { return b !== br; });
+      }
     }
   });
-  // Merge custom flavors into CATALOG
+
+  // Step 4: Also handle built-in brands reassigned to custom categories
+  Object.keys(customFlavors).forEach(function(key) {
+    if (key.indexOf("__catbrand__") === 0) {
+      var br = key.replace("__catbrand__", "");
+      var cat = customFlavors[key];
+      // Skip if this is a custom brand (already handled above)
+      if (customFlavors["__brand__" + br]) return;
+      // Built-in brand reassigned to a different category
+      if (cat !== "Vape") {
+        CATEGORIES["Vape"] = (CATEGORIES["Vape"] || []).filter(function(b) { return b !== br; });
+        if (!CATEGORIES[cat]) CATEGORIES[cat] = [];
+        if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
+      }
+    }
+  });
+
+  // Step 5: Merge custom flavors into CATALOG
   Object.keys(customFlavors).forEach(function(br) {
-    if (br.indexOf("__") === 0) return; // skip __brand__, __deleted__ meta keys
+    if (br.indexOf("__") === 0) return;
     if (!CATALOG[br]) CATALOG[br] = [];
     customFlavors[br].forEach(function(fl) {
       if (CATALOG[br].indexOf(fl) === -1) CATALOG[br].push(fl);
     });
   });
-  // Apply deletions — remove any flavor that was deleted by the user
+
+  // Step 6: Apply deletions
   var deleted = customFlavors["__deleted__"] || [];
   deleted.forEach(function(delKey) {
     var sep = delKey.indexOf("~~");
