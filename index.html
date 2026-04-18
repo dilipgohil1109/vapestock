@@ -1069,47 +1069,69 @@ function gdSave(onDone) {
   var sb = document.getElementById("btn-save-drive");
   if(sb) { sb.textContent = "⏳..."; sb.disabled = true; }
   setSyncDot("busy","saving...");
-  // Add sync log entry BEFORE building payload so other devices see it in Drive
+
   var saveTs = Date.now();
-  addSyncLog("push", "Saving to Google Drive...");
-  var payload = JSON.stringify({action:"write",stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:saveTs});
-  function onSuccess(detail) {
-    setSyncDot("ok","saved ✓");
-    // Update the last log entry with final detail
-    if(txLog.length && txLog[0].type==="sync" && txLog[0].direction==="push") {
-      txLog[0].detail = detail || "Saved to Google Drive";
-      saveLocal();
-    }
-    toast("Saved to Google Drive ✓","ok");
-    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
-    if(onDone) onDone();
-  }
-  function onFail(e) {
-    var msg = e && e.message ? e.message : String(e);
-    setSyncDot("err","error");
-    addSyncLog("error", "Save failed: " + msg, true);
-    toast("Save failed: " + msg.substring(0,40),"err");
-    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
-    console.warn("gdSave:", e);
-  }
-  // Try with CORS first (captures response), fall back to no-cors
-  fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload})
-  .then(function(r) { return r.json(); })
-  .then(function(resp) {
-    // Capture the fileId so Refresh can use the direct Drive URL
-    if(resp && resp.fileId) {
-      gdFileId = resp.fileId;
-      try { localStorage.setItem("vs5_gdfileid", gdFileId); } catch(e) {}
-      onSuccess("Saved & verified (fileId: " + gdFileId.substring(0,12) + "...)");
-    } else {
-      onSuccess("Saved to Google Drive");
-    }
+  var payload = JSON.stringify({
+    stock:stock, txLog:txLog.slice(0,2000),
+    customFlavors:customFlavors, customers:customers,
+    defaultPrices:defaultPrices, customerPrices:customerPrices,
+    ts:saveTs
+  });
+
+  // Always use no-cors POST — guaranteed to reach GAS regardless of CORS policy
+  fetch(gdUrl, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain"},
+    body: payload,
+    mode: "no-cors"
   })
-  .catch(function() {
-    // CORS blocked on response — fall back to no-cors (data still reaches GAS)
-    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
-    .then(function() { onSuccess("Saved (no-cors fallback — fileId not captured yet)"); })
-    .catch(function(e) { onFail(e); });
+  .then(function() {
+    // no-cors succeeds silently — verify by reading back after 2s
+    setSyncDot("busy","verifying...");
+    setTimeout(function() {
+      fetch(gdUrl, {
+        method: "POST",
+        headers: {"Content-Type": "text/plain"},
+        body: JSON.stringify({action: "read"})
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+        if(resp && resp.ts && resp.ts >= saveTs) {
+          // Verified — data is in Drive
+          setSyncDot("ok","saved ✓");
+          addSyncLog("push", "Saved & verified in Drive · " + Object.keys(resp.stock||{}).length + " stock entries · " + new Date(resp.ts).toLocaleString());
+          toast("Saved & verified ✓","ok");
+        } else if(resp && resp.stock) {
+          // Data is there but different timestamp (older save)
+          setSyncDot("ok","saved ✓");
+          addSyncLog("push", "Saved to Drive (older data in Drive — ts mismatch)");
+          toast("Saved to Drive ✓","ok");
+        } else if(resp && resp.error) {
+          setSyncDot("warn","saved?");
+          addSyncLog("push", "Sent to Drive but verify failed: GAS error: " + resp.error);
+          toast("Sent to Drive (verify failed)","warn");
+        } else {
+          setSyncDot("warn","saved?");
+          addSyncLog("push", "Sent to Drive but Drive returned: " + JSON.stringify(resp).substring(0,80));
+          toast("Sent to Drive (unconfirmed)","warn");
+        }
+        if(onDone) onDone();
+      })
+      .catch(function(err) {
+        if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+        setSyncDot("ok","saved ✓");
+        addSyncLog("push", "Sent to Drive (could not verify: " + (err.message||err) + ")");
+        toast("Sent to Drive ✓","ok");
+        if(onDone) onDone();
+      });
+    }, 2000);
+  })
+  .catch(function(err) {
+    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+    setSyncDot("err","error");
+    addSyncLog("error", "Save failed: " + (err.message||err), true);
+    toast("Save failed: " + (err.message||err).substring(0,40),"err");
   });
 }
 function gdPull() {
@@ -1196,7 +1218,8 @@ function gdRefresh() {
     if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
     setSyncDot("ok","updated ✓");
     var info = Object.keys(d).join(", ");
-    addSyncLog("pull", "Loaded: {" + info + "}" + (d.ts ? " · " + new Date(d.ts).toLocaleString() : ""));
+    var stockKeys = d.stock ? Object.keys(d.stock).length : 0;
+    addSyncLog("pull", "Loaded: {" + info + "} stock-entries:" + stockKeys + (d.ts ? " · " + new Date(d.ts).toLocaleString() : " NO-TS"));
     toast("Updated from Google Drive ✓","ok");
   }
 
@@ -1217,7 +1240,7 @@ function gdRefresh() {
   .then(function(d) {
     if(d && d.error) {
       // GAS returned an error — show it so user knows what to fix
-      onFail("GAS error: " + d.error + " — please update & redeploy GAS code from Sync tab");
+      onFail("GAS error: " + d.error);
       return;
     }
     applyData(d);
