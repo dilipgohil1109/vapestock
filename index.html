@@ -1286,11 +1286,17 @@ function renderStockBrands() {
   renderCatChips("s-cat-chips", activeCategory, function(cat) {
     activeCategory = cat;
     var brands = brandsForCat(cat);
-    activeBrand = brands[0] || BRANDS[0];
+    activeBrand = brands[0] || null;
     renderStockBrands(); renderStockGrid(); updateFilterCounts();
   });
   var wrap=document.getElementById("sb"); wrap.innerHTML="";
   var brs = brandsForCat(activeCategory);
+  if(!brs.length) {
+    var ph=document.createElement("div"); ph.style.cssText="font-size:12px;color:var(--txt3);padding:8px 4px";
+    ph.textContent="No brands in this category"; wrap.appendChild(ph);
+    activeBrand=null; return;
+  }
+  if(!activeBrand || brs.indexOf(activeBrand)===-1) activeBrand=brs[0];
   brs.forEach(function(br) {
     var d=document.createElement("div"); d.className="chip"+(br===activeBrand?" on":""); d.textContent=br;
     d.addEventListener("click",function(){ activeBrand=br; renderStockBrands(); renderStockGrid(); updateFilterCounts(); });
@@ -1327,6 +1333,13 @@ function renderStock() { renderStockBrands(); renderStockGrid(); updateFilterCou
 
 function renderStockGrid() {
   var grid=document.getElementById("sgrid");
+  grid.innerHTML="";
+  // No brand in this category
+  if(!activeBrand) {
+    var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
+    empty.innerHTML="<div class='ei'>📂</div><div class='et'>No brands in this category yet.<br>Add brands in the Catalog tab.</div>";
+    grid.appendChild(empty); return;
+  }
   var flavors=(CATALOG[activeBrand]||[]).filter(function(fl){
     var q=qty(activeBrand,fl);
     if(stockFlt==="in") return q>3;
@@ -1334,10 +1347,9 @@ function renderStockGrid() {
     if(stockFlt==="out") return q===0;
     return true;
   });
-  grid.innerHTML="";
   if(!flavors.length){
     var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
-    empty.innerHTML="<div class=\"ei\">&#128235;</div><div class=\"et\">No items match</div>";
+    empty.innerHTML="<div class='ei'>&#128235;</div><div class='et'>No items match</div>";
     grid.appendChild(empty); return;
   }
   flavors.forEach(function(fl){
@@ -1350,7 +1362,6 @@ function renderStockGrid() {
     var btnM=document.createElement("button"); btnM.className="qbtn m"; btnM.textContent="−";
     btnM.setAttribute("data-br",activeBrand); btnM.setAttribute("data-fl",fl); btnM.setAttribute("data-d","-1");
     var qvalEl=document.createElement("div"); qvalEl.className="qval"+(q===0?" z":q<=3?" lw":""); qvalEl.textContent=q;
-    // tap to edit inline
     qvalEl.addEventListener("click",function(){
       var inp=document.createElement("input"); inp.type="number"; inp.min="0"; inp.value=q; inp.className="qedit";
       inp.addEventListener("blur",function(){
@@ -1594,7 +1605,7 @@ function renderPurBrands(){
   renderCatChips("pur-cat-chips", purCategory, function(cat) {
     purCategory = cat;
     var brs = brandsForCat(cat);
-    purBrand = brs[0] || BRANDS[0];
+    purBrand = brs[0] || null;
     renderPurBrands(); renderPurFlavors();
   });
   var wrap=document.getElementById("pb"); wrap.innerHTML="";
@@ -1608,8 +1619,9 @@ function renderPurBrands(){
 (function(){var __el=document.getElementById("psearch");if(!__el)return;__el.addEventListener("input",renderPurFlavors)})();
 function renderPurFlavors(){
   var q=document.getElementById("psearch").value.toLowerCase();
-  var flavors=(CATALOG[purBrand]||[]).filter(function(f){return !q||f.toLowerCase().indexOf(q)!==-1;});
   var list=document.getElementById("pflist"); list.innerHTML="";
+  if(!purBrand){list.innerHTML="<div class=\"empty\" style=\"padding:12px\"><div class=\"et\">Select a brand above</div></div>";return;}
+  var flavors=(CATALOG[purBrand]||[]).filter(function(f){return !q||f.toLowerCase().indexOf(q)!==-1;});
   if(!flavors.length){list.innerHTML="<div class=\"empty\" style=\"padding:12px\"><div class=\"et\">No match</div></div>";return;}
   flavors.forEach(function(fl){
     var k=skey(purBrand,fl), inCart=cart[k]!==undefined;
@@ -2183,7 +2195,7 @@ function renderSellBrands() {
   renderCatChips("sell-cat-chips", sellCategory, function(cat) {
     sellCategory = cat;
     var brs = brandsForCat(cat);
-    sellBrand = brs[0] || BRANDS[0];
+    sellBrand = brs[0] || null;
     renderSellBrands(); renderSellFlavors();
   });
   var wrap = document.getElementById("sell-brand-scroll");
@@ -2208,12 +2220,13 @@ function renderSellBrands() {
 function renderSellFlavors() {
   var q = (document.getElementById("sell-search") || {}).value || "";
   q = q.toLowerCase();
-  var flavors = (CATALOG[sellBrand] || []).filter(function(f) {
-    return !q || f.toLowerCase().indexOf(q) !== -1;
-  });
   var list = document.getElementById("sell-flavor-list");
   if (!list) return;
   list.innerHTML = "";
+  if(!sellBrand){list.innerHTML="<div class='empty' style='padding:12px'><div class='et'>Select a brand above</div></div>";return;}
+  var flavors = (CATALOG[sellBrand] || []).filter(function(f) {
+    return !q || f.toLowerCase().indexOf(q) !== -1;
+  });
   if (!flavors.length) {
     var d = document.createElement("div");
     d.className = "empty"; d.style.padding = "12px";
