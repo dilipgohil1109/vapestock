@@ -1196,7 +1196,7 @@ function gdRefresh() {
     console.error("gdRefresh:", errMsg);
   }
 
-  // Use POST with action=read — same CORS path as Save, guaranteed to work!
+  // Try POST action=read first (new GAS), fall back to GET (old GAS)
   fetch(gdUrl, {
     method: "POST",
     headers: {"Content-Type": "text/plain"},
@@ -1204,10 +1204,20 @@ function gdRefresh() {
   })
   .then(function(r) { return r.json(); })
   .then(function(d) {
-    // Log raw keys so we can debug what Drive returned
     var keys = d ? Object.keys(d) : [];
-    console.log("gdRefresh raw keys:", keys, "ts:", d&&d.ts);
-    addSyncLog("pull", "Drive returned: {" + keys.join(", ") + "}" + (d&&d.ts ? " ts="+new Date(d.ts).toLocaleString() : " (no ts)"));
+    // If GAS returned an error or doesn't have our data fields,
+    // it means old GAS is running — fall back to GET
+    if(d && (d.error || (!d.stock && !d.ts && !d.customFlavors))) {
+      var reason = d.error ? ("GAS: " + d.error) : "no data fields";
+      addSyncLog("pull", "POST-read failed (" + reason + "), trying GET...");
+      return fetch(gdUrl + "?t=" + Date.now())
+        .then(function(r2) { return r2.json(); });
+    }
+    return d;
+  })
+  .then(function(d) {
+    var keys = d ? Object.keys(d) : [];
+    addSyncLog("pull", "Drive returned: {" + keys.join(", ") + "}" + (d&&d.ts ? " · saved " + new Date(d.ts).toLocaleString() : ""));
     applyData(d);
   })
   .catch(function(err) {
