@@ -712,7 +712,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <div class="pg" id="pg-sync">
   <p class="stitle">Google Drive Sync</p>
   <div class="info-box">
-    <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
+    <p><strong style="color:var(--acc)">How it works:</strong> Data is saved to Google Drive when you tap Save. Tap Refresh on any other device to load the latest data. Every device reads and writes the same file — changes sync within seconds.</p>
     <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
     <p style="color:var(--grn)">&#10003; The Google Apps Script code has not changed — no update needed if you already set it up.</p>
   </div>
@@ -725,26 +725,40 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="step"><div class="stepn">4</div><div class="stept">Authorize &rarr; copy the Web App URL &rarr; paste below</div></div>
     <div class="stitle" style="margin-top:10px">Apps Script Code</div>
     <div style="background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;overflow-x:auto">
+      <p style="color:var(--red);font-weight:700;margin-bottom:8px">&#9888; Update your Apps Script with this new code and redeploy as a new version. Your URL stays the same.</p>
       <pre id="gs-code" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;word-break:break-word">function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var file = getFile();
-  file.setContent(JSON.stringify(data));
-  return ContentService.createTextOutput(JSON.stringify({ok:true}))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var file = getFile();
+    file.setContent(JSON.stringify(data));
+    // Return fileId so the app can read via direct Drive URL (bypasses CORS)
+    return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ok:false, error:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 function doGet(e) {
   var file = getFile();
-  var content = file.getContent();
-  return ContentService.createTextOutput(content || &#x27;{}&#x27;)
+  var content = file.getContent() || &#x27;{}&#x27;;
+  return ContentService.createTextOutput(content)
     .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getFile() {
   var folder = DriveApp.getRootFolder();
   var files = folder.getFilesByName(&#x27;vapestock_data.json&#x27;);
-  if (files.hasNext()) return files.next();
-  return folder.createFile(&#x27;vapestock_data.json&#x27;, &#x27;{}&#x27;, MimeType.PLAIN_TEXT);
+  var file;
+  if (files.hasNext()) {
+    file = files.next();
+  } else {
+    file = folder.createFile(&#x27;vapestock_data.json&#x27;, &#x27;{}&#x27;, MimeType.PLAIN_TEXT);
+  }
+  // Make file publicly readable so direct Drive URL works from any browser
+  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}
+  return file;
 }</pre>
     </div>
     <button class="btn bsec" id="btn-copy-code">Copy Script Code</button>
@@ -807,7 +821,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}";
+var GAS_CODE = "function doPost(e) {\n  try {\n    var data = JSON.parse(e.postData.contents);\n    var file = getFile();\n    file.setContent(JSON.stringify(data));\n    // Return fileId so the app can read via direct Drive URL (bypasses CORS)\n    return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId()}))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ok:false, error:err.toString()}))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent() || '{}';\n  return ContentService.createTextOutput(content)\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  var file;\n  if (files.hasNext()) {\n    file = files.next();\n  } else {\n    file = folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n  }\n  // Make file publicly readable so direct Drive URL works from any browser\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
 
 var stock = {};
 var txLog = [];
@@ -821,6 +835,7 @@ var stockFlt = "all";
 var genBrand = "all";
 var genFlt = "in";
 var gdUrl = "";
+var gdFileId = "";
 var gdConnected = false;
 var gdPollTimer = null;
 var gdPushTimer = null;
@@ -1020,9 +1035,16 @@ function gdSave(onDone) {
   // Try with CORS first (captures response), fall back to no-cors
   fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload})
   .then(function(r) { return r.json(); })
-  .then(function(resp) { onSuccess(); })
+  .then(function(resp) {
+    // Capture the fileId so Refresh can use the direct Drive URL
+    if(resp && resp.fileId) {
+      gdFileId = resp.fileId;
+      try { localStorage.setItem("vs5_gdfileid", gdFileId); } catch(e) {}
+    }
+    onSuccess();
+  })
   .catch(function() {
-    // CORS blocked — fall back to no-cors (data still reaches GAS)
+    // CORS blocked on response — fall back to no-cors (data still reaches GAS)
     fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
     .then(function() { onSuccess(); })
     .catch(function(e) { onFail(e); });
@@ -1031,7 +1053,12 @@ function gdSave(onDone) {
 function gdPull() {
   // Internal pull — only applies if Drive data is newer
   if(!gdConnected) return;
-  xhrGet(gdUrl+"?t="+Date.now())
+  // Use direct Drive file URL (has CORS headers) if we have fileId
+  // Fall back to GAS URL if not
+  var readUrl = gdFileId
+    ? "https://drive.google.com/uc?export=download&id=" + gdFileId + "&t=" + Date.now()
+    : gdUrl + "?t=" + Date.now();
+  xhrGet(readUrl)
   .then(function(d){
     if(!d||!d.ts) return;
     if(d.ts>gdLastTs){
@@ -1075,7 +1102,10 @@ function gdRefresh() {
   var rb = document.getElementById("btn-refresh-drive");
   if(rb) { rb.textContent = "⏳..."; rb.disabled = true; }
   setSyncDot("busy","loading...");
-  xhrGet(gdUrl+"?t="+Date.now())
+  var _readUrl = gdFileId
+    ? "https://drive.google.com/uc?export=download&id=" + gdFileId + "&t=" + Date.now()
+    : gdUrl + "?t=" + Date.now();
+  xhrGet(_readUrl)
   .then(function(d) {
     if(!d || typeof d !== "object") throw new Error("Invalid data from Drive");
     if(!d.ts && !d.stock && !d.customFlavors) throw new Error("Drive file empty — tap Save on the other device first");
@@ -3408,6 +3438,7 @@ loadPricing();
 loadCustomFlavors();
 renderStock();
 updateStats();
+gdFileId = localStorage.getItem("vs5_gdfileid")||"";
 if(gdUrl){
   gdConnected=true; setSyncDot("busy","connecting...");
   document.getElementById("btn-gd-disc").style.display="";
