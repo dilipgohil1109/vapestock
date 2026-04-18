@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>VapeStock</title>
+<title>Krazy Wholesale</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--sur:#13131a;--sur2:#1c1c27;--brd:#2a2a3a;--acc:#7c6fff;--grn:#00e5a0;--red:#ff4d6d;--amb:#ffb800;--txt:#f0f0f8;--txt2:#9090b0;--txt3:#5a5a7a;--r:14px;--rs:8px}
+:root{--bg:#f5f5f7;--sur:#ffffff;--sur2:#eeeef0;--brd:#d1d1d6;--acc:#5b4fe8;--grn:#00a870;--red:#e0394a;--amb:#c47d00;--txt:#1a1a2e;--txt2:#4a4a6a;--txt3:#8a8aaa;--r:14px;--rs:8px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",sans-serif;overflow-x:hidden}
-.hdr{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--brd);padding:12px 14px 0}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(245,245,247,.97);backdrop-filter:blur(20px);box-shadow:0 1px 8px rgba(0,0,0,.08);padding:12px 14px 0}
 .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .logo{font-size:19px;font-weight:800;letter-spacing:-.5px}
 .logo b{color:var(--acc);font-weight:800}
@@ -22,9 +22,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .hs{text-align:center}
 .hsv{font-size:16px;font-weight:700;color:var(--grn);font-family:"DM Mono",monospace}
 .hsl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px}
-.tabs{display:flex;gap:1px;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--brd)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:44px;padding:9px 2px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--txt3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab{flex:0 0 auto;padding:10px 14px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap}
 .tab.on{color:var(--acc);border-color:var(--acc)}
 .pg{display:none;padding:14px;padding-bottom:100px}.pg.on{display:block}
 .stitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt3);margin-bottom:10px}
@@ -34,23 +34,23 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .fcard{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:11px;position:relative;transition:border-color .2s}
-.fcard.low{border-color:rgba(255,184,0,.5)}.fcard.out{border-color:rgba(255,77,109,.4);background:rgba(255,77,109,.04)}
+.fcard.low{border-color:rgba(196,125,0,.5)}.fcard.out{border-color:rgba(224,57,74,.4);background:rgba(224,57,74,.04)}
 .fname{font-size:12px;font-weight:600;line-height:1.3;margin-bottom:8px;min-height:30px;padding-right:12px}
 .qrow{display:flex;align-items:center;gap:5px}
 .qbtn{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.qbtn.m{background:rgba(255,77,109,.15);color:var(--red)}.qbtn.m:active{background:rgba(255,77,109,.4);transform:scale(.9)}
-.qbtn.p{background:rgba(0,229,160,.15);color:var(--grn)}.qbtn.p:active{background:rgba(0,229,160,.4);transform:scale(.9)}
+.qbtn.m{background:rgba(224,57,74,.15);color:var(--red)}.qbtn.m:active{background:rgba(224,57,74,.4);transform:scale(.9)}
+.qbtn.p{background:rgba(0,168,112,.15);color:var(--grn)}.qbtn.p:active{background:rgba(0,168,112,.4);transform:scale(.9)}
 .qval{flex:1;text-align:center;font-family:"DM Mono",monospace;font-size:18px;font-weight:700}
 .qval.z{color:var(--txt3)}.qval.lw{color:var(--amb)}
-.qedit{width:48px;text-align:center;padding:4px 0;border-radius:6px;background:var(--sur2);border:1px solid var(--acc);color:var(--txt);font-family:"DM Mono",monospace;font-size:16px;font-weight:700;outline:none}
+.qedit{width:48px;text-align:center;padding:4px 0;border-radius:6px;background:#fff;border:2px solid var(--acc);color:var(--txt);font-family:"DM Mono",monospace;font-size:16px;font-weight:700;outline:none}
 .cdot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%}
 .cdot.in{background:var(--grn)}.cdot.lw{background:var(--amb)}.cdot.out{background:var(--red)}
 .fedit-btn{position:absolute;bottom:8px;right:8px;font-size:10px;color:var(--txt3);cursor:pointer;font-weight:700;padding:2px 5px;border-radius:4px;background:var(--sur2);border:1px solid var(--brd)}
 .frow{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .fc{padding:5px 11px;border-radius:50px;border:1px solid var(--brd);background:var(--sur);font-size:11px;font-weight:700;cursor:pointer;color:var(--txt3);transition:all .2s;user-select:none}
-.fc.on{border-color:var(--acc);color:var(--acc);background:rgba(124,111,255,.1)}
+.fc.on{border-color:var(--acc);color:var(--acc);background:rgba(91,79,232,.1)}
 .fc-count{display:inline-block;background:rgba(255,255,255,.15);border-radius:50px;padding:1px 6px;font-size:10px;font-family:"DM Mono",monospace;margin-left:3px;font-weight:700}
-.fc.on .fc-count{background:rgba(124,111,255,.25)}
+.fc.on .fc-count{background:rgba(91,79,232,.2)}
 .igrp{margin-bottom:12px}
 .ilbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:6px}
 .ifield{width:100%;padding:11px 13px;border-radius:var(--rs);background:var(--sur);border:1px solid var(--brd);color:var(--txt);font-family:"Syne",sans-serif;font-size:14px;outline:none;transition:border .2s}
@@ -60,7 +60,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:14px}
 .flist{max-height:200px;overflow-y:auto;border-radius:var(--rs);border:1px solid var(--brd);scrollbar-width:thin;scrollbar-color:var(--brd) transparent}
 .fitem{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background .15s;user-select:none}
-.fitem:last-child{border-bottom:none}.fitem:active{background:var(--sur2)}.fitem.sel{background:rgba(124,111,255,.1)}
+.fitem:last-child{border-bottom:none}.fitem:active{background:var(--sur2)}.fitem.sel{background:rgba(91,79,232,.1)}
 .fin{font-size:13px;font-weight:600}.fsub{font-size:10px;color:var(--txt3);margin-top:1px}
 .fchk{width:20px;height:20px;border-radius:6px;border:2px solid var(--brd);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#fff}
 .fitem.sel .fchk{background:var(--acc);border-color:var(--acc)}
@@ -73,9 +73,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .btn:active{opacity:.85;transform:scale(.98)}
 .bpri{background:var(--acc);color:#fff}
 .bsuc{background:var(--grn);color:#000}
-.bdgr{background:rgba(255,77,109,.15);color:var(--red);border:1px solid rgba(255,77,109,.3)}
+.bdgr{background:rgba(224,57,74,.15);color:var(--red);border:1px solid rgba(255,77,109,.3)}
 .bsec{background:var(--sur2);color:var(--txt2);border:1px solid var(--brd)}
-.bamb{background:rgba(255,184,0,.15);color:var(--amb);border:1px solid rgba(255,184,0,.3)}
+.bamb{background:rgba(196,125,0,.1);color:var(--amb);border:1px solid rgba(196,125,0,.3)}
 .bsm{width:auto;padding:7px 13px;font-size:12px}
 .brow{display:flex;gap:8px}.brow .btn{flex:1}
 .wabtn{background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -86,19 +86,19 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .vtxt{font-size:12px;line-height:1.4;flex:1}
 .vtxt strong{font-size:13px;display:block;margin-bottom:2px}
 .qav{font-family:"DM Mono",monospace;color:var(--txt2);font-size:11px}
-.vitem.vok{background:rgba(0,229,160,.07);border-color:rgba(0,229,160,.25)}
-.vitem.ver{background:rgba(255,77,109,.07);border-color:rgba(255,77,109,.25)}
-.vitem.vsug{background:rgba(255,184,0,.07);border-color:rgba(255,184,0,.3)}
-.vitem.vman{background:rgba(124,111,255,.07);border-color:rgba(124,111,255,.25)}
+.vitem.vok{background:rgba(0,168,112,.07);border-color:rgba(0,168,112,.25)}
+.vitem.ver{background:rgba(224,57,74,.07);border-color:rgba(224,57,74,.25)}
+.vitem.vsug{background:rgba(196,125,0,.07);border-color:rgba(196,125,0,.3)}
+.vitem.vman{background:rgba(91,79,232,.07);border-color:rgba(91,79,232,.25)}
 .match-sel{width:100%;margin-top:6px;padding:6px 8px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt);font-family:"Syne",sans-serif;font-size:12px;outline:none}
 .match-sel:focus{border-color:var(--acc)}
 .qinline{width:48px;padding:4px 6px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:13px;font-weight:700;text-align:center;outline:none}
 .qinline:focus{border-color:var(--acc)}
-.skip-btn{font-size:10px;color:var(--txt3);cursor:pointer;font-weight:700;margin-left:6px;padding:3px 7px;border-radius:4px;background:var(--sur2);border:1px solid var(--brd);flex-shrink:0}
+.skip-btn{font-size:10px;color:var(--txt2);cursor:pointer;font-weight:700;margin-left:6px;padding:3px 7px;border-radius:4px;background:var(--sur2);border:1px solid var(--brd);flex-shrink:0}
 .hitem{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:12px;margin-bottom:9px}
 .hmeta{display:flex;justify-content:space-between;margin-bottom:6px}
 .htype{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
-.htype.pur{color:var(--grn)}.htype.sal{color:#ff6b9d}.htype.adj{color:var(--amb)}
+.htype.pur{color:var(--grn)}.htype.sal{color:#c0396a}.htype.adj{color:var(--amb)}
 .hdt{font-size:11px;color:var(--txt3);font-family:"DM Mono",monospace}
 .hdtl{font-size:12px;color:var(--txt2);line-height:1.6}
 .scard{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:15px;margin-bottom:11px}
@@ -108,14 +108,14 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .stepn{width:21px;height:21px;border-radius:50%;background:var(--acc);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
 .stept{font-size:12px;color:var(--txt2);line-height:1.5}
 .stept a{color:var(--acc);text-decoration:none}
-.info-box{background:rgba(124,111,255,.08);border:1px solid rgba(124,111,255,.25);border-radius:var(--rs);padding:11px;margin-bottom:12px}
+.info-box{background:rgba(91,79,232,.08);border:1px solid rgba(91,79,232,.25);border-radius:var(--rs);padding:11px;margin-bottom:12px}
 .info-box p{font-size:12px;color:var(--txt2);line-height:1.6;margin-bottom:5px}.info-box p:last-child{margin-bottom:0}
 .status-box{padding:9px 13px;border-radius:var(--rs);font-size:12px;font-weight:600;margin-top:9px;display:none}
-.status-box.ok{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);color:var(--grn)}
-.status-box.err{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--red)}
-.status-box.busy{background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.3);color:var(--amb)}
+.status-box.ok{background:rgba(0,168,112,.1);border:1px solid rgba(0,168,112,.3);color:var(--grn)}
+.status-box.err{background:rgba(224,57,74,.1);border:1px solid rgba(224,57,74,.3);color:var(--red)}
+.status-box.busy{background:rgba(196,125,0,.1);border:1px solid rgba(196,125,0,.3);color:var(--amb)}
 .dv{height:1px;background:var(--brd);margin:12px 0}
-.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--sur2);border:1px solid var(--brd);border-radius:50px;padding:9px 18px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--sur);border:1px solid var(--brd);border-radius:50px;padding:9px 18px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.15)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.ts{border-color:rgba(0,229,160,.5);color:var(--grn)}.toast.te{border-color:rgba(255,77,109,.5);color:var(--red)}.toast.tw{border-color:rgba(255,184,0,.5);color:var(--amb)}
 .empty{text-align:center;padding:34px 18px}
@@ -124,9 +124,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .leg{display:flex;align-items:center;gap:5px;color:var(--txt2)}
 .legdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-overlay.open{opacity:1;pointer-events:all}
-.modal-sheet{background:var(--sur);border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
 .modal-overlay.open .modal-sheet{transform:translateY(0)}
 .modal-title{font-size:16px;font-weight:800;margin-bottom:4px}
 .modal-sub{font-size:12px;color:var(--txt3);margin-bottom:16px}
@@ -145,7 +145,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .cat-brand-actions{display:flex;gap:6px}
 .cat-action-btn{padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;cursor:pointer}
 .cat-action-btn:active{background:rgba(255,255,255,.3)}
-.cat-action-del{border-color:rgba(255,77,109,.5);background:rgba(255,77,109,.2)}
+.cat-action-del{border-color:rgba(224,57,74,.4);background:rgba(224,57,74,.15)}
 .cat-flavor-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--brd);background:var(--sur)}
 .cat-flavor-row:last-child{border-bottom:none;border-radius:0 0 var(--r) var(--r)}
 .cat-flavor-name{font-size:13px;font-weight:600;flex:1}
@@ -153,8 +153,61 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .cat-flavor-del{color:var(--red);font-size:15px;cursor:pointer;padding:4px 7px;border-radius:4px;font-weight:700;flex-shrink:0}
 .cat-flavor-del:active{background:rgba(255,77,109,.15)}
 .cat-brand-block{border-radius:var(--r);border:1px solid var(--brd);margin-bottom:14px;overflow:hidden}
-.cat-add-flavor-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;background:rgba(124,111,255,.08);border:none;width:100%;text-align:left;color:var(--acc);font-size:12px;font-weight:700;cursor:pointer;font-family:"Syne",sans-serif;border-top:1px solid var(--brd)}
-.cat-add-flavor-btn:active{background:rgba(124,111,255,.18)}
+.cat-add-flavor-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;background:rgba(91,79,232,.06);border:none;width:100%;text-align:left;color:var(--acc);font-size:12px;font-weight:700;cursor:pointer;font-family:"Syne",sans-serif;border-top:1px solid var(--brd)}
+.cat-add-flavor-btn:active{background:rgba(91,79,232,.15)}
+
+.cat-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;scrollbar-width:none}
+.cat-chips::-webkit-scrollbar{display:none}
+.catc{flex-shrink:0;padding:5px 12px;border-radius:50px;background:var(--sur2);border:1.5px solid var(--acc);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;color:var(--acc);transition:all .2s;user-select:none}
+.catc.on{background:var(--acc);color:#fff}
+.catc:active{opacity:.8}
+
+.pcard{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.pcard-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pcard-name{font-size:15px;font-weight:700}
+.pcard-phone{font-size:11px;color:var(--txt3);font-family:"DM Mono",monospace;margin-top:2px}
+.ptable{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.ptable th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);padding:5px 8px;border-bottom:1px solid var(--brd)}
+.ptable td{padding:7px 8px;border-bottom:1px solid rgba(42,42,58,.5);vertical-align:middle}
+.ptable tr:last-child td{border-bottom:none}
+.ptable .brand-cell{font-weight:600;color:var(--txt)}
+.ptable .cat-cell{font-size:10px;color:var(--txt3)}
+.ptable .price-inp{width:72px;padding:5px 7px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:13px;font-weight:700;text-align:right;outline:none}
+.ptable .price-inp:focus{border-color:var(--acc)}
+.ptable .default-inp{width:72px;padding:5px 7px;border-radius:6px;background:rgba(91,79,232,.06);border:1px solid rgba(91,79,232,.25);color:var(--acc);font-family:"DM Mono",monospace;font-size:13px;font-weight:700;text-align:right;outline:none}
+.ptable .default-inp:focus{border-color:var(--acc)}
+.disc-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;white-space:nowrap}
+.disc-pos{background:transparent;color:#1a6b3a;font-weight:700}
+.disc-neg{background:transparent;color:#c0392b;font-weight:700}
+.disc-none{background:transparent;color:var(--txt3)}
+.cust-chip{flex-shrink:0;padding:6px 13px;border-radius:50px;background:var(--sur);border:1px solid var(--brd);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--txt2);transition:all .2s;user-select:none}
+.cust-chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+@media print{
+  @page{margin:15mm 12mm;size:auto}
+  html,body{background:#fff!important;color:#000!important}
+  .hdr,.tabs,.pg,.tab,.stitle{display:none!important}
+  #pg-pricing,#stock-print-area{display:none!important}
+  body[data-print-mode="pricing"] #pg-pricing{display:block!important;padding:0!important}
+  body[data-print-mode="pricing"] #pricing-print-area{display:block!important}
+  body[data-print-mode="stock"] #stock-print-area{display:block!important}
+  .no-print{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  #pg-pricing,#pricing-table-wrap,.pcard{background:#fff!important;color:#000!important}
+  .ptable th{color:#000!important;border-bottom:2px solid #000!important;font-size:9px!important}
+  .ptable td{color:#000!important;border-bottom:1px solid #ddd!important}
+  .brand-cell{color:#000!important;font-weight:700!important}
+  .pcard{border:1px solid #ccc!important;break-inside:avoid;margin-bottom:12px!important}
+  .disc-badge{background:transparent!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .disc-pos{color:#1a6b3a!important;font-weight:700!important;background:none!important}
+  .disc-neg{color:#c0392b!important;font-weight:700!important;background:none!important}
+  .price-inp,.default-inp{border:none!important;background:transparent!important;font-weight:700!important;color:#000!important}
+  .catc,.cust-chip{display:none!important}
+  #pricing-print-header{display:block!important}
+}
+.sp-cat-hdr{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #000;padding-bottom:4px;margin:18px 0 10px}
+.sp-brand-hdr{font-size:13px;font-weight:700;margin:12px 0 5px}
+.sp-flavor-grid{display:grid;grid-template-columns:repeat(1,1fr);gap:2px 0;margin-bottom:8px}
+.sp-flavor{font-size:11px;padding:2px 0;border-bottom:1px dotted #ccc;color:#000}
 </style>
 </head>
 <body>
@@ -164,6 +217,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
+      <button id="btn-save-drive" style="display:none;margin-left:6px;padding:3px 10px;border-radius:50px;border:1.5px solid #00a870;background:transparent;color:#00a870;font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">⬆ Save</button>
+      <button id="btn-refresh-drive" style="display:none;margin-left:4px;padding:3px 10px;border-radius:50px;border:1.5px solid #5b4fe8;background:transparent;color:#5b4fe8;font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">⬇ Refresh</button>
       <div class="hstats">
         <div class="hs"><div class="hsv" id="hs-tot">0</div><div class="hsl">Units</div></div>
         <div class="hs"><div class="hsv" style="color:var(--amb)" id="hs-low">0</div><div class="hsl">Low</div></div>
@@ -177,14 +232,18 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="tab" data-pg="sell">Sell</div>
     <div class="tab" data-pg="order">Order</div>
     <div class="tab" data-pg="history">Log</div>
-    <div class="tab" data-pg="sync">Sync</div>
     <div class="tab" data-pg="catalog">Catalog</div>
+    <div class="tab" data-pg="customers">Customers</div>
+    <div class="tab" data-pg="pricing">Pricing</div>
     <div class="tab" data-pg="export">Excel</div>
+    <div class="tab" data-pg="sync">Sync</div>
+  </div>xport">Excel</div>
   </div>
 </div>
 
 <!-- STOCK PAGE -->
 <div class="pg on" id="pg-stock">
+  <div class="cat-chips" id="s-cat-chips"></div>
   <div class="bscroll" id="sb"></div>
   <div class="frow" id="sf-row">
     <div class="fc on" data-sf="all">All <span class="fc-count" id="fc-all">0</span></div>
@@ -237,7 +296,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 
   <!-- MANUAL pane -->
   <div id="pur-manual-pane" style="display:none">
-    <div class="igrp"><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
+    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="pur-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
     <div class="igrp">
       <div class="ilbl">Select Flavors</div>
       <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="psearch" placeholder="Search flavor..."></div>
@@ -282,7 +341,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 
   <!-- MANUAL pane -->
   <div id="sell-manual-pane" style="display:none">
-    <div class="igrp"><div class="ilbl">Brand</div><div class="bscroll" id="sell-brand-scroll"></div></div>
+    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="sell-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="sell-brand-scroll"></div></div>
     <div class="igrp">
       <div class="ilbl">Select Flavors to Sell</div>
       <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="sell-search" placeholder="Search flavor..."></div>
@@ -301,6 +360,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   <div class="tabs" id="otabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
     <div class="tab on" data-ot="verify" style="border-radius:6px">Verify Order</div>
     <div class="tab" data-ot="generate" style="border-radius:6px">Generate List</div>
+    <div class="tab" data-ot="printstock" style="border-radius:6px">Print Stock</div>
   </div>
   <div id="ov-pane">
     <p class="stitle">Paste WhatsApp Order</p>
@@ -314,7 +374,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
   <div id="og-pane" style="display:none">
     <p class="stitle">Generate Stock List</p>
-    <div class="igrp"><div class="ilbl">Brand Filter</div><div class="bscroll" id="gb"></div></div>
+    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="gen-cat-chips"></div><div class="ilbl">Brand Filter</div><div class="bscroll" id="gb"></div></div>
     <div class="frow" id="gf-row">
       <div class="fc on" data-gf="in">In Stock</div>
       <div class="fc" data-gf="low">Low Only</div>
@@ -327,26 +387,111 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
       <button class="btn bsec bsm" id="btn-copy">Copy</button>
     </div>
   </div>
+
+  <!-- PRINT STOCK PANE -->
+  <div id="ops-pane" style="display:none">
+    <p class="stitle">Print Stock List</p>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:12px">Prints available flavors grouped by Category → Brand. No quantities shown.</p>
+
+    <div class="igrp">
+      <div class="ilbl">Category</div>
+      <div class="bscroll" id="ps-cat-chips"></div>
+    </div>
+
+    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="ps-in-stock-only" checked style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
+        <span style="font-size:13px;font-weight:600">Only show flavors with stock > 0</span>
+      </label>
+    </div>
+
+    <button class="btn bpri" id="btn-ps-print" style="margin-bottom:12px">&#128438; Print Stock List</button>
+
+    <div style="padding:10px 12px;background:rgba(196,125,0,.08);border:1px solid rgba(196,125,0,.35);border-radius:var(--rs)">
+      <div style="font-size:11px;font-weight:700;color:var(--amb);margin-bottom:5px">&#9432; Remove date &amp; file path from printout</div>
+      <div style="font-size:11px;color:var(--txt2);line-height:1.7">In the print dialog: click <strong style="color:var(--txt)">More settings</strong> → uncheck <strong style="color:var(--txt)">Headers and footers</strong>. Browser remembers this setting.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STOCK PRINT AREA (hidden, rendered before print) -->
+<div id="stock-print-area" style="display:none">
+  <div id="stock-print-content"></div>
 </div>
 
 <!-- HISTORY PAGE -->
 <div class="pg" id="pg-history">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Transaction Log</p>
-    <button class="btn bdgr bsm" id="btn-clrhist">Clear</button>
+    <button class="btn bdgr bsm" id="btn-clrhist">Clear All</button>
   </div>
+
+  <!-- Filter tabs -->
+  <div class="frow" id="log-filter-row" style="margin-bottom:10px">
+    <div class="fc on" data-lf="all">All</div>
+    <div class="fc" data-lf="purchase">Buy</div>
+    <div class="fc" data-lf="sale">Sell</div>
+    <div class="fc" data-lf="adj">Adjust</div>
+  </div>
+
+  <!-- Search -->
+  <div class="swrap" style="margin-bottom:10px">
+    <span class="sico">&#128269;</span>
+    <input class="ifield" id="log-search" placeholder="Search brand or flavor...">
+  </div>
+
+  <!-- Totals summary bar -->
+  <div id="log-summary" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap"></div>
+
+  <!-- Log list -->
   <div id="hlist"></div>
+  <div id="log-load-more" style="display:none;text-align:center;margin-top:12px">
+    <button class="btn bsec bsm" id="btn-log-more">Load more</button>
+  </div>
 </div>
 
 <!-- CATALOG PAGE -->
 <div class="pg" id="pg-catalog">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Master Catalog</p>
-    <button class="btn bpri bsm" id="btn-cat-add-brand">+ Add Brand</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn bsec bsm" id="btn-cat-export">&#11015; Export</button>
+      <button class="btn bsec bsm" id="btn-cat-import-open">&#11014; Import</button>
+      <button class="btn bpri bsm" id="btn-cat-add-brand">+ Brand</button>
+    </div>
   </div>
   <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">All brands and flavors available in Stock, Buy and Sell. Add new brands or flavors here — they appear across the whole app instantly.</p>
 
+  <!-- Import panel (hidden by default) -->
+  <div id="cat-import-panel" style="display:none;background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px">Import Catalog</div>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Upload a CSV file with columns: <strong style="color:var(--txt)">Category, Brand, Flavor</strong>. You can <strong style="color:var(--txt)">merge</strong> (add to existing) or <strong style="color:var(--txt)">replace</strong> (wipe and reload). Download the export first to see the exact format.</p>
+    <input type="file" id="cat-import-file" accept=".csv,.txt" style="display:none">
+    <div class="brow" style="margin-bottom:10px">
+      <button class="btn bsec" id="btn-cat-pick-file">&#128193; Choose JSON File</button>
+    </div>
+    <div id="cat-import-filename" style="font-size:12px;color:var(--txt3);margin-bottom:10px;display:none"></div>
+    <div id="cat-import-preview" style="display:none;background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;font-size:12px;color:var(--txt2);line-height:1.7"></div>
+    <div class="brow" id="cat-import-actions" style="display:none">
+      <button class="btn bpri" id="btn-cat-do-merge">Merge into existing</button>
+      <button class="btn bamb" id="btn-cat-do-replace">Replace all</button>
+      <button class="btn bsec bsm" id="btn-cat-import-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Category section -->
+  <div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="ilbl" style="margin-bottom:0">Categories</div>
+      <button class="btn bpri bsm" id="btn-cat-add-category" style="font-size:11px">+ Category</button>
+    </div>
+    <div id="cat-category-chips"></div>
+  </div>
+
   <!-- Brand filter chips -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <div class="ilbl" style="margin-bottom:0">Brands in <span id="cat-active-cat-label" style="color:var(--acc)">Vape</span></div>
+  </div>
   <div class="bscroll" id="cat-brand-scroll"></div>
 
   <!-- Search -->
@@ -358,12 +503,29 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   <!-- Flavor list for selected brand -->
   <div id="cat-flavor-list"></div>
 
+  <!-- Add Category Modal -->
+  <div class="modal-overlay" id="add-category-modal">
+    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
+      <span class="modal-close" id="add-cat-modal-close">&#10005;</span>
+      <div class="modal-title">Add New Category</div>
+      <div class="modal-sub">Create a category to group related brands (e.g. "Vape", "Nicotine Pouches", "E-Liquid").</div>
+      <div class="igrp">
+        <div class="ilbl">Category Name</div>
+        <input class="ifield" id="add-category-input" placeholder="e.g. E-Liquid" autocomplete="off">
+      </div>
+      <div class="brow">
+        <button class="btn bpri" id="btn-add-category-confirm">+ Create Category</button>
+        <button class="btn bsec" id="btn-add-category-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Brand Modal -->
   <div class="modal-overlay" id="add-brand-modal">
     <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
       <span class="modal-close" id="add-brand-close-btn">&#10005;</span>
       <div class="modal-title">Add New Brand</div>
-      <div class="modal-sub">Create a new vape brand. You can add flavors to it after.</div>
+      <div class="modal-sub">Adding brand to category: <span id="add-brand-cat-label" style="color:var(--acc);font-weight:700">Vape</span>. You can add flavors after.</div>
       <div class="igrp">
         <div class="ilbl">Brand Name</div>
         <input class="ifield" id="add-brand-input" placeholder="e.g. Elf Bar Pro" autocomplete="off">
@@ -397,12 +559,162 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
 </div>
 
+<!-- CUSTOMERS PAGE -->
+<div class="pg" id="pg-customers">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <p class="stitle" style="margin-bottom:0">Customer Master</p>
+    <button class="btn bpri bsm" id="btn-add-customer">+ Add Customer</button>
+  </div>
+  <div class="swrap" style="margin-bottom:12px">
+    <span class="sico">&#128269;</span>
+    <input class="ifield" id="cust-search" placeholder="Search customer...">
+  </div>
+  <div id="cust-list"></div>
+
+  <!-- Add / Edit Customer Modal -->
+  <div class="modal-overlay" id="cust-modal">
+    <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+      <span class="modal-close" id="cust-modal-close">&#10005;</span>
+      <div class="modal-title" id="cust-modal-title">Add Customer</div>
+      <input type="hidden" id="cust-edit-id" value="">
+      <div class="igrp">
+        <div class="ilbl">Customer Name</div>
+        <input class="ifield" id="cust-name-inp" placeholder="e.g. Ahmed Trading">
+      </div>
+      <div class="igrp">
+        <div class="ilbl">Phone (optional)</div>
+        <input class="ifield" id="cust-phone-inp" placeholder="+1 234 567 8900" type="tel">
+      </div>
+      <div class="igrp">
+        <div class="ilbl">Address Line 1 (optional)</div>
+        <input class="ifield" id="cust-addr1-inp" placeholder="123 Main Street">
+      </div>
+      <div class="igrp">
+        <div class="ilbl">Address Line 2 (optional)</div>
+        <input class="ifield" id="cust-addr2-inp" placeholder="Suite 400, Apt 2B...">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="igrp" style="margin-bottom:0">
+          <div class="ilbl">City</div>
+          <input class="ifield" id="cust-city-inp" placeholder="New York">
+        </div>
+        <div class="igrp" style="margin-bottom:0">
+          <div class="ilbl">State</div>
+          <select class="ifield" id="cust-state-inp">
+            <option value="">— State —</option>
+            <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option>
+            <option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option>
+            <option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+            <option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+            <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option>
+            <option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option>
+            <option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+            <option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+            <option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
+            <option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+            <option>DC</option>
+          </select>
+        </div>
+      </div>
+      <div class="igrp">
+        <div class="ilbl">ZIP Code</div>
+        <input class="ifield" id="cust-zip-inp" placeholder="10001" maxlength="10" inputmode="numeric">
+      </div>
+      <div class="igrp">
+        <div class="ilbl">Notes (optional)</div>
+        <input class="ifield" id="cust-notes-inp" placeholder="Payment terms, special instructions...">
+      </div>ment terms...">
+      </div>
+      <div class="brow">
+        <button class="btn bpri" id="btn-cust-save">Save Customer</button>
+        <button class="btn bsec" id="btn-cust-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING PAGE -->
+<div class="pg" id="pg-pricing">
+  <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <p class="stitle" style="margin-bottom:0">Price List</p>
+    <div style="display:flex;gap:8px">
+      <button class="btn bsec bsm no-print" id="btn-pricing-excel">&#11015; Excel</button>
+      <button class="btn bpri bsm no-print" id="btn-pricing-print">&#128438; Print</button>
+    </div>
+  </div>
+
+  <!-- Print filter modal -->
+  <div class="modal-overlay" id="print-filter-modal">
+    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
+      <span class="modal-close" id="print-filter-close">&#10005;</span>
+      <div class="modal-title">Print Options</div>
+      <div class="modal-sub">Choose which categories to include and what to print.</div>
+      <div class="igrp">
+        <div class="ilbl">Category Filter</div>
+        <div class="bscroll" id="print-cat-chips" style="flex-wrap:wrap;height:auto;padding-bottom:0"></div>
+      </div>
+      <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="print-only-priced" checked style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
+          <span style="font-size:13px;font-weight:600">Only show brands with customer price set</span>
+        </label>
+        <p style="font-size:11px;color:var(--txt3);margin-top:6px;margin-left:28px">Hides brands where no negotiated price has been entered for this customer</p>
+      </div>
+      <div class="brow">
+        <button class="btn bpri" id="btn-print-go">&#128438; Generate &amp; Print</button>
+        <button class="btn bsec" id="btn-print-cancel">Cancel</button>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:rgba(196,125,0,.08);border:1px solid rgba(196,125,0,.35);border-radius:var(--rs)">
+        <div style="font-size:11px;font-weight:700;color:var(--amb);margin-bottom:6px">&#9432; Remove date &amp; file path from printout</div>
+        <div style="font-size:11px;color:var(--txt2);line-height:1.7">
+          In the print dialog that opens:<br>
+          &bull; Click <strong style="color:var(--txt)">More settings</strong><br>
+          &bull; Uncheck <strong style="color:var(--txt)">Headers and footers</strong><br>
+          The browser remembers this setting — you only need to do it once.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Default prices note -->
+  <div class="info-box no-print" style="margin-bottom:12px">
+    <p>Set a <strong style="color:var(--acc)">Default Price</strong> per brand (applies to all customers). Then set individual <strong style="color:var(--txt)">Customer Prices</strong> — the discount/saving vs default is calculated automatically.</p>
+  </div>
+
+  <!-- Customer selector -->
+  <div class="no-print" style="margin-bottom:12px">
+    <div class="ilbl" style="margin-bottom:6px">Customer</div>
+    <div class="bscroll" id="pricing-cust-scroll"></div>
+  </div>
+
+  <!-- Print header (hidden on screen, shown when printing) -->
+  <div id="pricing-print-header" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+      <div>
+        <div style="font-size:26px;font-weight:900;letter-spacing:-0.5px;color:#000">Krazy Wholesale</div>
+        <div style="font-size:13px;color:#444;margin-top:2px;font-weight:600">Price List</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#333;line-height:2">
+        <div>Contact: ___________________________</div>
+        <div>Rep Name: _________________________</div>
+      </div>
+    </div>
+    <div id="pricing-print-cust" style="font-size:14px;margin-bottom:2px;border-top:2px solid #000;padding-top:8px"></div>
+  </div>
+
+  <!-- Price table area -->
+  <div id="pricing-print-area">
+    <div id="pricing-table-wrap"></div>
+  </div>
+</div>
+
 <!-- SYNC PAGE -->
 <div class="pg" id="pg-sync">
   <p class="stitle">Google Drive Sync</p>
   <div class="info-box">
-    <p><strong style="color:var(--acc)">How it works:</strong> Stock data is saved as a JSON file in your Google Drive. Both phones read and write to the same file — any change syncs within seconds.</p>
-    <p>One Google account. Both phones use the same Web App URL.</p>
+    <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
+    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
+    <p style="color:var(--grn)">&#10003; The Google Apps Script code has not changed — no update needed if you already set it up.</p>
   </div>
   <div class="scard">
     <div class="scard-t">Step 1 &mdash; One-time Setup</div>
@@ -449,10 +761,6 @@ function getFile() {
       <button class="btn bdgr bsm" id="btn-gd-disc" style="display:none">Disconnect</button>
     </div>
     <div class="status-box" id="gd-status"></div>
-    <div style="margin-top:10px;display:none" id="test-drive-wrap">
-      <button class="btn bsec bsm" id="btn-test-drive">🔍 Test Drive Response</button>
-      <div id="test-drive-result" style="margin-top:8px;font-size:11px;font-family:'DM Mono',monospace;background:var(--sur2);border-radius:var(--rs);padding:8px;display:none;word-break:break-all;max-height:120px;overflow-y:auto"></div>
-    </div>
   </div>
   <div class="scard">
     <div class="scard-t" style="color:var(--red)">Reset All Data</div>
@@ -485,13 +793,29 @@ function getFile() {
 
 var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
 var BRANDS = Object.keys(CATALOG);
+// CATEGORIES: { catName: [brandName, ...] }
+// All built-in brands start under "Vape"
+var CATEGORIES = { "Vape": Object.keys(CATALOG).slice() };
+var CATEGORY_NAMES = Object.keys(CATEGORIES);
+
+// Helper: get brands for a category
+function brandsForCat(cat) { return cat === "all" ? BRANDS : (CATEGORIES[cat] || []); }
+// Helper: get category of a brand
+function catOfBrand(br) {
+  var found = "Vape";
+  CATEGORY_NAMES.forEach(function(cat) { if ((CATEGORIES[cat]||[]).indexOf(br) !== -1) found = cat; });
+  return found;
+}
 
 var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}";
 
 var stock = {};
 var txLog = [];
+var activeCategory = "Vape";
 var activeBrand = BRANDS[0];
+var purCategory = "Vape";
 var purBrand = BRANDS[0];
+var sellCategory = "Vape";
 var cart = {};
 var stockFlt = "all";
 var genBrand = "all";
@@ -501,7 +825,6 @@ var gdConnected = false;
 var gdPollTimer = null;
 var gdPushTimer = null;
 var gdLastTs = 0;
-var gdFileId = "";
 
 // parsed items from upload/sell
 var purItems = [];
@@ -609,6 +932,7 @@ function saveLocal() {
     localStorage.setItem("vs5_stock", JSON.stringify(stock));
     localStorage.setItem("vs5_log", JSON.stringify(txLog));
     localStorage.setItem("vs5_gdurl", gdUrl);
+    savePricing();
   } catch(e) {}
 }
 function loadLocal() {
@@ -636,10 +960,31 @@ function setSyncDot(state, label) {
 }
 
 // ── STATS ──
+
+// ── CATEGORY CHIP RENDERER ──
+function renderCatChips(containerId, activeCat, onSelect) {
+  var wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  // "All" chip
+  var all = document.createElement("div");
+  all.className = "catc" + (activeCat === "all" ? " on" : "");
+  all.textContent = "All";
+  all.addEventListener("click", function() { onSelect("all"); });
+  wrap.appendChild(all);
+  CATEGORY_NAMES.forEach(function(cat) {
+    var d = document.createElement("div");
+    d.className = "catc" + (cat === activeCat ? " on" : "");
+    d.textContent = cat;
+    d.addEventListener("click", function() { onSelect(cat); });
+    wrap.appendChild(d);
+  });
+}
+
 function updateStats() {
   var tot=0, low=0, out=0;
   BRANDS.forEach(function(br) {
-    CATALOG[br].forEach(function(fl) {
+    (CATALOG[br]||[]).forEach(function(fl) {
       var q = qty(br, fl); tot += q;
       if (q===0) out++; else if (q<=3) low++;
     });
@@ -651,130 +996,132 @@ function updateStats() {
 
 function afterChange() { saveLocal(); updateStats(); }
 
-function rebuildCatalogFromFlavors() {
-  CATEGORY_NAMES.length = 0;
-  var keys = Object.keys(CATEGORIES);
-  for(var i=0;i<keys.length;i++) delete CATEGORIES[keys[i]];
-  var builtInBrands = Object.keys(CATALOG).filter(function(br){ return !customFlavors["__brand__"+br]; });
-  CATEGORIES["Vape"] = builtInBrands.slice();
-  CATEGORY_NAMES.push("Vape");
-  Object.keys(customFlavors).forEach(function(key){
-    if(key.indexOf("__cat__")===0){var cat=key.replace("__cat__","");if(!CATEGORIES[cat]){CATEGORIES[cat]=[];CATEGORY_NAMES.push(cat);}}
+// ── GOOGLE DRIVE ──
+function gdPush() { gdSave(); } // kept for compatibility
+
+function gdSave(onDone) {
+  if(!gdConnected) { toast("Not connected to Google Drive","err"); return; }
+  var sb = document.getElementById("btn-save-drive");
+  if(sb) { sb.textContent = "⏳..."; sb.disabled = true; }
+  setSyncDot("busy","saving...");
+  var payload = JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()});
+  function onSuccess() {
+    setSyncDot("ok","saved ✓");
+    toast("Saved to Google Drive ✓","ok");
+    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+    if(onDone) onDone();
+  }
+  function onFail(e) {
+    setSyncDot("err","error");
+    toast("Save failed — check connection","err");
+    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+    console.warn("gdSave:", e);
+  }
+  // Try with CORS first (captures response), fall back to no-cors
+  fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload})
+  .then(function(r) { return r.json(); })
+  .then(function(resp) { onSuccess(); })
+  .catch(function() {
+    // CORS blocked — fall back to no-cors (data still reaches GAS)
+    fetch(gdUrl, {method:"POST", headers:{"Content-Type":"text/plain"}, body:payload, mode:"no-cors"})
+    .then(function() { onSuccess(); })
+    .catch(function(e) { onFail(e); });
   });
-  var assigned={};
-  Object.keys(customFlavors).forEach(function(key){if(key.indexOf("__catbrand__")===0)assigned[key.replace("__catbrand__","")]=customFlavors[key];});
-  Object.keys(assigned).forEach(function(br){var cat=assigned[br];if(cat!=="Vape"){CATEGORIES["Vape"]=(CATEGORIES["Vape"]||[]).filter(function(b){return b!==br;});if(!CATEGORIES[cat])CATEGORIES[cat]=[];if(CATEGORIES[cat].indexOf(br)===-1)CATEGORIES[cat].push(br);}});
-  Object.keys(customFlavors).forEach(function(key){if(key.indexOf("__brand__")===0){var br=key.replace("__brand__","");if(!CATALOG[br])CATALOG[br]=[];if(BRANDS.indexOf(br)===-1)BRANDS.push(br);var cat=assigned[br]||"Vape";if(!CATEGORIES[cat])CATEGORIES[cat]=[];if(CATEGORIES[cat].indexOf(br)===-1)CATEGORIES[cat].push(br);if(cat!=="Vape")CATEGORIES["Vape"]=(CATEGORIES["Vape"]||[]).filter(function(b){return b!==br;});}});
-  Object.keys(customFlavors).forEach(function(br){if(br.indexOf("__")===0)return;if(!CATALOG[br])CATALOG[br]=[];customFlavors[br].forEach(function(fl){if(CATALOG[br].indexOf(fl)===-1)CATALOG[br].push(fl);});});
-  var deleted=customFlavors["__deleted__"]||[];
-  deleted.forEach(function(delKey){var sep=delKey.indexOf("~~");if(sep===-1)return;var br=delKey.substring(0,sep),fl=delKey.substring(sep+2);if(CATALOG[br])CATALOG[br]=CATALOG[br].filter(function(f){return f!==fl;});});
+}
+function gdPull() {
+  // Internal pull — only applies if Drive data is newer
+  if(!gdConnected) return;
+  xhrGet(gdUrl+"?t="+Date.now())
+  .then(function(d){
+    if(!d||!d.ts) return;
+    if(d.ts>gdLastTs){
+      gdLastTs=d.ts;
+      if(d.stock) stock=d.stock;
+      if(d.txLog) txLog=d.txLog;
+      if(d.customFlavors) { customFlavors=d.customFlavors; loadCustomFlavors(); }
+      if(d.customers) customers=d.customers;
+      if(d.defaultPrices) defaultPrices=d.defaultPrices;
+      if(d.customerPrices) customerPrices=d.customerPrices;
+      savePricing(); saveLocal();
+      renderStockGrid(); renderHistory(); updateStats();
+    }
+    setSyncDot("ok","live");
+  }).catch(function(){ setSyncDot("err","offline"); });
 }
 
-
-// ── GOOGLE DRIVE ──
-// XHR GET - handles GAS redirects, no proxy needed
+// XHR GET — follows GAS redirects without CORS issues
 function xhrGet(url) {
   return new Promise(function(resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
+    xhr.open("GET", url, true);
     xhr.timeout = 15000;
     xhr.onload = function() {
       if(xhr.status >= 200 && xhr.status < 400) {
-        var text = (xhr.responseText || '').trim();
-        if(!text) { reject(new Error('Empty response')); return; }
+        var text = (xhr.responseText||"").trim();
+        if(!text) { reject(new Error("Empty response")); return; }
         try { resolve(JSON.parse(text)); }
-        catch(e) { reject(new Error('Drive returned: ' + text.substring(0,80))); }
-      } else { reject(new Error('HTTP ' + xhr.status)); }
+        catch(e) { reject(new Error("Bad JSON: "+text.substring(0,60))); }
+      } else { reject(new Error("HTTP "+xhr.status)); }
     };
-    xhr.onerror = function() { reject(new Error('Network error')); };
-    xhr.ontimeout = function() { reject(new Error('Timeout')); };
+    xhr.onerror = function() { reject(new Error("Network error")); };
+    xhr.ontimeout = function() { reject(new Error("Timeout")); };
     xhr.send();
   });
 }
 
-
-function gdSave(onDone) {
-  if(!gdConnected) { toast("Not connected","err"); return; }
-  var saveBtn = document.getElementById("btn-save-drive");
-  if(saveBtn) { saveBtn.textContent = "⏳ Saving..."; saveBtn.disabled = true; }
-  setSyncDot("busy","saving...");
-  var payload = JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,ts:Date.now()});
-  function done() {
-    setSyncDot("ok","saved ✓"); addSyncLog("push"); toast("Saved to Google Drive ✓","ok");
-    if(saveBtn){saveBtn.textContent="⬆ Save";saveBtn.disabled=false;} if(onDone) onDone();
-  }
-  function fail(err) {
-    setSyncDot("err","error"); if(saveBtn){saveBtn.textContent="⬆ Save";saveBtn.disabled=false;}
-    toast("Save failed","err"); console.warn("gdSave:",err);
-  }
-  fetch(gdUrl,{method:"POST",headers:{"Content-Type":"text/plain"},body:payload})
-  .then(function(r){return r.json();})
-  .then(function(resp){if(resp&&resp.fileId){gdFileId=resp.fileId;try{localStorage.setItem("vs5_gdfileid",gdFileId);}catch(e){}}done();})
-  .catch(function(){fetch(gdUrl,{method:"POST",headers:{"Content-Type":"text/plain"},body:payload,mode:"no-cors"}).then(function(){done();}).catch(function(err){fail(err);});});
-}
-
-function addSyncLog(direction) {
-  txLog.unshift({type:"sync",direction:direction,date:new Date().toLocaleString(),qty:0});
-  if(txLog.length>2000) txLog.length=2000; saveLocal();
-}
-
+// Explicit Refresh — pulls from Drive and applies ALL data unconditionally
 function gdRefresh() {
-  if(!gdConnected) { toast("Not connected","err"); return; }
-  var refreshBtn = document.getElementById("btn-refresh-drive");
-  if(refreshBtn){refreshBtn.textContent="⏳ Loading...";refreshBtn.disabled=true;}
+  if(!gdConnected) { toast("Not connected to Google Drive","err"); return; }
+  var rb = document.getElementById("btn-refresh-drive");
+  if(rb) { rb.textContent = "⏳..."; rb.disabled = true; }
   setSyncDot("busy","loading...");
-  function applyData(d) {
-    if(!d||typeof d!=='object') throw new Error("Invalid data");
-    if(!d.ts&&!d.stock&&!d.customFlavors) throw new Error("Drive empty — Save from other device first");
-    if(d.stock) stock=d.stock; if(d.txLog) txLog=d.txLog;
-    if(d.customFlavors){customFlavors=d.customFlavors;rebuildCatalogFromFlavors();try{localStorage.setItem("vs5_custom",JSON.stringify(customFlavors));}catch(e){}}
-    if(d.customers) customers=d.customers; if(d.defaultPrices) defaultPrices=d.defaultPrices; if(d.customerPrices) customerPrices=d.customerPrices;
-    if(d.ts) gdLastTs=d.ts; if(d.fileId){gdFileId=d.fileId;try{localStorage.setItem("vs5_gdfileid",d.fileId);}catch(e){}}
-    savePricing(); saveLocal(); renderStock(); renderHistory(); updateStats();
-    addSyncLog("pull"); if(refreshBtn){refreshBtn.textContent="⬇ Refresh";refreshBtn.disabled=false;}
-    setSyncDot("ok","updated ✓"); toast("Updated from Google Drive ✓","ok");
-  }
-  function onFail(msg){if(refreshBtn){refreshBtn.textContent="⬇ Refresh";refreshBtn.disabled=false;}setSyncDot("err","error");toast(String(msg).substring(0,80),"err");}
-  if(gdFileId) {
-    xhrGet("https://drive.google.com/uc?export=download&id="+gdFileId+"&t="+Date.now())
-    .then(applyData).catch(function(){xhrGet(gdUrl+"?t="+Date.now()).then(applyData).catch(function(err){onFail(err.message||err);});});
-  } else {
-    xhrGet(gdUrl+"?t="+Date.now()).then(applyData).catch(function(err){onFail(err.message||err);});
-  }
-}
-
-function gdPull() {
-  if(!gdConnected) return;
   xhrGet(gdUrl+"?t="+Date.now())
-  .then(function(d){
-    if(d&&d.ts&&d.ts>gdLastTs){gdLastTs=d.ts;if(d.stock)stock=d.stock;if(d.txLog)txLog=d.txLog;if(d.customFlavors){customFlavors=d.customFlavors;rebuildCatalogFromFlavors();try{localStorage.setItem("vs5_custom",JSON.stringify(customFlavors));}catch(e){}}if(d.customers)customers=d.customers;if(d.defaultPrices)defaultPrices=d.defaultPrices;if(d.customerPrices)customerPrices=d.customerPrices;if(d.fileId){gdFileId=d.fileId;try{localStorage.setItem("vs5_gdfileid",d.fileId);}catch(e){}}savePricing();saveLocal();renderStock();renderHistory();updateStats();}
-    setSyncDot("ok","online ✓");
-  }).catch(function(err){console.warn("gdPull:",err.message);setSyncDot("err","offline");});
+  .then(function(d) {
+    if(!d || typeof d !== "object") throw new Error("Invalid data from Drive");
+    if(!d.ts && !d.stock && !d.customFlavors) throw new Error("Drive file empty — tap Save on the other device first");
+    // Apply ALL fields unconditionally (user explicitly requested refresh)
+    if(d.stock) stock = d.stock;
+    if(d.txLog) txLog = d.txLog;
+    if(d.customFlavors) { customFlavors = d.customFlavors; loadCustomFlavors(); }
+    if(d.customers) customers = d.customers;
+    if(d.defaultPrices) defaultPrices = d.defaultPrices;
+    if(d.customerPrices) customerPrices = d.customerPrices;
+    if(d.ts) gdLastTs = d.ts;
+    savePricing(); saveLocal();
+    renderStock(); renderHistory(); updateStats();
+    // Re-render any open tabs
+    if(document.getElementById("pg-catalog")&&document.getElementById("pg-catalog").classList.contains("on")) renderCatalogPage();
+    if(document.getElementById("pg-customers")&&document.getElementById("pg-customers").classList.contains("on")) renderCustomers();
+    if(document.getElementById("pg-pricing")&&document.getElementById("pg-pricing").classList.contains("on")) renderPricingPage();
+    if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
+    setSyncDot("ok","updated ✓");
+    toast("Updated from Google Drive ✓","ok");
+  })
+  .catch(function(err) {
+    if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
+    setSyncDot("err","error");
+    toast((err&&err.message ? err.message : "Refresh failed"),"err");
+    console.error("gdRefresh:", err);
+  });
 }
-
 function gdConnect(url) {
-  url=(url||"").trim();
-  if(!url){showGdStatus("err","Enter your Web App URL");return;}
-  if(url.indexOf("script.google.com")===-1){showGdStatus("err","Must be a script.google.com URL");return;}
-  gdUrl=url; gdConnected=true; saveLocal();
-  setSyncDot("busy","connecting..."); showGdStatus("busy","Testing connection...");
+  if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL"); return; }
+  gdUrl=url.trim(); gdConnected=true; saveLocal();
+  setSyncDot("busy","connecting..."); showGdStatus("busy","Connecting...");
   document.getElementById("btn-gd-disc").style.display="";
-  var sb=document.getElementById("btn-save-drive"); var rb=document.getElementById("btn-refresh-drive"); var tw=document.getElementById("test-drive-wrap");
-  if(sb)sb.style.display="inline-block"; if(rb)rb.style.display="inline-block"; if(tw)tw.style.display="block";
-  xhrGet(gdUrl+"?t="+Date.now())
-  .then(function(data){setSyncDot("ok","online ✓");showGdStatus("ok","✓ Connected! Sync is active.");toast("Connected ✓","ok");if(data&&data.fileId){gdFileId=data.fileId;try{localStorage.setItem("vs5_gdfileid",data.fileId);}catch(e){}};})
-  .catch(function(err){setSyncDot("ok","online");showGdStatus("ok","✓ Connected. Tap Save then Refresh.");toast("Connected — tap Save then Refresh","ok");console.warn("Connect:",err.message);});
+  var _sb=document.getElementById("btn-save-drive"); if(_sb)_sb.style.display="inline-block";
+  var _rb=document.getElementById("btn-refresh-drive"); if(_rb)_rb.style.display="inline-block";
+  gdPull(); clearInterval(gdPollTimer); gdPollTimer=setInterval(gdPull,10000);
+  toast("Google Drive connected!","ok");
 }
-
 function gdDisconnect() {
-  gdConnected=false; gdUrl=""; gdFileId="";
-  setSyncDot("","local"); document.getElementById("btn-gd-disc").style.display="none"; document.getElementById("gd-url").value="";
-  var sb=document.getElementById("btn-save-drive"); var rb=document.getElementById("btn-refresh-drive"); var tw=document.getElementById("test-drive-wrap");
-  if(sb)sb.style.display="none"; if(rb)rb.style.display="none"; if(tw)tw.style.display="none";
-  hideGdStatus(); saveLocal(); toast("Disconnected","warn");
+  gdConnected=false; gdUrl=""; clearInterval(gdPollTimer);
+  setSyncDot("","local"); document.getElementById("btn-gd-disc").style.display="none";
+  var _sb2=document.getElementById("btn-save-drive"); if(_sb2)_sb2.style.display="none";
+  var _rb2=document.getElementById("btn-refresh-drive"); if(_rb2)_rb2.style.display="none";
+  document.getElementById("gd-url").value=""; hideGdStatus(); saveLocal();
+  toast("Disconnected","warn");
 }
-
-
 function showGdStatus(type,msg){ var el=document.getElementById("gd-status"); el.textContent=msg; el.className="status-box "+type; el.style.display="block"; }
 function hideGdStatus(){ document.getElementById("gd-status").style.display="none"; }
 
@@ -792,6 +1139,8 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   if(pg==="history") renderHistory();
   if(pg==="sync") renderSyncPage();
   if(pg==="catalog") renderCatalogPage();
+  if(pg==="customers") renderCustomers();
+  if(pg==="pricing") renderPricingPage();
   if(pg==="export") renderExportPage();
   updateStats();
 });
@@ -804,6 +1153,8 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   tab.classList.add("on");
   document.getElementById("ov-pane").style.display=ot==="verify"?"block":"none";
   document.getElementById("og-pane").style.display=ot==="generate"?"block":"none";
+  document.getElementById("ops-pane").style.display=ot==="printstock"?"block":"none";
+  if(ot==="printstock") renderPsPage();
 })})();
 
 // ── PURCHASE SUB-TABS ──
@@ -818,10 +1169,17 @@ document.getElementById("mtabs").addEventListener("click",function(e){
 
 // ── STOCK PAGE ──
 function renderStockBrands() {
+  renderCatChips("s-cat-chips", activeCategory, function(cat) {
+    activeCategory = cat;
+    var brands = brandsForCat(cat);
+    activeBrand = brands[0] || BRANDS[0];
+    renderStockBrands(); renderStockGrid(); updateFilterCounts();
+  });
   var wrap=document.getElementById("sb"); wrap.innerHTML="";
-  BRANDS.forEach(function(br) {
+  var brs = brandsForCat(activeCategory);
+  brs.forEach(function(br) {
     var d=document.createElement("div"); d.className="chip"+(br===activeBrand?" on":""); d.textContent=br;
-    d.addEventListener("click",function(){ activeBrand=br; renderStock(); });
+    d.addEventListener("click",function(){ activeBrand=br; renderStockBrands(); renderStockGrid(); updateFilterCounts(); });
     wrap.appendChild(d);
   });
 }
@@ -885,7 +1243,7 @@ function renderStockGrid() {
         var nv=Math.max(0,parseInt(inp.value,10)||0);
         var old=stock[skey(activeBrand,fl)]||0;
         stock[skey(activeBrand,fl)]=nv;
-        if(nv!==old) txLog.unshift({type:"adj",brand:activeBrand,flavor:fl,qty:nv-old,date:new Date().toLocaleString()});
+        if(nv!==old) txLog.unshift({type:"adj",category:catOfBrand(activeBrand),brand:activeBrand,flavor:fl,qty:nv-old,date:new Date().toLocaleString()});
         afterChange(); renderStockGrid();
       });
       inp.addEventListener("keydown",function(e){ if(e.key==="Enter") inp.blur(); });
@@ -903,7 +1261,7 @@ function renderStockGrid() {
   var br=btn.getAttribute("data-br"), fl=btn.getAttribute("data-fl"), d=parseInt(btn.getAttribute("data-d"),10);
   var k=skey(br,fl), cur=stock[k]||0, nxt=Math.max(0,cur+d);
   stock[k]=nxt;
-  if(d<0&&cur>0) txLog.unshift({type:"sale",brand:br,flavor:fl,qty:1,date:new Date().toLocaleString()});
+  if(d<0&&cur>0) txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:1,date:new Date().toLocaleString()});
   afterChange(); renderStockGrid();
 })})();
 
@@ -1089,7 +1447,7 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
     }
     var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
     stock[k] = (stock[k] || 0) + item.qty;
-    txLog.unshift({ type: "purchase", brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString() });
+    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString() });
     count++;
   });
   afterChange();
@@ -1119,8 +1477,15 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
 
 // ── MANUAL PURCHASE ──
 function renderPurBrands(){
+  renderCatChips("pur-cat-chips", purCategory, function(cat) {
+    purCategory = cat;
+    var brs = brandsForCat(cat);
+    purBrand = brs[0] || BRANDS[0];
+    renderPurBrands(); renderPurFlavors();
+  });
   var wrap=document.getElementById("pb"); wrap.innerHTML="";
-  BRANDS.forEach(function(br){
+  var brs = brandsForCat(purCategory);
+  brs.forEach(function(br){
     var d=document.createElement("div"); d.className="chip"+(br===purBrand?" on":""); d.textContent=br;
     d.addEventListener("click",function(){purBrand=br;renderPurBrands();renderPurFlavors();});
     wrap.appendChild(d);
@@ -1174,7 +1539,7 @@ function renderCart(){
   keys.forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~"),q=parseInt(cart[k],10)||1;
     stock[k]=(stock[k]||0)+q;
-    txLog.unshift({type:"purchase",brand:br,flavor:fl,qty:q,date:new Date().toLocaleString()});
+    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,date:new Date().toLocaleString()});
   });
   afterChange(); cart={}; renderCart(); renderPurFlavors();
   toast(keys.length+" item(s) added to stock","ok");
@@ -1206,7 +1571,7 @@ function renderCart(){
     var deduct=Math.min(item.qty,cur);
     stock[k]=Math.max(0,cur-item.qty);
     if(item.qty>cur) warn++;
-    txLog.unshift({type:"sale",brand:br,flavor:fl,qty:deduct,date:new Date().toLocaleString()});
+    txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:deduct,date:new Date().toLocaleString()});
     count++;
   });
   afterChange();
@@ -1249,11 +1614,15 @@ function renderCart(){
 
 // ── GENERATE LIST ──
 function renderGenBrands(){
+  renderCatChips("gen-cat-chips", genCategory, function(cat) {
+    genCategory = cat; genBrand = "all"; renderGenBrands();
+  });
   var wrap=document.getElementById("gb"); wrap.innerHTML="";
   var all=document.createElement("div"); all.className="chip"+(genBrand==="all"?" on":""); all.textContent="All Brands";
   all.addEventListener("click",function(){genBrand="all";renderGenBrands();});
   wrap.appendChild(all);
-  BRANDS.forEach(function(br){
+  var brs = brandsForCat(genCategory);
+  brs.forEach(function(br){
     var d=document.createElement("div"); d.className="chip"+(genBrand===br?" on":""); d.textContent=br;
     d.addEventListener("click",function(){genBrand=br;renderGenBrands();});
     wrap.appendChild(d);
@@ -1266,7 +1635,8 @@ function renderGenBrands(){
   c.classList.add("on");
 })})();
 (function(){var __el=document.getElementById("btn-gen");if(!__el)return;__el.addEventListener("click",function(){
-  var brs=genBrand==="all"?BRANDS:[genBrand];
+  var allBrsInCat = genCategory === "all" ? BRANDS : brandsForCat(genCategory);
+  var brs=genBrand==="all"?allBrsInCat:[genBrand];
   var lines=["*VAPE STOCK LIST*","Date: "+new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),""];
   var hasAny=false;
   brs.forEach(function(br){
@@ -1302,27 +1672,104 @@ function renderGenBrands(){
 })})();
 
 // ── HISTORY ──
-function renderHistory(){
-  var el=document.getElementById("hlist"); el.innerHTML="";
-  if(!txLog.length){
-    var empty=document.createElement("div"); empty.className="empty";
-    empty.innerHTML="<div class=\"ei\">&#128235;</div><div class=\"et\">No transactions yet</div>";
-    el.appendChild(empty); return;
+var logFilter = "all";
+var logSearch = "";
+var logShowing = 50;
+
+function renderHistory() {
+  // Apply filters
+  var filtered = txLog.filter(function(h) {
+    if (logFilter !== "all" && h.type !== logFilter) return false;
+    if (logSearch) {
+      var q = logSearch.toLowerCase();
+      return (h.brand||"").toLowerCase().indexOf(q) !== -1 ||
+             (h.flavor||"").toLowerCase().indexOf(q) !== -1 ||
+             (h.category||"").toLowerCase().indexOf(q) !== -1;
+    }
+    return true;
+  });
+
+  // Summary bar
+  var sumEl = document.getElementById("log-summary");
+  if (sumEl) {
+    var totBuy=0, totSell=0, totAdj=0;
+    filtered.forEach(function(h) {
+      if (h.type==="purchase") totBuy += h.qty||0;
+      else if (h.type==="sale") totSell += h.qty||0;
+      else if (h.type==="adj") totAdj += Math.abs(h.qty||0);
+    });
+    sumEl.innerHTML =
+      "<div style='background:rgba(0,168,112,.1);border:1px solid rgba(0,168,112,.3);border-radius:8px;padding:6px 12px;font-size:12px'>" +
+        "<span style='color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.5px'>Bought</span><br>" +
+        "<span style='font-family:DM Mono,monospace;font-weight:700;color:var(--grn)'>" + totBuy + " units</span></div>" +
+      "<div style='background:rgba(224,57,74,.1);border:1px solid rgba(224,57,74,.3);border-radius:8px;padding:6px 12px;font-size:12px'>" +
+        "<span style='color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.5px'>Sold</span><br>" +
+        "<span style='font-family:DM Mono,monospace;font-weight:700;color:var(--red)'>" + totSell + " units</span></div>" +
+      "<div style='background:rgba(196,125,0,.1);border:1px solid rgba(196,125,0,.3);border-radius:8px;padding:6px 12px;font-size:12px'>" +
+        "<span style='color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.5px'>" + filtered.length + " entries</span><br>" +
+        "<span style='font-family:DM Mono,monospace;font-weight:700;color:var(--amb)'>of " + txLog.length + " total</span></div>";
   }
-  txLog.slice(0,100).forEach(function(h){
-    var item=document.createElement("div"); item.className="hitem";
-    var meta=document.createElement("div"); meta.className="hmeta";
-    var tp=document.createElement("span"); tp.className="htype "+(h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
-    tp.textContent=h.type==="purchase"?"+ Purchase":h.type==="adj"?"~ Adjusted":"- Sale";
-    var dt=document.createElement("span"); dt.className="hdt"; dt.textContent=h.date;
+
+  var el = document.getElementById("hlist"); el.innerHTML = "";
+  if (!filtered.length) {
+    var empty = document.createElement("div"); empty.className = "empty";
+    empty.innerHTML = "<div class='ei'>&#128235;</div><div class='et'>No entries match</div>";
+    el.appendChild(empty);
+    var lm = document.getElementById("log-load-more"); if (lm) lm.style.display = "none";
+    return;
+  }
+
+  var toShow = filtered.slice(0, logShowing);
+  toShow.forEach(function(h) {
+    var item = document.createElement("div"); item.className = "hitem";
+    // Color left border by type
+    var borderColor = h.type==="purchase" ? "rgba(0,229,160,.5)" : h.type==="adj" ? "rgba(255,184,0,.5)" : "rgba(255,77,109,.5)";
+    item.style.borderLeft = "3px solid " + borderColor;
+    item.style.paddingLeft = "11px";
+    var meta = document.createElement("div"); meta.className = "hmeta";
+    var tp = document.createElement("span");
+    tp.className = "htype " + (h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
+    tp.textContent = h.type==="purchase" ? "+ Purchase" : h.type==="adj" ? "~ Adjusted" : "- Sale";
+    var dt = document.createElement("span"); dt.className = "hdt"; dt.textContent = h.date;
     meta.appendChild(tp); meta.appendChild(dt);
-    var det=document.createElement("div"); det.className="hdtl"; det.textContent=h.brand+" · "+h.flavor;
-    var st=document.createElement("strong");
-    var sign=h.type==="sale"?"-":(h.qty>0?"+":"");
-    st.textContent=" "+sign+h.qty+" units";
+    var det = document.createElement("div"); det.className = "hdtl";
+    var cat = h.category || catOfBrand(h.brand) || "";
+    det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
+    var st = document.createElement("strong");
+    var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
+    st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
+    st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
     det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
   });
+
+  var lm = document.getElementById("log-load-more");
+  if (lm) lm.style.display = filtered.length > logShowing ? "block" : "none";
 }
+
+// ── LOG TAB LISTENERS ──
+(function(){
+  var el = document.getElementById("log-filter-row");
+  if (!el) return;
+  el.addEventListener("click", function(e) {
+    var c = e.target.closest("[data-lf]"); if (!c) return;
+    logFilter = c.getAttribute("data-lf");
+    logShowing = 50;
+    document.querySelectorAll("#log-filter-row .fc").forEach(function(x) { x.classList.remove("on"); });
+    c.classList.add("on");
+    renderHistory();
+  });
+})();
+(function(){
+  var el = document.getElementById("log-search");
+  if (!el) return;
+  el.addEventListener("input", function() { logSearch = this.value; logShowing = 50; renderHistory(); });
+})();
+(function(){
+  var el = document.getElementById("btn-log-more");
+  if (!el) return;
+  el.addEventListener("click", function() { logShowing += 50; renderHistory(); });
+})();
+
 (function(){var __el=document.getElementById("btn-clrhist");if(!__el)return;__el.addEventListener("click",function(){
   if(!confirm("Clear all history?")) return;
   txLog=[]; afterChange(); renderHistory();
@@ -1354,19 +1801,19 @@ function exportToExcel(){
   if(typeof XLSX==="undefined"){toast("Excel library not loaded","err");return;}
   var wb=XLSX.utils.book_new();
   var now=new Date();
-  var s1=[["Brand","Total Units","In Stock Flavors","Low Stock (<=3)","Out of Stock"]];
+  var s1=[["Category","Brand","Total Units","In Stock Flavors","Low Stock (<=3)","Out of Stock"]];
   BRANDS.forEach(function(br){
     var total=0,inS=0,low=0,out=0;
-    CATALOG[br].forEach(function(fl){var q=qty(br,fl);total+=q;if(q===0)out++;else if(q<=3)low++;else inS++;});
-    s1.push([br,total,inS,low,out]);
+    (CATALOG[br]||[]).forEach(function(fl){var q=qty(br,fl);total+=q;if(q===0)out++;else if(q<=3)low++;else inS++;});
+    s1.push([catOfBrand(br),br,total,inS,low,out]);
   });
-  var ws1=XLSX.utils.aoa_to_sheet(s1); ws1["!cols"]=[{wch:22},{wch:14},{wch:18},{wch:16},{wch:16}];
+  var ws1=XLSX.utils.aoa_to_sheet(s1); ws1["!cols"]=[{wch:16},{wch:22},{wch:14},{wch:18},{wch:16},{wch:16}];
   XLSX.utils.book_append_sheet(wb,ws1,"Summary");
-  var s2=[["Brand","Flavor","Stock Qty","Status"]];
+  var s2=[["Category","Brand","Flavor","Stock Qty","Status"]];
   BRANDS.forEach(function(br){
-    CATALOG[br].forEach(function(fl){var q=qty(br,fl);s2.push([br,fl,q,q===0?"OUT":q<=3?"LOW":"OK"]);});
+    (CATALOG[br]||[]).forEach(function(fl){var q=qty(br,fl);s2.push([catOfBrand(br),br,fl,q,q===0?"OUT":q<=3?"LOW":"OK"]);});
   });
-  var ws2=XLSX.utils.aoa_to_sheet(s2); ws2["!cols"]=[{wch:22},{wch:34},{wch:12},{wch:8}];
+  var ws2=XLSX.utils.aoa_to_sheet(s2); ws2["!cols"]=[{wch:16},{wch:22},{wch:34},{wch:12},{wch:8}];
   XLSX.utils.book_append_sheet(wb,ws2,"Full Inventory");
   var s3=[["Date","Type","Brand","Flavor","Qty"]];
   if(txLog.length) txLog.forEach(function(h){s3.push([h.date,h.type==="purchase"?"Purchase":h.type==="adj"?"Adjusted":"Sale",h.brand,h.flavor,h.qty]);});
@@ -1394,11 +1841,23 @@ function loadCustomFlavors() {
     var c = localStorage.getItem("vs5_custom");
     if (c) customFlavors = JSON.parse(c);
   } catch(e) {}
-  // Add custom brands first
+  // Restore custom categories
+  Object.keys(customFlavors).forEach(function(key) {
+    if (key.indexOf("__cat__") === 0) {
+      var cat = key.replace("__cat__", "");
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; CATEGORY_NAMES.push(cat); }
+    }
+  });
+  // Restore custom brands and assign to their category
   Object.keys(customFlavors).forEach(function(key) {
     if (key.indexOf("__brand__") === 0) {
       var br = key.replace("__brand__", "");
       if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); }
+      // Find which category this brand belongs to
+      var catKey = "__catbrand__" + br;
+      var cat = customFlavors[catKey] || "Vape";
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; }
+      if (CATEGORIES[cat].indexOf(br) === -1) CATEGORIES[cat].push(br);
     }
   });
   // Merge custom flavors into CATALOG
@@ -1507,7 +1966,7 @@ function renderCustomFlavorList() {
   // set stock
   if (qtyVal > 0) {
     stock[skey(br, name)] = qtyVal;
-    txLog.unshift({ type: "purchase", brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
   }
   saveCustomFlavors(); saveLocal(); updateStats();
   renderStock();
@@ -1542,13 +2001,21 @@ function renderCustomFlavorList() {
 
 // ── MANUAL SELL ──
 var sellBrand = BRANDS[0];
+var genCategory = "all";
 var sellCart = {};
 
 function renderSellBrands() {
+  renderCatChips("sell-cat-chips", sellCategory, function(cat) {
+    sellCategory = cat;
+    var brs = brandsForCat(cat);
+    sellBrand = brs[0] || BRANDS[0];
+    renderSellBrands(); renderSellFlavors();
+  });
   var wrap = document.getElementById("sell-brand-scroll");
   if (!wrap) return;
   wrap.innerHTML = "";
-  BRANDS.forEach(function(br) {
+  var brs = brandsForCat(sellCategory);
+  brs.forEach(function(br) {
     var d = document.createElement("div");
     d.className = "chip" + (br === sellBrand ? " on" : "");
     d.textContent = br;
@@ -1649,7 +2116,7 @@ function renderSellCart() {
       var cur = stock[k] || 0;
       if (q > cur) warn++;
       stock[k] = Math.max(0, cur - q);
-      txLog.unshift({ type: "sale", brand: br, flavor: fl, qty: q, date: new Date().toLocaleString() });
+      txLog.unshift({ type: "sale", category: catOfBrand(br), brand: br, flavor: fl, qty: q, date: new Date().toLocaleString() });
       count++;
     });
     afterChange();
@@ -1660,22 +2127,363 @@ function renderSellCart() {
   });
 })();
 
+
+// ── ADD CATEGORY ──
+function openAddCategoryModal() {
+  var m = document.getElementById("add-category-modal");
+  if (m) m.classList.add("open");
+  var inp = document.getElementById("add-category-input");
+  if (inp) { inp.value = ""; inp.focus(); }
+}
+function closeAddCategoryModal() {
+  var m = document.getElementById("add-category-modal");
+  if (m) m.classList.remove("open");
+  var inp = document.getElementById("add-category-input");
+  if (inp) inp.value = "";
+}
+(function(){var el=document.getElementById("btn-cat-add-category");if(!el)return;el.addEventListener("click",openAddCategoryModal);})();
+(function(){var el=document.getElementById("add-cat-modal-close");if(!el)return;el.addEventListener("click",closeAddCategoryModal);})();
+(function(){var el=document.getElementById("btn-add-category-cancel");if(!el)return;el.addEventListener("click",closeAddCategoryModal);})();
+(function(){var el=document.getElementById("add-category-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeAddCategoryModal();});})();
+(function(){
+  var el = document.getElementById("btn-add-category-confirm");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var inp = document.getElementById("add-category-input");
+    var name = inp ? inp.value.trim() : "";
+    if (!name) { toast("Enter a category name", "err"); return; }
+    if (CATEGORIES[name]) { toast("Category already exists", "warn"); return; }
+    CATEGORIES[name] = [];
+    CATEGORY_NAMES.push(name);
+    customFlavors["__cat__" + name] = true;
+    saveCustomFlavors();
+    catActiveCategory = name;
+    closeAddCategoryModal();
+    renderCatalogPage();
+    toast(name + " category created!", "ok");
+  });
+})();
+
+// ── DELETE CATEGORY ──
+function confirmDeleteCategory(cat) {
+  var brs = CATEGORIES[cat] || [];
+  if (brs.length > 0) {
+    if (!confirm("Delete category \"" + cat + "\"?\nThe " + brs.length + " brand(s) inside will be moved to \"Vape\".")) return;
+    // Move brands to Vape
+    brs.forEach(function(br) {
+      if (!CATEGORIES["Vape"]) CATEGORIES["Vape"] = [];
+      if (CATEGORIES["Vape"].indexOf(br) === -1) CATEGORIES["Vape"].push(br);
+      customFlavors["__catbrand__" + br] = "Vape";
+    });
+  } else {
+    if (!confirm("Delete empty category \"" + cat + "\"?")) return;
+  }
+  delete CATEGORIES[cat];
+  var ci = CATEGORY_NAMES.indexOf(cat);
+  if (ci > -1) CATEGORY_NAMES.splice(ci, 1);
+  delete customFlavors["__cat__" + cat];
+  saveCustomFlavors();
+  catActiveCategory = "Vape";
+  catActiveBrand = brandsForCat("Vape")[0] || BRANDS[0] || null;
+  renderCatalogPage(); renderStockBrands();
+  toast(cat + " category deleted", "warn");
+}
+
+// ── CATALOG EXPORT (CSV) ──
+(function(){
+  var el = document.getElementById("btn-cat-export");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    // CSV format: Category,Brand,Flavor
+    // One row per flavor. Deleted flavors tracked in a comment at the bottom.
+    var rows = ["Category,Brand,Flavor"];
+    CATEGORY_NAMES.forEach(function(cat) {
+      var brands = CATEGORIES[cat] || [];
+      brands.forEach(function(br) {
+        (CATALOG[br] || []).forEach(function(fl) {
+          // Escape fields that contain commas or quotes
+          function csvCell(v) {
+            v = String(v);
+            if (v.indexOf(',') !== -1 || v.indexOf('"') !== -1 || v.indexOf('\n') !== -1) {
+              return '"' + v.replace(/"/g, '""') + '"';
+            }
+            return v;
+          }
+          rows.push(csvCell(cat) + "," + csvCell(br) + "," + csvCell(fl));
+        });
+      });
+    });
+    // Append deleted flavors as a comment section so imports can skip them
+    var deleted = customFlavors["__deleted__"] || [];
+    if (deleted.length) {
+      rows.push("");
+      rows.push("# Deleted flavors (do not remove this section)");
+      deleted.forEach(function(d) {
+        var parts = d.split("~~");
+        var br = parts[0], fl = parts.slice(1).join("~~");
+        rows.push("# DELETED," + br + "," + fl);
+      });
+    }
+    var csv = rows.join("\n");
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "VapeStock_Catalog_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast("Catalog exported as CSV!", "ok");
+  });
+})();
+
+// ── CATALOG IMPORT ──
+var importedCatalogData = null;
+
+(function(){
+  var el = document.getElementById("btn-cat-import-open");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var panel = document.getElementById("cat-import-panel");
+    if (!panel) return;
+    var isOpen = panel.style.display !== "none";
+    panel.style.display = isOpen ? "none" : "block";
+    if (isOpen) resetImportUI();
+  });
+})();
+
+(function(){
+  var el = document.getElementById("btn-cat-pick-file");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var fi = document.getElementById("cat-import-file");
+    if (fi) fi.click();
+  });
+})();
+
+(function(){
+  var el = document.getElementById("cat-import-file");
+  if (!el) return;
+  el.addEventListener("change", function() {
+    var file = el.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var text = e.target.result;
+        // Parse CSV: Category,Brand,Flavor
+        var lines = text.split(/\r?\n/);
+        var parsed = { categories: {}, catalog: {}, deletedFlavors: [] };
+        var hasHeader = false;
+        lines.forEach(function(line) {
+          line = line.trim();
+          if (!line) return;
+          // Skip comment lines starting with #
+          if (line.charAt(0) === "#") {
+            // But capture deleted flavor markers
+            if (line.indexOf("# DELETED,") === 0) {
+              var delParts = parseCsvLine(line.replace("# DELETED,", ""));
+              if (delParts.length >= 2) {
+                parsed.deletedFlavors.push(delParts[0] + "~~" + delParts[1]);
+              }
+            }
+            return;
+          }
+          var parts = parseCsvLine(line);
+          if (parts.length < 3) return;
+          var cat = parts[0].trim(), br = parts[1].trim(), fl = parts[2].trim();
+          // Skip header row
+          if (!hasHeader && cat.toLowerCase() === "category" && br.toLowerCase() === "brand") {
+            hasHeader = true; return;
+          }
+          if (!cat || !br || !fl) return;
+          // Build categories
+          if (!parsed.categories[cat]) parsed.categories[cat] = [];
+          if (parsed.categories[cat].indexOf(br) === -1) parsed.categories[cat].push(br);
+          // Build catalog
+          if (!parsed.catalog[br]) parsed.catalog[br] = [];
+          if (parsed.catalog[br].indexOf(fl) === -1) parsed.catalog[br].push(fl);
+        });
+        if (Object.keys(parsed.catalog).length === 0) {
+          toast("No valid data found — check CSV format: Category,Brand,Flavor", "err"); return;
+        }
+        importedCatalogData = parsed;
+        var fn = document.getElementById("cat-import-filename");
+        if (fn) { fn.textContent = "\u2714 " + file.name; fn.style.display = "block"; }
+        var brands = Object.keys(parsed.catalog);
+        var cats = Object.keys(parsed.categories);
+        var totalFl = brands.reduce(function(s,b){ return s+(parsed.catalog[b]||[]).length; },0);
+        var preview = document.getElementById("cat-import-preview");
+        if (preview) {
+          var lines2 = ["<strong style='color:var(--txt)'>" + cats.length + " categories &middot; " + brands.length + " brands &middot; " + totalFl + " flavors</strong>"];
+          cats.slice(0,4).forEach(function(cat) {
+            var brs = parsed.categories[cat] || [];
+            lines2.push("&bull; <strong>" + cat + "</strong> &mdash; " + brs.slice(0,3).join(", ") + (brs.length > 3 ? "..." : ""));
+          });
+          if (cats.length > 4) lines2.push("&hellip; and " + (cats.length-4) + " more categories");
+          preview.innerHTML = lines2.join("<br>"); preview.style.display = "block";
+        }
+        var act = document.getElementById("cat-import-actions");
+        if (act) act.style.display = "flex";
+      } catch(err) { toast("Could not parse file — check it is a valid CSV", "err"); }
+    };
+    reader.readAsText(file);
+    el.value = "";
+  });
+})();
+
+function resetImportUI() {
+  var fn = document.getElementById("cat-import-filename");
+  var prev = document.getElementById("cat-import-preview");
+  var act = document.getElementById("cat-import-actions");
+  if (fn) { fn.textContent = ""; fn.style.display = "none"; }
+  if (prev) { prev.innerHTML = ""; prev.style.display = "none"; }
+  if (act) act.style.display = "none";
+  importedCatalogData = null;
+}
+
+// ── CSV LINE PARSER ──
+function parseCsvLine(line) {
+  var result = [], cur = "", inQuote = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (inQuote) {
+      if (c === '"' && line[i+1] === '"') { cur += '"'; i++; }
+      else if (c === '"') inQuote = false;
+      else cur += c;
+    } else {
+      if (c === '"') inQuote = true;
+      else if (c === ',') { result.push(cur); cur = ""; }
+      else cur += c;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+function applyCatalogImport(mode) {
+  if (!importedCatalogData || !importedCatalogData.catalog) { toast("No file loaded", "err"); return; }
+  var data = importedCatalogData;
+  if (mode === "replace") {
+    customFlavors = { "__deleted__": data.deletedFlavors || [] };
+    Object.keys(CATALOG).forEach(function(br) { delete CATALOG[br]; });
+    BRANDS.length = 0;
+    Object.keys(CATEGORIES).forEach(function(cat) { delete CATEGORIES[cat]; });
+    CATEGORY_NAMES.length = 0;
+    // Restore categories
+    var importedCats = data.categories || { "Vape": Object.keys(data.catalog) };
+    Object.keys(importedCats).forEach(function(cat) {
+      CATEGORIES[cat] = (importedCats[cat] || []).slice();
+      CATEGORY_NAMES.push(cat);
+      customFlavors["__cat__" + cat] = true;
+    });
+    Object.keys(data.catalog).forEach(function(br) {
+      CATALOG[br] = (data.catalog[br] || []).slice(); BRANDS.push(br);
+      customFlavors["__brand__" + br] = true;
+    });
+  } else {
+    var importedCats = data.categories || { "Vape": Object.keys(data.catalog) };
+    Object.keys(importedCats).forEach(function(cat) {
+      if (!CATEGORIES[cat]) { CATEGORIES[cat] = []; CATEGORY_NAMES.push(cat); customFlavors["__cat__"+cat]=true; }
+      (importedCats[cat]||[]).forEach(function(br){ if(CATEGORIES[cat].indexOf(br)===-1) CATEGORIES[cat].push(br); });
+    });
+    Object.keys(data.catalog).forEach(function(br) {
+      if (!CATALOG[br]) { CATALOG[br] = []; BRANDS.push(br); customFlavors["__brand__" + br] = true; }
+      (data.catalog[br] || []).forEach(function(fl) {
+        if (CATALOG[br].indexOf(fl) === -1) {
+          CATALOG[br].push(fl);
+          if (!customFlavors[br]) customFlavors[br] = [];
+          if (customFlavors[br].indexOf(fl) === -1) customFlavors[br].push(fl);
+        }
+      });
+    });
+  }
+  saveCustomFlavors(); saveLocal(); updateStats();
+  catActiveBrand = BRANDS[0] || null;
+  renderCatalogPage(); renderStockBrands(); renderStockGrid();
+  var panel = document.getElementById("cat-import-panel");
+  if (panel) panel.style.display = "none";
+  resetImportUI();
+  toast(mode === "replace" ? "Catalog replaced!" : "Catalog merged!", "ok");
+}
+
+(function(){
+  var el = document.getElementById("btn-cat-do-merge");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    if (confirm("Merge into existing catalog?\nNew brands/flavors added, existing ones kept.")) applyCatalogImport("merge");
+  });
+})();
+
+(function(){
+  var el = document.getElementById("btn-cat-do-replace");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    if (confirm("Replace ENTIRE catalog with imported one?\nAll current brands and flavors will be removed.")) applyCatalogImport("replace");
+  });
+})();
+
+(function(){
+  var el = document.getElementById("btn-cat-import-cancel");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var panel = document.getElementById("cat-import-panel");
+    if (panel) panel.style.display = "none";
+    resetImportUI();
+  });
+})();
+
 // ── CATALOG PAGE HOOK ──
 
 var catActiveBrand = null;
 var catSearchQ = "";
 
+var catActiveCategory = "Vape";
+
 function renderCatalogPage() {
-  catActiveBrand = catActiveBrand || BRANDS[0];
+  catActiveBrand = catActiveBrand || brandsForCat(catActiveCategory)[0] || BRANDS[0];
+  renderCatCategorySection();
   renderCatBrandScroll();
   renderCatFlavorList();
+}
+
+function renderCatCategorySection() {
+  var lbl = document.getElementById("cat-active-cat-label");
+  if (lbl) lbl.textContent = catActiveCategory;
+  var wrap = document.getElementById("cat-category-chips");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  CATEGORY_NAMES.forEach(function(cat) {
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px";
+    var chip = document.createElement("div");
+    chip.className = "catc" + (cat === catActiveCategory ? " on" : "");
+    chip.textContent = cat;
+    chip.addEventListener("click", function() {
+      catActiveCategory = cat;
+      var brs = brandsForCat(cat);
+      catActiveBrand = brs[0] || null;
+      renderCatCategorySection(); renderCatBrandScroll(); renderCatFlavorList();
+    });
+    row.appendChild(chip);
+    // Delete button for custom categories
+    var isCustomCat = !!customFlavors["__cat__" + cat];
+    if (isCustomCat) {
+      var del = document.createElement("span");
+      del.style.cssText = "font-size:11px;color:var(--red);cursor:pointer;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3)";
+      del.textContent = "Delete Category";
+      del.addEventListener("click", function() { confirmDeleteCategory(cat); });
+      row.appendChild(del);
+    }
+    wrap.appendChild(row);
+  });
 }
 
 function renderCatBrandScroll() {
   var wrap = document.getElementById("cat-brand-scroll");
   if (!wrap) return;
   wrap.innerHTML = "";
-  BRANDS.forEach(function(br) {
+  var brs = brandsForCat(catActiveCategory);
+  brs.forEach(function(br) {
     var d = document.createElement("div");
     d.className = "chip" + (br === catActiveBrand ? " on" : "");
     d.textContent = br;
@@ -1782,6 +2590,8 @@ function openAddBrandModal() {
   var m = document.getElementById("add-brand-modal");
   if (!m) return;
   m.classList.add("open");
+  var lbl = document.getElementById("add-brand-cat-label");
+  if (lbl) lbl.textContent = catActiveCategory;
   var inp = document.getElementById("add-brand-input");
   if (inp) { inp.value = ""; inp.focus(); }
 }
@@ -1830,16 +2640,22 @@ function confirmDeleteBrand(br) {
   // Remove from BRANDS
   var idx = BRANDS.indexOf(br);
   if (idx > -1) BRANDS.splice(idx, 1);
+  // Remove from CATEGORIES
+  CATEGORY_NAMES.forEach(function(cat) {
+    var brs = CATEGORIES[cat];
+    if (brs) { var bi = brs.indexOf(br); if (bi > -1) brs.splice(bi, 1); }
+  });
   // Remove from customFlavors
   delete customFlavors["__brand__" + br];
+  delete customFlavors["__catbrand__" + br];
   delete customFlavors[br];
   // Remove stock entries
   Object.keys(stock).forEach(function(k) {
     if (k.indexOf(br + "~~") === 0) delete stock[k];
   });
-  catActiveBrand = BRANDS[0] || null;
+  catActiveBrand = brandsForCat(catActiveCategory)[0] || BRANDS[0] || null;
   saveCustomFlavors(); saveLocal(); updateStats();
-  renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
+  renderCatCategorySection(); renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
   toast(br + " deleted", "warn");
 }
 
@@ -1890,7 +2706,7 @@ function closeCatFlavorModal() {
     customFlavors[br].push(name);
     if (qtyVal > 0) {
       stock[skey(br, name)] = qtyVal;
-      txLog.unshift({ type: "purchase", brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+      txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
     }
     saveCustomFlavors(); saveLocal(); updateStats();
     closeCatFlavorModal();
@@ -1924,25 +2740,679 @@ function deleteCustomFlavor(br, fl) {
 }
 
 // ── Hook catalog page into main tab handler ──
-(function(){var el=document.getElementById("btn-save-drive");if(el)el.addEventListener("click",function(){gdSave();});})();
-(function(){var el=document.getElementById("btn-refresh-drive");if(el)el.addEventListener("click",function(){gdRefresh();});})();
-(function(){var el=document.getElementById("btn-gd-connect");if(el)el.addEventListener("click",function(){gdConnect(document.getElementById("gd-url").value.trim());});})();
-(function(){var el=document.getElementById("btn-gd-disc");if(el)el.addEventListener("click",function(){gdDisconnect();});})();
-(function(){var el=document.getElementById("btn-copy-code");if(!el)return;el.addEventListener("click",function(){var c=document.getElementById("gs-code");if(!c)return;navigator.clipboard.writeText(c.textContent).then(function(){toast("Copied!","ok");}).catch(function(){toast("Copy failed","err");});});})();
-(function(){var el=document.getElementById("btn-reset");if(!el)return;el.addEventListener("click",function(){if(!confirm("Reset ALL data on this device?"))return;stock={};txLog=[];customFlavors={};gdUrl="";gdConnected=false;gdFileId="";["vs5_stock","vs5_log","vs5_gdurl","vs5_custom","vs5_gdfileid"].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});setSyncDot("","local");renderStock();updateStats();renderHistory();toast("Data cleared","warn");});})();
 
-(function(){var el=document.getElementById("btn-save-drive");if(el)el.addEventListener("click",function(){gdSave();});})();
-(function(){var el=document.getElementById("btn-refresh-drive");if(el)el.addEventListener("click",function(){gdRefresh();});})();
-(function(){var el=document.getElementById("btn-test-drive");if(!el)return;el.addEventListener("click",function(){if(!gdConnected){toast("Connect first","err");return;}el.textContent="Testing...";var result=document.getElementById("test-drive-result");if(result){result.style.display="block";result.textContent="Testing XHR...";}xhrGet(gdUrl+"?t="+Date.now()).then(function(d){el.textContent="Test Drive";if(result)result.textContent="XHR WORKS! Keys: "+Object.keys(d||{}).join(", ")+(d.fileId?" | FileID:"+d.fileId:" (tap Save first)");if(d&&d.fileId){gdFileId=d.fileId;try{localStorage.setItem("vs5_gdfileid",d.fileId);}catch(e){}}}).catch(function(err){el.textContent="Test Drive";if(result)result.textContent="XHR failed: "+(err.message||err);});});})();
+// ── PRICING DATA ──
+var customers = [];      // [{id, name, phone, notes}]
+var defaultPrices = {};  // { "Brand": 0.00 }
+var customerPrices = {}; // { "custId~~Brand": 0.00 }
+var activePricingCust = "default";  // "default" or customer id
+var custSearch = "";
+
+function custKey(custId, brand) { return custId + "~~" + brand; }
+function getCustomerPrice(custId, brand) {
+  var k = custKey(custId, brand);
+  return customerPrices[k] !== undefined ? customerPrices[k] : null;
+}
+function getEffectivePrice(custId, brand) {
+  var cp = getCustomerPrice(custId, brand);
+  if (cp !== null) return cp;
+  return defaultPrices[brand] !== undefined ? defaultPrices[brand] : null;
+}
+
+// ── SAVE / LOAD pricing ──
+function savePricing() {
+  try {
+    localStorage.setItem("vs5_customers", JSON.stringify(customers));
+    localStorage.setItem("vs5_defprices", JSON.stringify(defaultPrices));
+    localStorage.setItem("vs5_custprices", JSON.stringify(customerPrices));
+  } catch(e) {}
+}
+function loadPricing() {
+  try {
+    var c = localStorage.getItem("vs5_customers"); if(c) customers = JSON.parse(c);
+    var d = localStorage.getItem("vs5_defprices"); if(d) defaultPrices = JSON.parse(d);
+    var p = localStorage.getItem("vs5_custprices"); if(p) customerPrices = JSON.parse(p);
+  } catch(e) {}
+}
+
+// ── CUSTOMER MODAL ──
+function openCustModal(id) {
+  var m = document.getElementById("cust-modal"); if(!m) return;
+  m.classList.add("open");
+  var title = document.getElementById("cust-modal-title");
+  var editId = document.getElementById("cust-edit-id");
+  var nameInp = document.getElementById("cust-name-inp");
+  var phoneInp = document.getElementById("cust-phone-inp");
+  var notesInp = document.getElementById("cust-notes-inp");
+  if (id) {
+    var cust = customers.find(function(c){ return c.id === id; });
+    if (!cust) return;
+    if(title) title.textContent = "Edit Customer";
+    if(editId) editId.value = id;
+    if(nameInp) nameInp.value = cust.name || "";
+    if(phoneInp) phoneInp.value = cust.phone || "";
+    var a1=document.getElementById("cust-addr1-inp"), a2=document.getElementById("cust-addr2-inp");
+    var ci=document.getElementById("cust-city-inp"), st=document.getElementById("cust-state-inp");
+    var zi=document.getElementById("cust-zip-inp"), no=document.getElementById("cust-notes-inp");
+    if(a1) a1.value=cust.addr1||""; if(a2) a2.value=cust.addr2||"";
+    if(ci) ci.value=cust.city||""; if(st) st.value=cust.state||"";
+    if(zi) zi.value=cust.zip||""; if(no) no.value=cust.notes||"";
+  } else {
+    if(title) title.textContent = "Add Customer";
+    if(editId) editId.value = "";
+    if(nameInp) { nameInp.value = ""; nameInp.focus(); }
+    if(phoneInp) phoneInp.value = "";
+    ["cust-addr1-inp","cust-addr2-inp","cust-city-inp","cust-zip-inp","cust-notes-inp"].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value="";
+    });
+    var st=document.getElementById("cust-state-inp"); if(st) st.value="";
+  }
+}
+function closeCustModal() {
+  var m = document.getElementById("cust-modal"); if(m) m.classList.remove("open");
+}
+(function(){var el=document.getElementById("btn-add-customer");if(!el)return;el.addEventListener("click",function(){openCustModal(null);});})();
+(function(){var el=document.getElementById("cust-modal-close");if(!el)return;el.addEventListener("click",closeCustModal);})();
+(function(){var el=document.getElementById("btn-cust-cancel");if(!el)return;el.addEventListener("click",closeCustModal);})();
+(function(){var el=document.getElementById("cust-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeCustModal();});})();
+
+(function(){
+  var el = document.getElementById("btn-cust-save");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var nameInp = document.getElementById("cust-name-inp");
+    var phoneInp = document.getElementById("cust-phone-inp");
+    var notesInp = document.getElementById("cust-notes-inp");
+    var editId = document.getElementById("cust-edit-id");
+    var name = nameInp ? nameInp.value.trim() : "";
+    if (!name) { toast("Enter a customer name", "err"); return; }
+    var id = editId ? editId.value : "";
+    var addr1 = (document.getElementById("cust-addr1-inp")||{}).value||"";
+    var addr2 = (document.getElementById("cust-addr2-inp")||{}).value||"";
+    var city  = (document.getElementById("cust-city-inp")||{}).value||"";
+    var state = (document.getElementById("cust-state-inp")||{}).value||"";
+    var zip   = (document.getElementById("cust-zip-inp")||{}).value||"";
+    var notes = (document.getElementById("cust-notes-inp")||{}).value||"";
+    var phone = phoneInp ? phoneInp.value.trim() : "";
+    if (id) {
+      var cust = customers.find(function(c){ return c.id === id; });
+      if (cust) { cust.name=name; cust.phone=phone; cust.addr1=addr1.trim(); cust.addr2=addr2.trim(); cust.city=city.trim(); cust.state=state; cust.zip=zip.trim(); cust.notes=notes.trim(); }
+    } else {
+      customers.push({ id:"c"+Date.now(), name:name, phone:phone, addr1:addr1.trim(), addr2:addr2.trim(), city:city.trim(), state:state, zip:zip.trim(), notes:notes.trim() });
+    }
+    savePricing(); closeCustModal(); renderCustomers();
+    toast((id ? "Customer updated" : "Customer added") + "!", "ok");
+  });
+})();
+
+// ── RENDER CUSTOMERS ──
+function renderCustomers() {
+  var el = document.getElementById("cust-list"); if(!el) return;
+  var q = custSearch.toLowerCase();
+  var list = customers.filter(function(c){ return !q || c.name.toLowerCase().indexOf(q) !== -1 || (c.phone||"").indexOf(q) !== -1; });
+  el.innerHTML = "";
+  if (!list.length) {
+    el.innerHTML = "<div class='empty'><div class='ei'>&#128101;</div><div class='et'>" + (customers.length ? "No match" : "No customers yet. Add one to get started.") + "</div></div>";
+    return;
+  }
+  list.forEach(function(cust) {
+    var card = document.createElement("div"); card.className = "pcard";
+    var hdr = document.createElement("div"); hdr.className = "pcard-hdr";
+    var info = document.createElement("div");
+    var nm = document.createElement("div"); nm.className = "pcard-name"; nm.textContent = cust.name;
+    var ph = document.createElement("div"); ph.className = "pcard-phone";
+    // Build address string
+    var addrParts = [];
+    if (cust.addr1) addrParts.push(cust.addr1);
+    if (cust.addr2) addrParts.push(cust.addr2);
+    var cityLine = [cust.city, cust.state, cust.zip].filter(Boolean).join(", ");
+    if (cityLine) addrParts.push(cityLine);
+    var addrStr = addrParts.join(" · ");
+    ph.textContent = [cust.phone, addrStr, cust.notes].filter(Boolean).join("  |  ") || "No contact info";
+    info.appendChild(nm); info.appendChild(ph);
+    var btns = document.createElement("div"); btns.style.cssText = "display:flex;gap:6px";
+    var editBtn = document.createElement("button"); editBtn.className = "btn bsec bsm"; editBtn.textContent = "Edit";
+    (function(id){ editBtn.addEventListener("click", function(){ openCustModal(id); }); })(cust.id);
+    var priceBtn = document.createElement("button"); priceBtn.className = "btn bpri bsm"; priceBtn.textContent = "Prices";
+    (function(id){ priceBtn.addEventListener("click", function(){
+      activePricingCust = id;
+      // Switch to pricing tab
+      document.querySelectorAll("#mtabs .tab").forEach(function(t){t.classList.remove("on");});
+      document.querySelector("#mtabs [data-pg='pricing']").classList.add("on");
+      document.querySelectorAll(".pg").forEach(function(p){p.classList.remove("on");});
+      document.getElementById("pg-pricing").classList.add("on");
+      renderPricingPage();
+    }); })(cust.id);
+    var delBtn = document.createElement("button"); delBtn.className = "btn bdgr bsm"; delBtn.textContent = "\u00d7";
+    (function(id, name){ delBtn.addEventListener("click", function(){
+      if(!confirm("Delete customer \"" + name + "\"?\nTheir negotiated prices will also be removed.")) return;
+      customers = customers.filter(function(c){ return c.id !== id; });
+      // Remove their prices
+      Object.keys(customerPrices).forEach(function(k){ if(k.indexOf(id+"~~")===0) delete customerPrices[k]; });
+      savePricing(); renderCustomers();
+      toast(name + " deleted", "warn");
+    }); })(cust.id, cust.name);
+    btns.appendChild(editBtn); btns.appendChild(priceBtn); btns.appendChild(delBtn);
+    hdr.appendChild(info); hdr.appendChild(btns);
+    card.appendChild(hdr);
+    el.appendChild(card);
+  });
+}
+
+(function(){
+  var el = document.getElementById("cust-search");
+  if (!el) return;
+  el.addEventListener("input", function(){ custSearch = this.value; renderCustomers(); });
+})();
+
+// ── RENDER PRICING PAGE ──
+function renderPricingPage() {
+  renderPricingCustScroll();
+  renderPricingTable();
+}
+
+function renderPricingCustScroll() {
+  var wrap = document.getElementById("pricing-cust-scroll"); if(!wrap) return;
+  wrap.innerHTML = "";
+  // Default chip
+  var def = document.createElement("div");
+  def.className = "cust-chip" + (activePricingCust==="default"?" on":"");
+  def.textContent = "Default Prices";
+  def.addEventListener("click", function(){ activePricingCust="default"; renderPricingCustScroll(); renderPricingTable(); });
+  wrap.appendChild(def);
+  customers.forEach(function(c) {
+    var d = document.createElement("div");
+    d.className = "cust-chip" + (activePricingCust===c.id?" on":"");
+    d.textContent = c.name;
+    d.addEventListener("click", function(){ activePricingCust=c.id; renderPricingCustScroll(); renderPricingTable(); });
+    wrap.appendChild(d);
+  });
+}
+
+function renderPricingTable() {
+  var wrap = document.getElementById("pricing-table-wrap"); if(!wrap) return;
+  wrap.innerHTML = "";
+  var isDefault = activePricingCust === "default";
+  var cust = isDefault ? null : customers.find(function(c){ return c.id===activePricingCust; });
+
+  // Print header info
+  var ph = document.getElementById("pricing-print-header");
+  var pc = document.getElementById("pricing-print-cust");
+  var pd = document.getElementById("pricing-print-date");
+  if(ph) ph.style.display = "none"; // shown only when print triggered
+
+  CATEGORY_NAMES.forEach(function(cat) {
+    var brands = CATEGORIES[cat] || [];
+    if (!brands.length) return;
+
+    var section = document.createElement("div"); section.className = "pcard"; section.style.marginBottom="12px";
+    // Category header
+    var catHdr = document.createElement("div");
+    catHdr.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--acc);margin-bottom:10px";
+    catHdr.textContent = cat;
+    section.appendChild(catHdr);
+
+    var table = document.createElement("table"); table.className = "ptable";
+    var thead = document.createElement("thead");
+    var hrow = document.createElement("tr");
+    var cols = isDefault
+      ? ["Brand", "Default Price", ""]
+      : ["Brand", "Default", "Your Price", "Discount"];
+    cols.forEach(function(col) {
+      var th = document.createElement("th"); th.textContent = col; hrow.appendChild(th);
+    });
+    thead.appendChild(hrow); table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    brands.forEach(function(br) {
+      var tr = document.createElement("tr");
+      // Brand cell
+      var brandTd = document.createElement("td");
+      var brandName = document.createElement("div"); brandName.className = "brand-cell"; brandName.textContent = br;
+      brandTd.appendChild(brandName);
+      tr.appendChild(brandTd);
+
+      if (isDefault) {
+        // Default price input
+        var defTd = document.createElement("td");
+        var defInp = document.createElement("input");
+        defInp.type = "number"; defInp.min = "0"; defInp.step = "0.01";
+        defInp.className = "default-inp";
+        defInp.value = defaultPrices[br] !== undefined ? defaultPrices[br] : "";
+        defInp.placeholder = "0.00";
+        (function(brand){ defInp.addEventListener("change", function(){
+          var v = parseFloat(this.value);
+          if (!isNaN(v) && v >= 0) defaultPrices[brand] = v;
+          else delete defaultPrices[brand];
+          savePricing(); gdPricingPush();
+        }); })(br);
+        defTd.appendChild(defInp); tr.appendChild(defTd);
+        // Empty actions cell
+        tr.appendChild(document.createElement("td"));
+      } else {
+        // Default price (read only)
+        var defTd = document.createElement("td");
+        var defP = defaultPrices[br];
+        defTd.style.cssText = "font-family:'DM Mono',monospace;color:var(--txt3);font-size:12px";
+        defTd.textContent = defP !== undefined ? defP.toFixed(2) : "—";
+        tr.appendChild(defTd);
+
+        // Customer price input
+        var cpTd = document.createElement("td");
+        var cpInp = document.createElement("input");
+        cpInp.type = "number"; cpInp.min = "0"; cpInp.step = "0.01";
+        cpInp.className = "price-inp";
+        var existing = getCustomerPrice(activePricingCust, br);
+        cpInp.value = existing !== null ? existing : "";
+        cpInp.placeholder = defP !== undefined ? defP.toFixed(2) : "0.00";
+        (function(custId, brand){ cpInp.addEventListener("change", function(){
+          var v = parseFloat(this.value);
+          if (!isNaN(v) && v >= 0) customerPrices[custKey(custId,brand)] = v;
+          else delete customerPrices[custKey(custId,brand)];
+          savePricing(); gdPricingPush();
+          renderPricingTable();
+        }); })(activePricingCust, br);
+        cpTd.appendChild(cpInp); tr.appendChild(cpTd);
+
+        // Discount badge
+        var discTd = document.createElement("td");
+        var cp = getCustomerPrice(activePricingCust, br);
+        var dp = defaultPrices[br];
+        if (cp !== null && dp !== undefined && dp > 0) {
+          var diff = dp - cp;
+          var pct = ((diff / dp) * 100).toFixed(1);
+          var badge = document.createElement("span");
+          if (Math.abs(diff) < 0.001) {
+            badge.className = "disc-badge disc-none"; badge.textContent = "No change";
+          } else if (diff > 0) {
+            badge.className = "disc-badge disc-pos"; badge.textContent = "-" + pct + "% saving";
+          } else {
+            badge.className = "disc-badge disc-neg"; badge.textContent = "+" + Math.abs(pct) + "% above";
+          }
+          discTd.appendChild(badge);
+        }
+        tr.appendChild(discTd);
+      }
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody); section.appendChild(table);
+    wrap.appendChild(section);
+  });
+
+  if (!CATEGORY_NAMES.length || !BRANDS.length) {
+    wrap.innerHTML = "<div class='empty'><div class='et'>No brands in catalog yet</div></div>";
+  }
+}
+
+// Push pricing data to Google Drive
+function gdPricingPush() {
+  if (!gdConnected) return;
+  clearTimeout(gdPushTimer);
+  gdPushTimer = setTimeout(gdPush, 1500);
+}
+
+// ── PRINT ──
+// ── PRINT FILTER MODAL ──
+var printCatFilter = "all"; // "all" or a category name
+
+(function(){
+  var el = document.getElementById("btn-pricing-print");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    if (activePricingCust === "default") {
+      // Default view — print directly, no filter needed for "only priced"
+      buildAndPrint("all", false);
+      return;
+    }
+    // Open filter modal
+    printCatFilter = "all";
+    renderPrintCatChips();
+    var m = document.getElementById("print-filter-modal");
+    if (m) m.classList.add("open");
+  });
+})();
+
+(function(){var el=document.getElementById("print-filter-close");if(!el)return;el.addEventListener("click",function(){var m=document.getElementById("print-filter-modal");if(m)m.classList.remove("open");});})();
+(function(){var el=document.getElementById("btn-print-cancel");if(!el)return;el.addEventListener("click",function(){var m=document.getElementById("print-filter-modal");if(m)m.classList.remove("open");});})();
+(function(){var el=document.getElementById("print-filter-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)el.classList.remove("open");});})();
+
+(function(){
+  var el = document.getElementById("btn-print-go");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var onlyPriced = document.getElementById("print-only-priced");
+    var filterPriced = onlyPriced ? onlyPriced.checked : true;
+    var m = document.getElementById("print-filter-modal");
+    if (m) m.classList.remove("open");
+    buildAndPrint(printCatFilter, filterPriced);
+  });
+})();
+
+function renderPrintCatChips() {
+  var wrap = document.getElementById("print-cat-chips"); if (!wrap) return;
+  wrap.innerHTML = "";
+  var allChip = document.createElement("div");
+  allChip.className = "chip" + (printCatFilter === "all" ? " on" : "");
+  allChip.textContent = "All Categories";
+  allChip.style.marginBottom = "6px";
+  allChip.addEventListener("click", function() { printCatFilter = "all"; renderPrintCatChips(); });
+  wrap.appendChild(allChip);
+  CATEGORY_NAMES.forEach(function(cat) {
+    var d = document.createElement("div");
+    d.className = "chip" + (printCatFilter === cat ? " on" : "");
+    d.textContent = cat; d.style.marginBottom = "6px";
+    d.addEventListener("click", function() { printCatFilter = cat; renderPrintCatChips(); });
+    wrap.appendChild(d);
+  });
+}
+
+function buildAndPrint(catFilter, onlyPriced) {
+  var isDefault = activePricingCust === "default";
+  var cust = isDefault ? null : customers.find(function(c){ return c.id === activePricingCust; });
+
+  // Determine categories to print
+  var cats = catFilter === "all" ? CATEGORY_NAMES : [catFilter];
+
+  // Build the filtered print content
+  var printWrap = document.getElementById("pricing-table-wrap");
+  if (!printWrap) return;
+  printWrap.innerHTML = "";
+
+  var hasAny = false;
+  cats.forEach(function(cat) {
+    var brands = (CATEGORIES[cat] || []).filter(function(br) {
+      if (!onlyPriced || isDefault) return true;
+      // Only include if customer has a price set for this brand
+      return getCustomerPrice(activePricingCust, br) !== null;
+    });
+    if (!brands.length) return;
+    hasAny = true;
+
+    var section = document.createElement("div"); section.className = "pcard"; section.style.marginBottom = "12px";
+    var catHdr = document.createElement("div");
+    catHdr.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--acc);margin-bottom:10px";
+    catHdr.textContent = cat;
+    section.appendChild(catHdr);
+
+    var table = document.createElement("table"); table.className = "ptable";
+    var thead = document.createElement("thead");
+    var hrow = document.createElement("tr");
+    var cols = isDefault ? ["Brand","Default Price",""] : ["Brand","Default","Your Price","Discount"];
+    cols.forEach(function(col){ var th=document.createElement("th"); th.textContent=col; hrow.appendChild(th); });
+    thead.appendChild(hrow); table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    brands.forEach(function(br) {
+      var tr = document.createElement("tr");
+      var brandTd = document.createElement("td");
+      var brandName = document.createElement("div"); brandName.className = "brand-cell"; brandName.textContent = br;
+      brandTd.appendChild(brandName); tr.appendChild(brandTd);
+
+      if (isDefault) {
+        var defTd = document.createElement("td");
+        var defInp = document.createElement("input");
+        defInp.type="number"; defInp.min="0"; defInp.step="0.01"; defInp.className="default-inp";
+        defInp.value = defaultPrices[br] !== undefined ? defaultPrices[br] : "";
+        defInp.placeholder = "0.00";
+        (function(brand){ defInp.addEventListener("change", function(){
+          var v = parseFloat(this.value);
+          if (!isNaN(v) && v >= 0) defaultPrices[brand] = v; else delete defaultPrices[brand];
+          savePricing(); gdPricingPush();
+        }); })(br);
+        defTd.appendChild(defInp); tr.appendChild(defTd);
+        tr.appendChild(document.createElement("td"));
+      } else {
+        var defP = defaultPrices[br];
+        var defTd = document.createElement("td");
+        defTd.style.cssText = "font-family:'DM Mono',monospace;color:var(--txt3);font-size:12px";
+        defTd.textContent = defP !== undefined ? defP.toFixed(2) : "—";
+        tr.appendChild(defTd);
+
+        var cpTd = document.createElement("td");
+        var cpInp = document.createElement("input");
+        cpInp.type="number"; cpInp.min="0"; cpInp.step="0.01"; cpInp.className="price-inp";
+        var existing = getCustomerPrice(activePricingCust, br);
+        cpInp.value = existing !== null ? existing : "";
+        cpInp.placeholder = defP !== undefined ? defP.toFixed(2) : "0.00";
+        (function(custId, brand){ cpInp.addEventListener("change", function(){
+          var v = parseFloat(this.value);
+          if (!isNaN(v) && v >= 0) customerPrices[custKey(custId,brand)] = v;
+          else delete customerPrices[custKey(custId,brand)];
+          savePricing(); gdPricingPush(); renderPricingTable();
+        }); })(activePricingCust, br);
+        cpTd.appendChild(cpInp); tr.appendChild(cpTd);
+
+        var discTd = document.createElement("td");
+        var cp = getCustomerPrice(activePricingCust, br);
+        var dp = defaultPrices[br];
+        if (cp !== null && dp !== undefined && dp > 0) {
+          var diff = dp - cp;
+          var pct = ((diff / dp) * 100).toFixed(1);
+          var badge = document.createElement("span");
+          if (Math.abs(diff) < 0.001) { badge.className="disc-badge disc-none"; badge.textContent="No change"; }
+          else if (diff > 0) { badge.className="disc-badge disc-pos"; badge.textContent="-"+pct+"% saving"; }
+          else { badge.className="disc-badge disc-neg"; badge.textContent="+"+Math.abs(pct)+"% above"; }
+          discTd.appendChild(badge);
+        }
+        tr.appendChild(discTd);
+      }
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody); section.appendChild(table);
+    printWrap.appendChild(section);
+  });
+
+  if (!hasAny) {
+    printWrap.innerHTML = "<div class='empty'><div class='et'>No brands match your filter</div></div>";
+    return;
+  }
+
+  // Set print header
+  var ph = document.getElementById("pricing-print-header");
+  var pc = document.getElementById("pricing-print-cust");
+  if (ph) ph.style.display = "block";
+  if (pc) {
+    if (isDefault) {
+      pc.textContent = "Default Price List" + (catFilter !== "all" ? " — " + catFilter : "");
+    } else if (cust) {
+      var addrParts = [];
+      if (cust.addr1) addrParts.push(cust.addr1);
+      if (cust.addr2) addrParts.push(cust.addr2);
+      var cityLine = [cust.city, cust.state, cust.zip].filter(Boolean).join(", ");
+      if (cityLine) addrParts.push(cityLine);
+      pc.innerHTML = "<strong>" + cust.name + "</strong>" +
+        (cust.phone ? " &middot; " + cust.phone : "") +
+        (catFilter !== "all" ? " &middot; <span style='color:#555'>" + catFilter + "</span>" : "") +
+        (addrParts.length ? "<br><span style='font-size:12px;color:#666'>" + addrParts.join(", ") + "</span>" : "") +
+        (cust.notes ? "<br><span style='font-size:11px;color:#888'>" + cust.notes + "</span>" : "");
+    }
+  }
+
+  // Small delay so DOM renders before print dialog opens
+  setTimeout(function() {
+    document.body.setAttribute("data-print-mode", "pricing");
+    window.print();
+    setTimeout(function() {
+      if (ph) ph.style.display = "none";
+      document.body.removeAttribute("data-print-mode");
+      renderPricingTable(); // restore full table view after printing
+    }, 800);
+  }, 150);
+}
+
+// ── PRICING EXCEL EXPORT ──
+(function(){
+  var el = document.getElementById("btn-pricing-excel");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    if (typeof XLSX === "undefined") { toast("Excel library not loaded", "err"); return; }
+    var wb = XLSX.utils.book_new();
+    // Default prices sheet
+    var s1 = [["Category","Brand","Default Price"]];
+    CATEGORY_NAMES.forEach(function(cat){
+      (CATEGORIES[cat]||[]).forEach(function(br){
+        s1.push([cat, br, defaultPrices[br]!==undefined ? defaultPrices[br] : ""]);
+      });
+    });
+    var ws1 = XLSX.utils.aoa_to_sheet(s1);
+    ws1["!cols"]=[{wch:16},{wch:22},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws1, "Default Prices");
+
+    // Customers directory sheet
+    var custSheet = [["Name","Phone","Address Line 1","Address Line 2","City","State","ZIP","Notes"]];
+    customers.forEach(function(c){
+      custSheet.push([c.name||"",c.phone||"",c.addr1||"",c.addr2||"",c.city||"",c.state||"",c.zip||"",c.notes||""]);
+    });
+    var wsCust = XLSX.utils.aoa_to_sheet(custSheet);
+    wsCust["!cols"]=[{wch:22},{wch:16},{wch:24},{wch:16},{wch:14},{wch:8},{wch:10},{wch:24}];
+    XLSX.utils.book_append_sheet(wb, wsCust, "Customers");
+
+    // One sheet per customer
+    customers.forEach(function(cust) {
+      var rows = [["Category","Brand","Default Price","Customer Price","Discount %","Saving per unit"]];
+      CATEGORY_NAMES.forEach(function(cat){
+        (CATEGORIES[cat]||[]).forEach(function(br){
+          var dp = defaultPrices[br];
+          var cp = getCustomerPrice(cust.id, br);
+          var disc = (dp!==undefined && cp!==null && dp>0) ? (((dp-cp)/dp)*100).toFixed(1)+"%" : "";
+          var saving = (dp!==undefined && cp!==null) ? (dp-cp).toFixed(2) : "";
+          rows.push([cat, br,
+            dp!==undefined ? dp : "",
+            cp!==null ? cp : "",
+            disc, saving
+          ]);
+        });
+      });
+      var ws = XLSX.utils.aoa_to_sheet(rows);
+      ws["!cols"]=[{wch:16},{wch:22},{wch:14},{wch:14},{wch:12},{wch:14}];
+      // Sanitise sheet name (Excel max 31 chars, no special chars)
+      var sheetName = cust.name.replace(/[:\\\/\?\*\[\]]/g,"").substring(0,31);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+
+    XLSX.writeFile(wb, "VapeStock_Pricing_" + new Date().toISOString().slice(0,10) + ".xlsx");
+    toast("Pricing Excel downloaded!", "ok");
+  });
+})();
+
+// ── PRINT STOCK LIST ──
+var psCatFilter = "all";
+
+function renderPsPage() {
+  // Render category chips
+  var wrap = document.getElementById("ps-cat-chips"); if (!wrap) return;
+  wrap.innerHTML = "";
+  var allChip = document.createElement("div");
+  allChip.className = "catc" + (psCatFilter === "all" ? " on" : "");
+  allChip.textContent = "All Categories";
+  allChip.addEventListener("click", function() { psCatFilter = "all"; renderPsPage(); });
+  wrap.appendChild(allChip);
+  CATEGORY_NAMES.forEach(function(cat) {
+    var d = document.createElement("div");
+    d.className = "catc" + (psCatFilter === cat ? " on" : "");
+    d.textContent = cat;
+    d.addEventListener("click", function() { psCatFilter = cat; renderPsPage(); });
+    wrap.appendChild(d);
+  });
+}
+
+(function(){
+  var el = document.getElementById("btn-ps-print");
+  if (!el) return;
+  el.addEventListener("click", function() {
+    var inStockOnly = document.getElementById("ps-in-stock-only");
+    var onlyInStock = inStockOnly ? inStockOnly.checked : true;
+    var cats = psCatFilter === "all" ? CATEGORY_NAMES : [psCatFilter];
+    var content = document.getElementById("stock-print-content");
+    if (!content) return;
+    content.innerHTML = "";
+
+    // Print header
+    var hdr = document.createElement("div");
+    hdr.style.cssText = "margin-bottom:16px;padding-bottom:10px;border-bottom:3px solid #000";
+    hdr.innerHTML = "<div style='font-size:24px;font-weight:900;letter-spacing:-.5px'>Krazy Wholesale</div>" +
+      "<div style='font-size:13px;color:#444;font-weight:600;margin-top:2px'>Stock List" +
+      (psCatFilter !== "all" ? " — " + psCatFilter : "") + "</div>";
+    content.appendChild(hdr);
+
+    var hasAny = false;
+    cats.forEach(function(cat) {
+      var brands = CATEGORIES[cat] || [];
+      var catHasFlavors = false;
+      var catDiv = document.createElement("div");
+
+      var catHdr = document.createElement("div");
+      catHdr.className = "sp-cat-hdr";
+      catHdr.textContent = cat;
+      catDiv.appendChild(catHdr);
+
+      brands.forEach(function(br) {
+        var flavors = (CATALOG[br] || []).filter(function(fl) {
+          if (!onlyInStock) return true;
+          return qty(br, fl) > 0;
+        });
+        if (!flavors.length) return;
+        catHasFlavors = true; hasAny = true;
+
+        var brHdr = document.createElement("div");
+        brHdr.className = "sp-brand-hdr";
+        brHdr.textContent = br + " (" + flavors.length + ")";
+        catDiv.appendChild(brHdr);
+
+        var grid = document.createElement("div");
+        grid.className = "sp-flavor-grid";
+        flavors.forEach(function(fl) {
+          var item = document.createElement("div");
+          item.className = "sp-flavor";
+          item.textContent = fl;
+          grid.appendChild(item);
+        });
+        catDiv.appendChild(grid);
+      });
+
+      if (catHasFlavors) content.appendChild(catDiv);
+    });
+
+    if (!hasAny) {
+      content.innerHTML = "<div style='text-align:center;padding:40px;color:#666'>No stock available matching your filter.</div>";
+    }
+
+    // Show the stock print area and trigger print
+    var area = document.getElementById("stock-print-area");
+    if (area) area.style.display = "block";
+    // Mark as stock print (not pricing print)
+    document.body.setAttribute("data-print-mode", "stock");
+
+    setTimeout(function() {
+      window.print();
+      setTimeout(function() {
+        if (area) area.style.display = "none";
+        document.body.removeAttribute("data-print-mode");
+      }, 800);
+    }, 150);
+  });
+})();
+
+// ── SAVE / REFRESH BUTTONS ──
+(function(){
+  var sb = document.getElementById("btn-save-drive");
+  if(sb) sb.addEventListener("click", function(){ gdSave(); });
+  var rb = document.getElementById("btn-refresh-drive");
+  if(rb) rb.addEventListener("click", function(){ gdRefresh(); });
+})();
+
 
 // ── INIT ──
 loadLocal();
+loadPricing();
 loadCustomFlavors();
 renderStock();
 updateStats();
 if(gdUrl){
   gdConnected=true; setSyncDot("busy","connecting...");
   document.getElementById("btn-gd-disc").style.display="";
+  var _sb3=document.getElementById("btn-save-drive"); if(_sb3)_sb3.style.display="inline-block";
+  var _rb3=document.getElementById("btn-refresh-drive"); if(_rb3)_rb3.style.display="inline-block";
   gdPull(); gdPollTimer=setInterval(gdPull,10000);
 } else { setSyncDot("","local"); }
 
