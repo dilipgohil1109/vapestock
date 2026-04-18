@@ -1148,8 +1148,10 @@ function gdRefresh() {
   setSyncDot("busy","loading...");
 
   function applyData(d) {
-    if(!d || typeof d !== "object") throw new Error("Invalid data from Drive");
-    if(!d.ts && !d.stock && !d.customFlavors) throw new Error("Drive is empty — tap Save on other device first");
+    if(!d || typeof d !== "object" || Array.isArray(d)) {
+      throw new Error("Invalid response from Drive");
+    }
+    // Apply whatever fields exist — don't block on missing fields
     if(d.stock) stock = d.stock;
     if(d.txLog) {
       // Merge: keep local sync entries (this device's save/refresh history), 
@@ -1195,7 +1197,13 @@ function gdRefresh() {
     body: JSON.stringify({action: "read"})
   })
   .then(function(r) { return r.json(); })
-  .then(function(d) { applyData(d); })
+  .then(function(d) {
+    // Log raw keys so we can debug what Drive returned
+    var keys = d ? Object.keys(d) : [];
+    console.log("gdRefresh raw keys:", keys, "ts:", d&&d.ts);
+    addSyncLog("pull", "Drive returned: {" + keys.join(", ") + "}" + (d&&d.ts ? " ts="+new Date(d.ts).toLocaleString() : " (no ts)"));
+    applyData(d);
+  })
   .catch(function(err) {
     onFail((err&&err.message) ? err.message : String(err));
   });
