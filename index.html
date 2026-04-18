@@ -2333,6 +2333,7 @@ function closeAddCategoryModal() {
     customFlavors["__cat__" + name] = true;
     saveCustomFlavors();
     catActiveCategory = name;
+    catActiveBrand = null;  // New category is empty — no brand active
     closeAddCategoryModal();
     renderCatalogPage();
     toast(name + " category created!", "ok");
@@ -2615,7 +2616,12 @@ var catSearchQ = "";
 var catActiveCategory = "Vape";
 
 function renderCatalogPage() {
-  catActiveBrand = catActiveBrand || brandsForCat(catActiveCategory)[0] || BRANDS[0];
+  var brsInCat = brandsForCat(catActiveCategory);
+  // Always reset active brand to first brand in the current category
+  // (prevents showing flavors from a brand in a different category)
+  if(!catActiveBrand || brsInCat.indexOf(catActiveBrand) === -1) {
+    catActiveBrand = brsInCat[0] || null;
+  }
   renderCatCategorySection();
   renderCatBrandScroll();
   renderCatFlavorList();
@@ -2636,7 +2642,7 @@ function renderCatCategorySection() {
     chip.addEventListener("click", function() {
       catActiveCategory = cat;
       var brs = brandsForCat(cat);
-      catActiveBrand = brs[0] || null;
+      catActiveBrand = brs[0] || null;  // Reset to first brand in this category (or null if empty)
       renderCatCategorySection(); renderCatBrandScroll(); renderCatFlavorList();
     });
     row.appendChild(chip);
@@ -2671,6 +2677,16 @@ function renderCatFlavorList() {
   var container = document.getElementById("cat-flavor-list");
   if (!container) return;
   container.innerHTML = "";
+
+  // No brand selected (empty category) — show prompt
+  if(!catActiveBrand) {
+    var empty = document.createElement("div");
+    empty.style.cssText = "padding:24px;text-align:center;color:var(--txt3);font-size:13px";
+    empty.innerHTML = "<div style='font-size:28px;margin-bottom:8px'>📂</div><div>This category has no brands yet.</div><div style='margin-top:6px;font-size:12px'>Tap <strong>+ Add Brand</strong> to create one.</div>";
+    container.appendChild(empty);
+    return;
+  }
+
   var q = catSearchQ.toLowerCase();
   var flavors = (CATALOG[catActiveBrand] || []).filter(function(fl) {
     return !q || fl.toLowerCase().indexOf(q) !== -1;
@@ -2790,14 +2806,19 @@ function closeAddBrandModal() {
     var name = inp ? inp.value.trim() : "";
     if (!name) { toast("Enter a brand name", "err"); return; }
     if (CATALOG[name]) { toast("Brand already exists", "warn"); return; }
-    // Add to CATALOG
-    CATALOG[name] = [];
+    // Add to CATALOG with empty flavor list
+    if(!CATALOG[name]) CATALOG[name] = [];
     // Mark as custom brand
     customFlavors["__brand__" + name] = true;
+    // Assign to current active category
+    var assignCat = catActiveCategory || "Vape";
+    customFlavors["__catbrand__" + name] = assignCat;
+    if(!CATEGORIES[assignCat]) CATEGORIES[assignCat] = [];
+    if(CATEGORIES[assignCat].indexOf(name) === -1) CATEGORIES[assignCat].push(name);
     saveCustomFlavors();
     // Update BRANDS
     if (BRANDS.indexOf(name) === -1) BRANDS.push(name);
-    catActiveBrand = name;
+    catActiveBrand = name;  // Switch to new brand (it's empty — correct)
     closeAddBrandModal();
     renderCatBrandScroll();
     renderCatFlavorList();
