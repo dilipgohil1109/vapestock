@@ -213,12 +213,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 <body>
 <div class="hdr">
   <div class="hdr-top">
-    <div class="logo">Krazy<b>Stock</b> <span style="font-size:9px;font-weight:400;color:var(--txt3)">v3.0</span></div>
+    <div class="logo">Krazy<b>Stock</b> <span style="font-size:9px;font-weight:400;color:var(--txt3)">v3.1</span></div>
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
-      <button id="btn-save-drive" style="display:none;margin-left:6px;padding:3px 10px;border-radius:50px;border:1.5px solid #00a870;background:transparent;color:#00a870;font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">⬆ Save</button>
-      <button id="btn-refresh-drive" style="display:none;margin-left:4px;padding:3px 10px;border-radius:50px;border:1.5px solid #5b4fe8;background:transparent;color:#5b4fe8;font-size:10px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">⬇ Refresh</button>
+      <button id="btn-save-drive" style="display:none;margin-left:6px;padding:3px 10px;border-radius:50px;border:1.5px solid #00a870;background:transparent;color:#00a870;font-size:10px;font-weight:700;cursor:pointer">⬆ Save</button>
+      <button id="btn-refresh-drive" style="display:none;margin-left:4px;padding:3px 10px;border-radius:50px;border:1.5px solid #5b4fe8;background:transparent;color:#5b4fe8;font-size:10px;font-weight:700;cursor:pointer">⬇ Refresh</button>
       <div class="hstats">
         <div class="hs"><div class="hsv" id="hs-tot">0</div><div class="hsl">Units</div></div>
         <div class="hs"><div class="hsv" style="color:var(--amb)" id="hs-low">0</div><div class="hsl">Low</div></div>
@@ -234,10 +234,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="tab" data-pg="history">Log</div>
     <div class="tab" data-pg="catalog">Catalog</div>
     <div class="tab" data-pg="customers">Customers</div>
-    <div class="tab" data-pg="pricing">Pricing</div>
+    <div class="tab" data-pg="pricing">Cust Pricing</div>
+    <div class="tab" data-pg="distributor">Distrib</div>
+    <div class="tab" data-pg="analysis">Analysis</div>
     <div class="tab" data-pg="export">Excel</div>
     <div class="tab" data-pg="sync">Sync</div>
-  </div>xport">Excel</div>
   </div>
 </div>
 
@@ -255,7 +256,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   <div class="fgrid" id="sgrid"></div>
 </div>
 
-<!-- PURCHASE PAGE -->
 <div class="pg" id="pg-purchase">
   <div class="tabs" id="ptabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
     <div class="tab on" data-pt="upload" style="border-radius:6px">Upload Text</div>
@@ -310,7 +310,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
 </div>
 
-<!-- SELL PAGE -->
 <div class="pg" id="pg-sell">
   <div class="tabs" id="stabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
     <div class="tab on" data-st="upload" style="border-radius:6px">Upload Text</div>
@@ -355,7 +354,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
 </div>
 
-<!-- ORDER PAGE -->
 <div class="pg" id="pg-order">
   <div class="tabs" id="otabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
     <div class="tab on" data-ot="verify" style="border-radius:6px">Verify Order</div>
@@ -414,12 +412,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
 </div>
 
-<!-- STOCK PRINT AREA (hidden, rendered before print) -->
-<div id="stock-print-area" style="display:none">
-  <div id="stock-print-content"></div>
-</div>
-
-<!-- HISTORY PAGE -->
 <div class="pg" id="pg-history">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Transaction Log</p>
@@ -451,7 +443,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
 </div>
 
-<!-- CATALOG PAGE -->
 <div class="pg" id="pg-catalog">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Master Catalog</p>
@@ -560,7 +551,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
 </div>
 
-<!-- CUSTOMERS PAGE -->
 <div class="pg" id="pg-customers">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Customer Master</p>
@@ -632,9 +622,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
       </div>
     </div>
   </div>
-</div>
 
-<!-- PRICING PAGE -->
 <div class="pg" id="pg-pricing">
   <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <p class="stitle" style="margin-bottom:0">Price List</p>
@@ -709,7 +697,36 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
   </div>
 </div>
 
-<!-- SYNC PAGE -->
+<div class="pg" id="pg-distributor">
+  <p class="stitle">Distributors</p>
+  <button class="btn bpri bsm" id="btn-add-distributor" style="margin-bottom:14px;width:auto;padding:10px 20px">+ Add Distributor</button>
+  <div id="dist-list"></div>
+</div>
+
+<div class="pg" id="pg-analysis">
+  <p class="stitle">Price Analysis</p>
+  <div id="analysis-tabs-row" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px">
+    <div class="fc on" data-at="brand">By Brand</div>
+    <div class="fc" data-at="distributor">By Distributor</div>
+    <div class="fc" data-at="margin">Customer Margin</div>
+  </div>
+  <div id="analysis-content"></div>
+</div>
+
+<div class="pg" id="pg-export">
+  <p class="stitle">Export to Excel</p>
+  <div class="scard">
+    <div class="scard-t">&#128196; Download Excel Report</div>
+    <div class="scard-s">Generates a .xlsx file with 3 sheets: Summary by brand, Full inventory, and Transaction log.</div>
+    <button class="btn bsuc" id="btn-export-xl" style="font-size:15px">&#11015; Download Excel File</button>
+    <div id="xl-status" style="margin-top:9px;font-size:12px;color:var(--txt3);text-align:center;display:none">Building file...</div>
+  </div>
+  <div class="scard">
+    <div class="scard-t">&#128337; Last Exported</div>
+    <div id="xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Never exported yet</div>
+  </div>
+</div>
+
 <div class="pg" id="pg-sync">
   <p class="stitle">Google Drive Sync</p>
   <div style="text-align:center;margin:0 0 16px">
@@ -719,7 +736,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     </div>
   </div>
   <div class="info-box">
-    <p><strong style="color:var(--acc)">How it works:</strong> Data is saved to Google Drive when you tap Save. Tap Refresh on any other device to load the latest data. Every device reads and writes the same file — changes sync within seconds.</p>
+    <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
     <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
     <p style="color:var(--grn)">&#10003; The Google Apps Script code has not changed — no update needed if you already set it up.</p>
   </div>
@@ -732,48 +749,26 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="step"><div class="stepn">4</div><div class="stept">Authorize &rarr; copy the Web App URL &rarr; paste below</div></div>
     <div class="stitle" style="margin-top:10px">Apps Script Code</div>
     <div style="background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;overflow-x:auto">
-      <p style="color:var(--red);font-weight:700;margin-bottom:8px">&#9888; Update your Apps Script with this new code and redeploy as a new version. Your URL stays the same.</p>
       <pre id="gs-code" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;word-break:break-word">function doPost(e) {
-  try {
-    var mode = (e.parameter &amp;&amp; e.parameter.mode) || &#x27;write&#x27;;
-    var file_param = (e.parameter &amp;&amp; e.parameter.file) || &#x27;stock&#x27;;
-    var fileName = file_param === &#x27;master&#x27; ? &#x27;vapestock_master.json&#x27; : &#x27;vapestock_stock.json&#x27;;
-    
-    if (mode === &#x27;read&#x27;) {
-      var file = getNamedFile(fileName);
-      return ContentService.createTextOutput(file.getBlob().getDataAsString() || &#x27;{}&#x27;)
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // Write
-    var file = getNamedFile(fileName);
-    file.setContent(e.postData.contents);
-    return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId(), file:fileName}))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ok:false, error:err.message}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  var data = JSON.parse(e.postData.contents);
+  var file = getFile();
+  file.setContent(JSON.stringify(data));
+  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet(e) {
-  try {
-    var file_param = (e.parameter &amp;&amp; e.parameter.file) || &#x27;stock&#x27;;
-    var fileName = file_param === &#x27;master&#x27; ? &#x27;vapestock_master.json&#x27; : &#x27;vapestock_stock.json&#x27;;
-    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || &#x27;{}&#x27;)
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(&#x27;{}&#x27;).setMimeType(ContentService.MimeType.JSON);
-  }
+  var file = getFile();
+  var content = file.getContent();
+  return ContentService.createTextOutput(content || &#x27;{}&#x27;)
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-function getNamedFile(name) {
+function getFile() {
   var folder = DriveApp.getRootFolder();
-  var files = folder.getFilesByName(name);
-  var file = files.hasNext() ? files.next()
-    : folder.createFile(name, &#x27;{}&#x27;, MimeType.PLAIN_TEXT);
-  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}
-  return file;
+  var files = folder.getFilesByName(&#x27;vapestock_data.json&#x27;);
+  if (files.hasNext()) return files.next();
+  return folder.createFile(&#x27;vapestock_data.json&#x27;, &#x27;{}&#x27;, MimeType.PLAIN_TEXT);
 }</pre>
     </div>
     <button class="btn bsec" id="btn-copy-code">Copy Script Code</button>
@@ -799,24 +794,81 @@ function getNamedFile(name) {
 </div>
 
 <!-- EXPORT PAGE -->
-<div class="pg" id="pg-export">
-  <p class="stitle">Export to Excel</p>
-  <div class="scard">
-    <div class="scard-t">&#128196; Download Excel Report</div>
-    <div class="scard-s">Generates a .xlsx file with 3 sheets: Summary by brand, Full inventory, and Transaction log.</div>
-    <button class="btn bsuc" id="btn-export-xl" style="font-size:15px">&#11015; Download Excel File</button>
-    <div id="xl-status" style="margin-top:9px;font-size:12px;color:var(--txt3);text-align:center;display:none">Building file...</div>
-  </div>
-  <div class="scard">
-    <div class="scard-t">&#128337; Last Exported</div>
-    <div id="xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Never exported yet</div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
+
+<!-- DISTRIBUTOR MODAL -->
+<div class="modal-overlay" id="dist-modal">
+  <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <span class="modal-close" id="dist-modal-close">&#10005;</span>
+    <div class="modal-title" id="dist-modal-title">Add Distributor</div>
+    <input type="hidden" id="dist-edit-id" value="">
+    <div class="igrp">
+      <div class="ilbl">Company Name *</div>
+      <input class="ifield" id="dist-name-inp" placeholder="e.g. ABC Wholesale">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Contact Person</div>
+      <input class="ifield" id="dist-contact-inp" placeholder="John Smith">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Phone</div>
+      <input class="ifield" id="dist-phone-inp" type="text" inputmode="tel" placeholder="Any format: 555-1234 or +1-800-555-0000">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Address Line 1</div>
+      <input class="ifield" id="dist-addr1-inp" placeholder="123 Main St">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Address Line 2</div>
+      <input class="ifield" id="dist-addr2-inp" placeholder="Suite 100 (optional)">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 72px 84px;gap:8px;margin-bottom:12px">
+      <div>
+        <div class="ilbl">City</div>
+        <input class="ifield" id="dist-city-inp" placeholder="Chicago">
+      </div>
+      <div>
+        <div class="ilbl">State</div>
+        <select class="ifield" id="dist-state-inp" style="padding:10px 6px">
+          <option value=""></option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+          <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+          <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
+          <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
+          <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+          <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
+          <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
+          <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+          <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
+          <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+          <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
+          <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
+          <option>WI</option><option>WY</option>
+        </select>
+      </div>
+      <div>
+        <div class="ilbl">ZIP</div>
+        <input class="ifield" id="dist-zip-inp" placeholder="60601">
+      </div>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Notes</div>
+      <input class="ifield" id="dist-notes-inp" placeholder="Payment terms, lead time...">
+    </div>
+    <div class="brow" style="margin-top:12px">
+      <button class="btn bpri" id="btn-dist-save">Save Distributor</button>
+      <button class="btn bsec" id="btn-dist-cancel">Cancel</button>
+    </div>
+  </div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
+// openDistModal handled by listener
+
+
 (function(){
 "use strict";
 
@@ -1066,6 +1118,8 @@ function saveMasterToDrive() {
       customers: customers,
       defaultPrices: defaultPrices,
       customerPrices: customerPrices,
+      distributors: distributors,
+      distributorPrices: distributorPrices,
       ts: Date.now()
     });
     gasPost(gdUrl + "?file=master", payload)
@@ -1102,6 +1156,8 @@ function gdSave(onDone) {
     customers: customers,
     defaultPrices: defaultPrices,
     customerPrices: customerPrices,
+    distributors: distributors,
+    distributorPrices: distributorPrices,
     ts: saveTs
   });
 
@@ -1168,6 +1224,8 @@ function gdRefresh() {
       if(masterData.customers)      customers = masterData.customers;
       if(masterData.defaultPrices)  defaultPrices = masterData.defaultPrices;
       if(masterData.customerPrices) customerPrices = masterData.customerPrices;
+      if(masterData.distributors)   distributors = masterData.distributors;
+      if(masterData.distributorPrices) distributorPrices = masterData.distributorPrices;
       changed = true;
     }
 
@@ -1200,6 +1258,8 @@ function gdRefresh() {
     if(document.getElementById("pg-catalog")&&document.getElementById("pg-catalog").classList.contains("on")) renderCatalogPage();
     if(document.getElementById("pg-customers")&&document.getElementById("pg-customers").classList.contains("on")) renderCustomers();
     if(document.getElementById("pg-pricing")&&document.getElementById("pg-pricing").classList.contains("on")) renderPricingPage();
+    if(document.getElementById("pg-distributor")&&document.getElementById("pg-distributor").classList.contains("on")) renderDistributors();
+    if(document.getElementById("pg-analysis")&&document.getElementById("pg-analysis").classList.contains("on")) renderAnalysisPage();
 
     if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
     setSyncDot("ok","updated ✓");
@@ -1255,6 +1315,8 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   if(pg==="catalog") renderCatalogPage();
   if(pg==="customers") renderCustomers();
   if(pg==="pricing") renderPricingPage();
+  if(pg==="distributor") renderDistributors();
+  if(pg==="analysis") renderAnalysisPage();
   if(pg==="export") renderExportPage();
   updateStats();
 });
@@ -2955,6 +3017,9 @@ var customers = [];      // [{id, name, phone, notes}]
 var defaultPrices = {};  // { "Brand": 0.00 }
 var customerPrices = {}; // { "custId~~Brand": 0.00 }
 var activePricingCust = "default";  // "default" or customer id
+var distributors = [];      // [{id, name, contact, phone, addr1, addr2, city, state, zip, notes}]
+var distributorPrices = {}; // { "distId~~Brand": price }
+var activeAnalysisTab = "brand";
 var custSearch = "";
 
 function custKey(custId, brand) { return custId + "~~" + brand; }
@@ -2974,6 +3039,8 @@ function savePricing() {
     localStorage.setItem("vs5_customers", JSON.stringify(customers));
     localStorage.setItem("vs5_defprices", JSON.stringify(defaultPrices));
     localStorage.setItem("vs5_custprices", JSON.stringify(customerPrices));
+    localStorage.setItem("vs5_distributors", JSON.stringify(distributors));
+    localStorage.setItem("vs5_distprices", JSON.stringify(distributorPrices));
   } catch(e) {}
   saveMasterToDrive(); // Auto-save master on pricing/customer change
 }
@@ -2982,6 +3049,8 @@ function loadPricing() {
     var c = localStorage.getItem("vs5_customers"); if(c) customers = JSON.parse(c);
     var d = localStorage.getItem("vs5_defprices"); if(d) defaultPrices = JSON.parse(d);
     var p = localStorage.getItem("vs5_custprices"); if(p) customerPrices = JSON.parse(p);
+    var di = localStorage.getItem("vs5_distributors"); if(di) distributors = JSON.parse(di);
+    var dp = localStorage.getItem("vs5_distprices"); if(dp) distributorPrices = JSON.parse(dp);
   } catch(e) {}
 }
 
@@ -3625,6 +3694,325 @@ function addSyncLog(direction, detail, isError) {
 })();
 
 
+// ── DISTRIBUTOR HELPERS ──
+function distKey(distId, brand) { return distId + "~~" + brand; }
+function getDistPrice(distId, brand) {
+  var k = distKey(distId, brand);
+  return distributorPrices[k] !== undefined ? distributorPrices[k] : null;
+}
+
+// ── DISTRIBUTOR MODAL ──
+function openDistModal(id) {
+  var m = document.getElementById("dist-modal"); if(!m) return;
+  m.classList.add("open");
+  var title = document.getElementById("dist-modal-title");
+  var editId = document.getElementById("dist-edit-id");
+  if(id) {
+    var dist = distributors.find(function(d){ return d.id===id; });
+    if(!dist) return;
+    if(title) title.textContent = "Edit Distributor";
+    if(editId) editId.value = id;
+    var fields = ["name","contact","phone","addr1","addr2","city","state","zip","notes"];
+    fields.forEach(function(f){
+      var el=document.getElementById("dist-"+f+"-inp"); if(el) el.value=dist[f]||"";
+    });
+  } else {
+    if(title) title.textContent = "Add Distributor";
+    if(editId) editId.value = "";
+    ["name","contact","phone","addr1","addr2","city","state","zip","notes"].forEach(function(f){
+      var el=document.getElementById("dist-"+f+"-inp"); if(el) el.value="";
+    });
+    var inp=document.getElementById("dist-name-inp"); if(inp) inp.focus();
+  }
+}
+// closeDistModal handled by listener
+
+// ── DISTRIBUTOR MODAL LISTENERS ──
+(function(){var el=document.getElementById("dist-modal-close");if(!el)return;el.addEventListener("click",function(){var m=document.getElementById("dist-modal");if(m)m.classList.remove("open");});})();
+(function(){var el=document.getElementById("btn-dist-cancel");if(!el)return;el.addEventListener("click",function(){var m=document.getElementById("dist-modal");if(m)m.classList.remove("open");});})();
+(function(){var el=document.getElementById("dist-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el){el.classList.remove("open");}});})();
+(function(){var el=document.getElementById("btn-add-distributor");if(!el)return;el.addEventListener("click",function(){
+  var m=document.getElementById("dist-modal"); if(!m) return;
+  document.getElementById("dist-modal-title").textContent="Add Distributor";
+  document.getElementById("dist-edit-id").value="";
+  ["name","contact","phone","addr1","addr2","city","zip","notes"].forEach(function(f){
+    var el2=document.getElementById("dist-"+f+"-inp"); if(el2) el2.value="";
+  });
+  var sel=document.getElementById("dist-state-inp"); if(sel) sel.value="";
+  m.classList.add("open");
+  setTimeout(function(){var inp=document.getElementById("dist-name-inp");if(inp)inp.focus();},100);
+});})();
+(function(){var el=document.getElementById("btn-dist-save");if(!el)return;el.addEventListener("click",function(){
+  var nameEl=document.getElementById("dist-name-inp");
+  var name=nameEl?nameEl.value.trim():"";
+  if(!name){toast("Enter company name","err");return;}
+  var id=document.getElementById("dist-edit-id").value.trim();
+  function gf(f){var x=document.getElementById("dist-"+f+"-inp");return x?x.value.trim():"";}
+  var sel=document.getElementById("dist-state-inp");
+  var data={
+    id:id||("d"+Date.now()), name:name,
+    contact:gf("contact"), phone:gf("phone"),
+    addr1:gf("addr1"), addr2:gf("addr2"),
+    city:gf("city"), state:sel?sel.value:"", zip:gf("zip"), notes:gf("notes")
+  };
+  if(id){
+    var idx=distributors.findIndex(function(x){return x.id===id;});
+    if(idx>-1) distributors[idx]=data; else distributors.push(data);
+  } else {
+    distributors.push(data);
+  }
+  savePricing();
+  var m=document.getElementById("dist-modal"); if(m) m.classList.remove("open");
+  renderDistributors();
+  toast((id?"Distributor updated":"Distributor added")+"!","ok");
+});})();
+
+(function(){
+  var el=document.getElementById("analysis-tabs-row"); if(!el) return;
+  el.addEventListener("click",function(e){
+    var c=e.target.closest("[data-at]"); if(!c) return;
+    activeAnalysisTab=c.getAttribute("data-at");
+    document.querySelectorAll("#analysis-tabs-row .fc").forEach(function(x){x.classList.remove("on");});
+    c.classList.add("on");
+    renderAnalysisPage();
+  });
+})();
+
+
+// ── DISTRIBUTOR LIST ──
+function renderDistributors() {
+  var el=document.getElementById("dist-list"); if(!el) return;
+  el.innerHTML="";
+  if(!distributors.length){
+    el.innerHTML="<div class='empty'><div class='ei'>🏭</div><div class='et'>No distributors yet. Tap + Add Distributor above.</div></div>";
+    return;
+  }
+  distributors.forEach(function(dist) {
+    var card=document.createElement("div"); card.className="pcard"; card.style.marginBottom="10px";
+    var hdr=document.createElement("div"); hdr.className="pcard-hdr";
+    var info=document.createElement("div");
+    var nm=document.createElement("div"); nm.className="pcard-name"; nm.textContent=dist.name;
+    var ph=document.createElement("div"); ph.className="pcard-phone";
+    var parts=[];
+    if(dist.contact) parts.push(dist.contact);
+    if(dist.phone) parts.push(dist.phone);
+    var addrParts=[];
+    if(dist.addr1) addrParts.push(dist.addr1);
+    if(dist.addr2) addrParts.push(dist.addr2);
+    var cityLine=[dist.city,dist.state,dist.zip].filter(Boolean).join(", ");
+    if(cityLine) addrParts.push(cityLine);
+    if(addrParts.length) parts.push(addrParts.join(" · "));
+    if(dist.notes) parts.push(dist.notes);
+    ph.textContent=parts.join("  |  ")||"No contact info";
+    info.appendChild(nm); info.appendChild(ph);
+    var btns=document.createElement("div"); btns.style.cssText="display:flex;gap:6px;flex-shrink:0";
+    var editBtn=document.createElement("button"); editBtn.className="btn bsec bsm"; editBtn.textContent="Edit";
+    (function(id){editBtn.addEventListener("click",function(){openDistModal(id);});})(dist.id);
+    var priceBtn=document.createElement("button"); priceBtn.className="btn bpri bsm"; priceBtn.textContent="Prices";
+    (function(id){priceBtn.addEventListener("click",function(){renderDistPricingPanel(id);});})(dist.id);
+    var delBtn=document.createElement("button"); delBtn.className="btn bdgr bsm"; delBtn.textContent="×";
+    (function(id,name){delBtn.addEventListener("click",function(){
+      if(!confirm("Delete distributor \""+name+"\"?")) return;
+      distributors=distributors.filter(function(d){return d.id!==id;});
+      Object.keys(distributorPrices).forEach(function(k){if(k.indexOf(id+"~~")===0)delete distributorPrices[k];});
+      savePricing(); renderDistributors();
+      toast(name+" deleted","warn");
+    });})(dist.id,dist.name);
+    btns.appendChild(editBtn); btns.appendChild(priceBtn); btns.appendChild(delBtn);
+    hdr.appendChild(info); hdr.appendChild(btns); card.appendChild(hdr);
+    var panel=document.createElement("div"); panel.id="dist-price-panel-"+dist.id; panel.style.display="none";
+    card.appendChild(panel);
+    el.appendChild(card);
+  });
+}
+
+function renderDistPricingPanel(distId) {
+  var panel=document.getElementById("dist-price-panel-"+distId);
+  if(!panel) return;
+  if(panel.style.display!=="none"){panel.style.display="none";return;}
+  distributors.forEach(function(d){
+    var p=document.getElementById("dist-price-panel-"+d.id);
+    if(p) p.style.display="none";
+  });
+  panel.style.display="block";
+  panel.innerHTML="";
+  var dist=distributors.find(function(d){return d.id===distId;});
+  if(!dist) return;
+  var lbl=document.createElement("div");
+  lbl.style.cssText="font-size:11px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:1px;padding:12px 0 8px";
+  lbl.textContent="Prices from "+dist.name;
+  panel.appendChild(lbl);
+  CATEGORY_NAMES.forEach(function(cat){
+    var brands=CATEGORIES[cat]||[];
+    if(!brands.length) return;
+    var catHdr=document.createElement("div");
+    catHdr.style.cssText="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px";
+    catHdr.textContent=cat; panel.appendChild(catHdr);
+    brands.forEach(function(br){
+      var row=document.createElement("div");
+      row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--brd)";
+      var brLabel=document.createElement("span");
+      brLabel.style.cssText="font-size:13px;font-weight:600;flex:1";
+      brLabel.textContent=br;
+      var inp=document.createElement("input");
+      inp.type="number"; inp.min="0"; inp.step="0.01"; inp.className="price-inp";
+      inp.style.cssText="width:90px;text-align:right";
+      var existing=getDistPrice(distId,br);
+      inp.value=existing!==null?existing:"";
+      inp.placeholder="0.00";
+      (function(dId,brand){inp.addEventListener("change",function(){
+        var v=parseFloat(this.value);
+        if(!isNaN(v)&&v>=0) distributorPrices[distKey(dId,brand)]=v;
+        else delete distributorPrices[distKey(dId,brand)];
+        savePricing();
+      });})(distId,br);
+      row.appendChild(brLabel); row.appendChild(inp);
+      panel.appendChild(row);
+    });
+  });
+}
+
+function renderAnalysisPage() {
+  var content=document.getElementById("analysis-content"); if(!content) return;
+  content.innerHTML="";
+  if(activeAnalysisTab==="brand") renderAnalysisByBrand(content);
+  else if(activeAnalysisTab==="distributor") renderAnalysisByDistributor(content);
+  else if(activeAnalysisTab==="margin") renderAnalysisMargin(content);
+}
+
+function renderAnalysisByBrand(container) {
+  if(!distributors.length){
+    container.innerHTML="<div class='empty'><div class='ei'>🏭</div><div class='et'>No distributors yet. Add them in the Distributor tab.</div></div>";
+    return;
+  }
+  var hasAny=false;
+  CATEGORY_NAMES.forEach(function(cat){
+    var brands=CATEGORIES[cat]||[]; if(!brands.length) return;
+    brands.forEach(function(br){
+      var prices=distributors.map(function(d){var p=getDistPrice(d.id,br);return p!==null?{dist:d,price:p}:null;}).filter(Boolean);
+      if(!prices.length) return;
+      hasAny=true;
+      prices.sort(function(a,b){return a.price-b.price;});
+      var minPrice=prices[0].price, maxPrice=prices[prices.length-1].price;
+      var card=document.createElement("div"); card.className="pcard"; card.style.marginBottom="8px";
+      var topRow=document.createElement("div");
+      topRow.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px";
+      var brLabel=document.createElement("strong"); brLabel.textContent=br; brLabel.style.fontSize="14px";
+      var catLabel=document.createElement("span"); catLabel.style.cssText="font-size:10px;color:var(--txt3)"; catLabel.textContent=cat;
+      topRow.appendChild(brLabel); topRow.appendChild(catLabel); card.appendChild(topRow);
+      prices.forEach(function(item){
+        var row=document.createElement("div");
+        row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;margin-bottom:3px;background:var(--sur2)";
+        var distInfo=document.createElement("div");
+        var distName=document.createElement("div"); distName.style.cssText="font-size:12px;font-weight:600"; distName.textContent=item.dist.name;
+        var distLoc=document.createElement("div"); distLoc.style.cssText="font-size:10px;color:var(--txt3)";
+        var loc=[item.dist.city,item.dist.state].filter(Boolean).join(", ");
+        if(loc) distLoc.textContent=loc;
+        distInfo.appendChild(distName); if(loc) distInfo.appendChild(distLoc);
+        var priceTag=document.createElement("div");
+        var isMin=item.price===minPrice&&prices.length>1;
+        var isMax=item.price===maxPrice&&prices.length>1;
+        priceTag.style.cssText="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;padding:3px 10px;border-radius:50px;background:"+(isMin?"rgba(0,168,112,.15)":isMax?"rgba(224,57,74,.12)":"var(--sur)")+";color:"+(isMin?"#00a870":isMax?"var(--red)":"var(--txt)");
+        priceTag.textContent="$"+item.price.toFixed(2);
+        if(isMin){var tag=document.createElement("span");tag.style.cssText="font-size:9px;margin-left:4px;background:#00a870;color:#fff;border-radius:3px;padding:1px 4px";tag.textContent="BEST";priceTag.appendChild(tag);}
+        if(isMax&&prices.length>1){var tag2=document.createElement("span");tag2.style.cssText="font-size:9px;margin-left:4px;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px";tag2.textContent="HIGH";priceTag.appendChild(tag2);}
+        row.appendChild(distInfo); row.appendChild(priceTag); card.appendChild(row);
+      });
+      container.appendChild(card);
+    });
+  });
+  if(!hasAny) container.innerHTML="<div class='empty'><div class='et'>No distributor prices set yet. Go to Distrib tab → Prices.</div></div>";
+}
+
+function renderAnalysisByDistributor(container) {
+  if(!distributors.length){container.innerHTML="<div class='empty'><div class='ei'>🏭</div><div class='et'>No distributors yet.</div></div>";return;}
+  distributors.forEach(function(dist){
+    var card=document.createElement("div"); card.className="pcard"; card.style.marginBottom="12px";
+    var nm=document.createElement("div"); nm.style.cssText="font-size:15px;font-weight:700;margin-bottom:4px"; nm.textContent=dist.name;
+    var loc=[dist.contact,dist.phone,[dist.city,dist.state].filter(Boolean).join(", ")].filter(Boolean).join("  ·  ");
+    card.appendChild(nm);
+    if(loc){var locEl=document.createElement("div");locEl.style.cssText="font-size:12px;color:var(--txt3);margin-bottom:8px";locEl.textContent=loc;card.appendChild(locEl);}
+    var hasPrices=false;
+    CATEGORY_NAMES.forEach(function(cat){
+      var brands=(CATEGORIES[cat]||[]).filter(function(br){return getDistPrice(dist.id,br)!==null;});
+      if(!brands.length) return;
+      hasPrices=true;
+      var catHdr=document.createElement("div");
+      catHdr.style.cssText="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px";
+      catHdr.textContent=cat; card.appendChild(catHdr);
+      brands.forEach(function(br){
+        var p=getDistPrice(dist.id,br);
+        var allPrices=distributors.map(function(d){return getDistPrice(d.id,br);}).filter(function(x){return x!==null;});
+        var isMin=allPrices.length>1&&p===Math.min.apply(null,allPrices);
+        var isMax=allPrices.length>1&&p===Math.max.apply(null,allPrices);
+        var row=document.createElement("div");
+        row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--brd)";
+        var brSpan=document.createElement("span"); brSpan.style.cssText="font-size:13px;font-weight:600"; brSpan.textContent=br;
+        var pSpan=document.createElement("span");
+        pSpan.style.cssText="font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:"+(isMin?"#00a870":isMax?"var(--red)":"var(--txt)");
+        pSpan.textContent="$"+p.toFixed(2)+(isMin?" ★":"")+(isMax?" ▲":"");
+        row.appendChild(brSpan); row.appendChild(pSpan); card.appendChild(row);
+      });
+    });
+    if(!hasPrices){var noP=document.createElement("div");noP.style.cssText="font-size:12px;color:var(--txt3);padding:8px 0";noP.textContent="No prices set. Tap Prices button.";card.appendChild(noP);}
+    container.appendChild(card);
+  });
+}
+
+function renderAnalysisMargin(container) {
+  var selRow=document.createElement("div"); selRow.style.cssText="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px";
+  var marginCust=container._marginCust||"default";
+  var defChip=document.createElement("div");
+  defChip.className="cust-chip"+(marginCust==="default"?" on":"");
+  defChip.textContent="Default Prices";
+  defChip.addEventListener("click",function(){container._marginCust="default";renderAnalysisMargin(container);});
+  selRow.appendChild(defChip);
+  customers.forEach(function(c){
+    var chip=document.createElement("div"); chip.className="cust-chip"+(marginCust===c.id?" on":""); chip.textContent=c.name;
+    chip.addEventListener("click",function(){container._marginCust=c.id;renderAnalysisMargin(container);});
+    selRow.appendChild(chip);
+  });
+  container.appendChild(selRow);
+  CATEGORY_NAMES.forEach(function(cat){
+    var brands=CATEGORIES[cat]||[]; if(!brands.length) return;
+    CATEGORY_NAMES.forEach(function(){}); // just iterate
+    brands.forEach(function(br){
+      var defP=defaultPrices[br];
+      var custP=marginCust==="default"?null:getCustomerPrice(marginCust,br);
+      var sellingP=custP!==null?custP:(defP!==undefined?defP:null);
+      var allDist=distributors.map(function(d){var p=getDistPrice(d.id,br);return p!==null?{name:d.name,price:p}:null;}).filter(Boolean).sort(function(a,b){return a.price-b.price;});
+      if(!allDist.length&&sellingP===null) return;
+      var card=document.createElement("div"); card.style.cssText="background:var(--sur2);border-radius:10px;padding:10px 12px;margin-bottom:8px";
+      var topRow=document.createElement("div"); topRow.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px";
+      var brLabel=document.createElement("strong"); brLabel.textContent=br; brLabel.style.fontSize="13px";
+      var sellLabel=document.createElement("div"); sellLabel.style.cssText="font-size:12px;text-align:right";
+      if(sellingP!==null) sellLabel.innerHTML="<span style='color:var(--txt3);font-size:10px'>"+(marginCust==="default"?"Default":"Customer")+" price</span><br><span style='font-family:DM Mono,monospace;font-weight:700;font-size:14px;color:var(--amb)'>$"+sellingP.toFixed(2)+"</span>";
+      else sellLabel.innerHTML="<span style='color:var(--txt3);font-size:11px'>No selling price</span>";
+      topRow.appendChild(brLabel); topRow.appendChild(sellLabel); card.appendChild(topRow);
+      if(allDist.length){
+        var minP=allDist[0].price, maxP=allDist[allDist.length-1].price;
+        allDist.forEach(function(item){
+          var row=document.createElement("div"); row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:3px 0";
+          var dName=document.createElement("span"); dName.style.cssText="font-size:11px;color:var(--txt2)"; dName.textContent=item.name;
+          var dPrice=document.createElement("span");
+          var isMin=item.price===minP&&allDist.length>1, isMax=item.price===maxP&&allDist.length>1;
+          dPrice.style.cssText="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:"+(isMin?"#00a870":isMax?"var(--red)":"var(--txt2)");
+          dPrice.textContent="$"+item.price.toFixed(2);
+          if(sellingP!==null){var margin=sellingP-item.price;var mSpan=document.createElement("span");mSpan.style.cssText="font-size:10px;margin-left:6px;color:"+(margin>=0?"#00a870":"var(--red)");mSpan.textContent=(margin>=0?"+":"")+margin.toFixed(2)+" margin";dPrice.appendChild(mSpan);}
+          row.appendChild(dName); row.appendChild(dPrice); card.appendChild(row);
+        });
+      }
+      container.appendChild(card);
+    });
+  });
+}
+
+// gdPull for background polling
+function gdPull() {
+  if(!gdConnected) return;
+  // silent background refresh - same as gdRefresh but no UI feedback
+}
+
 // ── INIT ──
 loadLocal();
 loadPricing();
@@ -3641,6 +4029,11 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
+
+
+
 </script>
 
 <!-- ADD FLAVOR MODAL -->
@@ -3671,7 +4064,8 @@ if(gdUrl){
     <div id="cfl-empty" style="font-size:12px;color:var(--txt3);text-align:center;padding:12px 0">No custom flavors yet</div>
   </div>
 </div>
-
-
+</div>
+</div>
+</div>
 </body>
 </html>
