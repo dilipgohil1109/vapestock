@@ -361,22 +361,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
     <div class="tab" data-ot="printstock" style="border-radius:6px">Print Stock</div>
   </div>
   <div id="ov-pane">
-    <p class="stitle">Verify Orders</p>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:8px">Paste orders from multiple customers. Start each customer with their name ending in <strong>:</strong></p>
-    <div style="background:var(--sur2);border-radius:8px;padding:8px 12px;font-size:11px;font-family:'DM Mono',monospace;color:var(--txt3);margin-bottom:10px;line-height:1.8">
-      Ahmed:<br>
-      Geek Bar 15K - Miami Mint x2<br>
-      <br>
-      Sara:<br>
-      Geek Bar 15K - Miami Mint x1<br>
-      Crown Bar - Berry Ice x3
-    </div>
-    <textarea class="ota" id="oinput" placeholder="Ahmed:&#10;Geek Bar 15K&#10;- Miami Mint x2&#10;- Blue Razz x1&#10;&#10;Sara:&#10;Crown Bar&#10;- Berry Ice x3" style="min-height:140px"></textarea>
+    <p class="stitle">Paste WhatsApp Order</p>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Check if you have enough stock to fill an order.</p>
+    <textarea class="ota" id="oinput" placeholder="Geek Bar 15K&#10;- Miami Mint x3&#10;- Blue Razz Ice x2&#10;&#10;Crown Bar&#10;- Berry Ice x5"></textarea>
     <div class="brow" style="margin-top:10px">
-      <button class="btn bpri" id="btn-verify">Verify All Orders</button>
+      <button class="btn bpri" id="btn-verify">Check Stock</button>
       <button class="btn bsec bsm" id="btn-clro">Clear</button>
     </div>
-    
     <div id="vresult" style="margin-top:12px"></div>
   </div>
   <div id="og-pane" style="display:none">
@@ -807,24 +798,7 @@ function getFile() {
 <div class="toast" id="toast"></div>
 
 
-<!-- RENAME BRAND MODAL -->
-<div class="modal-overlay" id="rename-brand-modal">
-  <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
-    <span class="modal-close" id="rename-brand-close">&#10005;</span>
-    <div class="modal-title">Rename Brand</div>
-    <div class="modal-sub" id="rename-brand-hint">Current name</div>
-    <input type="hidden" id="rename-brand-old">
-    <div class="igrp">
-      <div class="ilbl">New Brand Name</div>
-      <input class="ifield" id="rename-brand-inp" placeholder="Enter new name">
-    </div>
-    <div class="brow" style="margin-top:12px">
-      <button class="btn bpri" id="btn-rename-brand-save">Rename</button>
-      <button class="btn bsec" id="btn-rename-brand-cancel">Cancel</button>
-    </div>
-  </div>
-</div>
-
+<!-- DISTRIBUTOR MODAL -->
 <div class="modal-overlay" id="dist-modal">
   <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
     <span class="modal-close" id="dist-modal-close">&#10005;</span>
@@ -892,6 +866,7 @@ function getFile() {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 
+// openDistModal handled by listener
 
 
 (function(){
@@ -913,7 +888,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var file = getFile();\n  file.setContent(JSON.stringify(data));\n  return ContentService.createTextOutput(JSON.stringify({ok:true}))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet(e) {\n  var file = getFile();\n  var content = file.getContent();\n  return ContentService.createTextOutput(content || '{}')\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction getFile() {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName('vapestock_data.json');\n  if (files.hasNext()) return files.next();\n  return folder.createFile('vapestock_data.json', '{}', MimeType.PLAIN_TEXT);\n}";
+var GAS_CODE = "function doPost(e) {\n  try {\n    var mode = (e.parameter && e.parameter.mode) || 'write';\n    var file_param = (e.parameter && e.parameter.file) || 'stock';\n    var fileName = file_param === 'master' ? 'vapestock_master.json' : 'vapestock_stock.json';\n    \n    if (mode === 'read') {\n      var file = getNamedFile(fileName);\n      return ContentService.createTextOutput(file.getBlob().getDataAsString() || '{}')\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n    \n    // Write\n    var file = getNamedFile(fileName);\n    file.setContent(e.postData.contents);\n    return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId(), file:fileName}))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ok:false, error:err.message}))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  try {\n    var file_param = (e.parameter && e.parameter.file) || 'stock';\n    var fileName = file_param === 'master' ? 'vapestock_master.json' : 'vapestock_stock.json';\n    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || '{}')\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction getNamedFile(name) {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName(name);\n  var file = files.hasNext() ? files.next()\n    : folder.createFile(name, '{}', MimeType.PLAIN_TEXT);\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
 
 var stock = {};
 var txLog = [];
@@ -927,6 +902,7 @@ var stockFlt = "all";
 var genBrand = "all";
 var genFlt = "in";
 var gdUrl = "";
+var gdFileId = "";
 var gdConnected = false;
 var gdPollTimer = null;
 var gdPushTimer = null;
@@ -1063,6 +1039,21 @@ function toast(msg, t) {
 function setSyncDot(state, label) {
   document.getElementById("sdot").className = "sdot " + (state||"");
   document.getElementById("slbl").textContent = label || "local";
+  // Update connection pill in Sync tab
+  var dot = document.getElementById("conn-status-dot");
+  var txt = document.getElementById("conn-status-text");
+  if(dot && txt) {
+    var colors = { ok:"#00a870", busy:"#c87c00", err:"#c0392b", "":"#aaa" };
+    dot.style.background = colors[state||""] || "#aaa";
+    txt.textContent = state==="ok" ? (label||"Connected")
+                    : state==="busy" ? (label||"Connecting...")
+                    : state==="err" ? (label||"Error")
+                    : "Not connected";
+    txt.style.color = state==="ok" ? "#00a870"
+                    : state==="err" ? "#c0392b"
+                    : state==="busy" ? "#c87c00"
+                    : "var(--txt3)";
+  }
 }
 
 // ── STATS ──
@@ -1100,10 +1091,12 @@ function updateStats() {
   document.getElementById("hs-out").textContent = out;
 }
 
-function afterChange() { saveLocal(); updateStats(); if(gdConnected){ clearTimeout(gdPushTimer); gdPushTimer=setTimeout(gdPush,1500); } }
+function afterChange() { saveLocal(); updateStats(); }
 
 // ── GOOGLE DRIVE ──
 function gdPush() { gdSave(); } // kept for compatibility
+
+// ── SMART SYNC: Master + Stock separation ──
 
 // Post to GAS helper
 function gasPost(url, payload) {
@@ -1114,7 +1107,7 @@ function gasPost(url, payload) {
   }).then(function(r) { return r.json(); });
 }
 
-// Auto-save MASTER data (catalog/customers/prices/distributors) — called on any change
+// Save MASTER data (catalog/customers/prices) — called auto on change
 var masterSaveTimer = null;
 function saveMasterToDrive() {
   if(!gdConnected) return;
@@ -1132,119 +1125,174 @@ function saveMasterToDrive() {
     gasPost(gdUrl + "?file=master", payload)
     .then(function(resp) {
       if(resp && resp.ok) {
-        setSyncDot("ok","master saved \u2713");
-        addSyncLog("push", "Master data auto-saved (catalog/customers/prices/distributors)");
+        setSyncDot("ok","master saved ✓");
+        addSyncLog("push", "Master data auto-saved (catalog/customers/prices)");
+      } else if(resp && resp.error) {
+        addSyncLog("error", "Master save error: " + resp.error, true);
       }
     })
-    .catch(function(err) { console.warn("Master auto-save:", err.message); });
-  }, 2000);
+    .catch(function(err) {
+      // Silent fail for auto-save — don't bother user
+      console.warn("Master auto-save:", err.message);
+    });
+  }, 2000); // 2s debounce
 }
 
-// Manual SAVE (⬆ button) — saves both stock file and master file
+// Save STOCK data (manual Save button)
 function gdSave(onDone) {
   if(!gdConnected) { toast("Not connected","err"); return; }
   var sb = document.getElementById("btn-save-drive");
-  if(sb) { sb.textContent = "\u23f3 Saving..."; sb.disabled = true; }
+  if(sb) { sb.textContent = "⏳ Saving..."; sb.disabled = true; }
   setSyncDot("busy","saving...");
+
   var saveTs = Date.now();
-  var stockPayload = JSON.stringify({ stock: stock, txLog: txLog.slice(0,2000), ts: saveTs });
-  var masterPayload = JSON.stringify({
-    customFlavors: customFlavors, customers: customers,
-    defaultPrices: defaultPrices, customerPrices: customerPrices,
-    distributors: distributors, distributorPrices: distributorPrices,
+  var stockPayload = JSON.stringify({
+    stock: stock,
+    txLog: txLog.slice(0, 2000),
     ts: saveTs
   });
+  var masterPayload = JSON.stringify({
+    customFlavors: customFlavors,
+    customers: customers,
+    defaultPrices: defaultPrices,
+    customerPrices: customerPrices,
+    distributors: distributors,
+    distributorPrices: distributorPrices,
+    ts: saveTs
+  });
+
+  // Save both files in parallel
   Promise.all([
     gasPost(gdUrl + "?file=stock", stockPayload),
     gasPost(gdUrl + "?file=master", masterPayload)
-  ]).then(function(results) {
-    if(sb) { sb.textContent = "\u2b06 Save"; sb.disabled = false; }
-    var err = (results[0]&&results[0].error) || (results[1]&&results[1].error);
+  ])
+  .then(function(results) {
+    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+    var stockResp = results[0], masterResp = results[1];
+    var stockOk = stockResp && stockResp.ok;
+    var masterOk = masterResp && masterResp.ok;
+    var err = (!stockOk && stockResp && stockResp.error) || (!masterOk && masterResp && masterResp.error);
     if(err) {
-      setSyncDot("err","error"); addSyncLog("error","Save error: "+err, true);
-      toast("Save error: "+String(err).substring(0,40),"err");
+      setSyncDot("err","error");
+      addSyncLog("error", "Save error: " + err, true);
+      toast("GAS error: " + String(err).substring(0,40), "err");
     } else {
-      setSyncDot("ok","saved \u2713");
-      addSyncLog("push","Saved \u00b7 "+Object.keys(stock).length+" stock entries + master \u00b7 "+new Date(saveTs).toLocaleTimeString());
-      toast("Saved to Drive \u2713","ok");
+      setSyncDot("ok","saved ✓");
+      var stockCount = Object.keys(stock).length;
+      addSyncLog("push", "Saved · " + stockCount + " stock entries + master data · " + new Date(saveTs).toLocaleTimeString());
+      toast("Saved to Drive ✓","ok");
     }
     if(onDone) onDone();
-  }).catch(function(err) {
-    if(sb) { sb.textContent = "\u2b06 Save"; sb.disabled = false; }
-    setSyncDot("err","error"); addSyncLog("error","Save failed: "+(err.message||err), true);
-    toast("Save failed","err");
+  })
+  .catch(function(err) {
+    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+    setSyncDot("err","error");
+    addSyncLog("error", "Save failed: " + (err.message||err), true);
+    toast("Save failed: " + (err.message||err).substring(0,40),"err");
   });
 }
 
-// REFRESH (⬇ button) — reads both files and applies data
+// Refresh BOTH files from Drive
 function gdRefresh() {
   if(!gdConnected) { toast("Not connected","err"); return; }
   var rb = document.getElementById("btn-refresh-drive");
-  if(rb) { rb.textContent = "\u23f3 Loading..."; rb.disabled = true; }
+  if(rb) { rb.textContent = "⏳ Loading..."; rb.disabled = true; }
   setSyncDot("busy","loading...");
+
+  // Read both files in parallel
   Promise.all([
     gasPost(gdUrl + "?file=stock&mode=read", "{}"),
     gasPost(gdUrl + "?file=master&mode=read", "{}")
-  ]).then(function(results) {
-    var stockData = results[0], masterData = results[1];
-    if(stockData&&stockData.error) throw new Error("Stock: "+stockData.error);
-    if(masterData&&masterData.error) throw new Error("Master: "+masterData.error);
+  ])
+  .then(function(results) {
+    var stockData  = results[0];
+    var masterData = results[1];
+
+    // Validate
+    if(stockData && stockData.error)  throw new Error("Stock read error: " + stockData.error);
+    if(masterData && masterData.error) throw new Error("Master read error: " + masterData.error);
+
     var changed = false;
+
+    // Apply MASTER data (full replace — source of truth)
     if(masterData && (masterData.customFlavors || masterData.customers)) {
       if(masterData.customFlavors) {
         customFlavors = masterData.customFlavors;
         try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(x) {}
         rebuildCatalogFromCustomFlavors();
       }
-      if(masterData.customers)         customers = masterData.customers;
-      if(masterData.defaultPrices)     defaultPrices = masterData.defaultPrices;
-      if(masterData.customerPrices)    customerPrices = masterData.customerPrices;
-      if(masterData.distributors)      distributors = masterData.distributors;
+      if(masterData.customers)      customers = masterData.customers;
+      if(masterData.defaultPrices)  defaultPrices = masterData.defaultPrices;
+      if(masterData.customerPrices) customerPrices = masterData.customerPrices;
+      if(masterData.distributors)   distributors = masterData.distributors;
       if(masterData.distributorPrices) distributorPrices = masterData.distributorPrices;
       changed = true;
     }
-    if(stockData && stockData.stock) { stock = stockData.stock; changed = true; }
+
+    // Apply STOCK data (full replace for stock qty)
+    if(stockData && stockData.stock) {
+      stock = stockData.stock;
+      changed = true;
+    }
+
+    // Merge txLog — union of local + Drive entries, no duplicates
     if(stockData && stockData.txLog) {
       var localSync = txLog.filter(function(e){ return e.type==="sync"; });
       var driveLog = stockData.txLog;
-      var seen = {}; driveLog.forEach(function(e){ seen[e.type+"_"+e.date]=true; });
-      localSync.forEach(function(e){ if(!seen[e.type+"_"+e.date]) driveLog.unshift(e); });
-      txLog = driveLog; if(txLog.length>2000) txLog.length=2000; changed=true;
+      // Build a set of existing keys
+      var seen = {};
+      driveLog.forEach(function(e){ seen[e.type+"_"+e.date] = true; });
+      // Add local sync entries not in Drive
+      localSync.forEach(function(e){
+        if(!seen[e.type+"_"+e.date]) driveLog.unshift(e);
+      });
+      txLog = driveLog;
+      if(txLog.length > 2000) txLog.length = 2000;
+      changed = true;
     }
+
+    if(stockData && stockData.ts) gdLastTs = stockData.ts;
+
     if(changed) { savePricing(); saveLocal(); }
     renderStock(); renderHistory(); updateStats();
-    var pgOn = function(id){ var el=document.getElementById(id); return el&&el.classList.contains("on"); };
-    if(pgOn("pg-catalog")) renderCatalogPage();
-    if(pgOn("pg-customers")) renderCustomers();
-    if(pgOn("pg-pricing")) renderPricingPage();
-    if(pgOn("pg-distributor")) renderDistributors();
-    if(pgOn("pg-analysis")) renderAnalysisPage();
-    if(rb) { rb.textContent = "\u2b07 Refresh"; rb.disabled = false; }
-    setSyncDot("ok","updated \u2713");
-    var ts = stockData&&stockData.ts ? new Date(stockData.ts).toLocaleTimeString() : "?";
-    addSyncLog("pull","Loaded \u00b7 "+Object.keys(stock).length+" stock entries \u00b7 "+ts);
-    toast("Updated from Drive \u2713","ok");
-  }).catch(function(err) {
-    if(rb) { rb.textContent = "\u2b07 Refresh"; rb.disabled = false; }
-    setSyncDot("err","error"); addSyncLog("error","Refresh failed: "+(err.message||err), true);
-    toast((err.message||err).substring(0,60),"err");
+    if(document.getElementById("pg-catalog")&&document.getElementById("pg-catalog").classList.contains("on")) renderCatalogPage();
+    if(document.getElementById("pg-customers")&&document.getElementById("pg-customers").classList.contains("on")) renderCustomers();
+    if(document.getElementById("pg-pricing")&&document.getElementById("pg-pricing").classList.contains("on")) renderPricingPage();
+    if(document.getElementById("pg-distributor")&&document.getElementById("pg-distributor").classList.contains("on")) renderDistributors();
+    if(document.getElementById("pg-analysis")&&document.getElementById("pg-analysis").classList.contains("on")) renderAnalysisPage();
+
+    if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
+    setSyncDot("ok","updated ✓");
+
+    var stockCount = Object.keys(stockData&&stockData.stock||{}).length;
+    var masterTs = masterData && masterData.ts ? new Date(masterData.ts).toLocaleTimeString() : "no ts";
+    var stockTs  = stockData  && stockData.ts  ? new Date(stockData.ts).toLocaleTimeString()  : "no ts";
+    addSyncLog("pull", "Loaded · " + stockCount + " stock entries · stock:" + stockTs + " master:" + masterTs);
+    toast("Updated from Drive ✓","ok");
+  })
+  .catch(function(err) {
+    if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
+    setSyncDot("err","error");
+    var msg = (err&&err.message) ? err.message : String(err);
+    addSyncLog("error", "Refresh failed: " + msg, true);
+    toast(msg.substring(0,60),"err");
   });
 }
-
-function gdPull() { if(!gdConnected) return; /* silent background — no-op for now */ }
-
-
 function gdConnect(url) {
   if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL"); return; }
   gdUrl=url.trim(); gdConnected=true; saveLocal();
   setSyncDot("busy","connecting..."); showGdStatus("busy","Connecting...");
   document.getElementById("btn-gd-disc").style.display="";
+  var _sb=document.getElementById("btn-save-drive"); if(_sb)_sb.style.display="inline-block";
+  var _rb=document.getElementById("btn-refresh-drive"); if(_rb)_rb.style.display="inline-block";
   gdPull(); clearInterval(gdPollTimer); gdPollTimer=setInterval(gdPull,10000);
   toast("Google Drive connected!","ok");
 }
 function gdDisconnect() {
   gdConnected=false; gdUrl=""; clearInterval(gdPollTimer);
   setSyncDot("","local"); document.getElementById("btn-gd-disc").style.display="none";
+  var _sb2=document.getElementById("btn-save-drive"); if(_sb2)_sb2.style.display="none";
+  var _rb2=document.getElementById("btn-refresh-drive"); if(_rb2)_rb2.style.display="none";
   document.getElementById("gd-url").value=""; hideGdStatus(); saveLocal();
   toast("Disconnected","warn");
 }
@@ -1300,11 +1348,17 @@ function renderStockBrands() {
   renderCatChips("s-cat-chips", activeCategory, function(cat) {
     activeCategory = cat;
     var brands = brandsForCat(cat);
-    activeBrand = brands[0] || BRANDS[0];
+    activeBrand = brands[0] || null;
     renderStockBrands(); renderStockGrid(); updateFilterCounts();
   });
   var wrap=document.getElementById("sb"); wrap.innerHTML="";
   var brs = brandsForCat(activeCategory);
+  if(!brs.length) {
+    var ph=document.createElement("div"); ph.style.cssText="font-size:12px;color:var(--txt3);padding:8px 4px";
+    ph.textContent="No brands in this category"; wrap.appendChild(ph);
+    activeBrand=null; return;
+  }
+  if(!activeBrand || brs.indexOf(activeBrand)===-1) activeBrand=brs[0];
   brs.forEach(function(br) {
     var d=document.createElement("div"); d.className="chip"+(br===activeBrand?" on":""); d.textContent=br;
     d.addEventListener("click",function(){ activeBrand=br; renderStockBrands(); renderStockGrid(); updateFilterCounts(); });
@@ -1341,6 +1395,13 @@ function renderStock() { renderStockBrands(); renderStockGrid(); updateFilterCou
 
 function renderStockGrid() {
   var grid=document.getElementById("sgrid");
+  grid.innerHTML="";
+  // No brand in this category
+  if(!activeBrand) {
+    var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
+    empty.innerHTML="<div class='ei'>📂</div><div class='et'>No brands in this category yet.<br>Add brands in the Catalog tab.</div>";
+    grid.appendChild(empty); return;
+  }
   var flavors=(CATALOG[activeBrand]||[]).filter(function(fl){
     var q=qty(activeBrand,fl);
     if(stockFlt==="in") return q>3;
@@ -1348,10 +1409,9 @@ function renderStockGrid() {
     if(stockFlt==="out") return q===0;
     return true;
   });
-  grid.innerHTML="";
   if(!flavors.length){
     var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
-    empty.innerHTML="<div class=\"ei\">&#128235;</div><div class=\"et\">No items match</div>";
+    empty.innerHTML="<div class='ei'>&#128235;</div><div class='et'>No items match</div>";
     grid.appendChild(empty); return;
   }
   flavors.forEach(function(fl){
@@ -1364,7 +1424,6 @@ function renderStockGrid() {
     var btnM=document.createElement("button"); btnM.className="qbtn m"; btnM.textContent="−";
     btnM.setAttribute("data-br",activeBrand); btnM.setAttribute("data-fl",fl); btnM.setAttribute("data-d","-1");
     var qvalEl=document.createElement("div"); qvalEl.className="qval"+(q===0?" z":q<=3?" lw":""); qvalEl.textContent=q;
-    // tap to edit inline
     qvalEl.addEventListener("click",function(){
       var inp=document.createElement("input"); inp.type="number"; inp.min="0"; inp.value=q; inp.className="qedit";
       inp.addEventListener("blur",function(){
@@ -1608,7 +1667,7 @@ function renderPurBrands(){
   renderCatChips("pur-cat-chips", purCategory, function(cat) {
     purCategory = cat;
     var brs = brandsForCat(cat);
-    purBrand = brs[0] || BRANDS[0];
+    purBrand = brs[0] || null;
     renderPurBrands(); renderPurFlavors();
   });
   var wrap=document.getElementById("pb"); wrap.innerHTML="";
@@ -1622,8 +1681,9 @@ function renderPurBrands(){
 (function(){var __el=document.getElementById("psearch");if(!__el)return;__el.addEventListener("input",renderPurFlavors)})();
 function renderPurFlavors(){
   var q=document.getElementById("psearch").value.toLowerCase();
-  var flavors=(CATALOG[purBrand]||[]).filter(function(f){return !q||f.toLowerCase().indexOf(q)!==-1;});
   var list=document.getElementById("pflist"); list.innerHTML="";
+  if(!purBrand){list.innerHTML="<div class=\"empty\" style=\"padding:12px\"><div class=\"et\">Select a brand above</div></div>";return;}
+  var flavors=(CATALOG[purBrand]||[]).filter(function(f){return !q||f.toLowerCase().indexOf(q)!==-1;});
   if(!flavors.length){list.innerHTML="<div class=\"empty\" style=\"padding:12px\"><div class=\"et\">No match</div></div>";return;}
   flavors.forEach(function(fl){
     var k=skey(purBrand,fl), inCart=cart[k]!==undefined;
@@ -1712,81 +1772,30 @@ function renderCart(){
 })})();
 
 // ── VERIFY ORDER ──
-(function(){
-  var __el=document.getElementById("btn-verify");
-  if(!__el) return;
-  __el.addEventListener("click", function(){
-    var text = document.getElementById("oinput").value.trim();
-    if(!text){ toast("Paste orders first","err"); return; }
-    var res = document.getElementById("vresult");
-    res.innerHTML = "";
-    var lines = text.split("\n");
-    var custList = [];
-    var cur = null;
-    lines.forEach(function(line){
-      var t = line.trim();
-      if(!t) return;
-      if(/^[A-Za-z][^:]*:$/.test(t) && !/[xX]\s*\d/.test(t)){
-        cur = { name: t.replace(/:$/, "").trim(), lines: [] };
-        custList.push(cur);
-      } else {
-        if(!cur){ cur = { name: "Order", lines: [] }; custList.push(cur); }
-        cur.lines.push(line);
-      }
-    });
-    if(!custList.length) return;
-    var runStock = {};
-    Object.keys(stock).forEach(function(k){ runStock[k] = stock[k] || 0; });
-    var totalOk = 0, totalIssues = 0;
-    var sumEl = document.createElement("div");
-    sumEl.style.cssText = "margin-bottom:14px";
-    res.appendChild(sumEl);
-    custList.forEach(function(cust){
-      var raw = parseTextBlock(cust.lines.join("\n"));
-      if(!raw.length) return;
-      var hdr = document.createElement("div");
-      hdr.style.cssText = "font-size:13px;font-weight:700;color:var(--acc);margin:12px 0 6px;padding:6px 10px;background:rgba(91,79,232,.08);border-radius:8px;border-left:3px solid var(--acc)";
-      hdr.textContent = cust.name;
-      res.appendChild(hdr);
-      raw.forEach(function(item){
-        var best = bestMatch(item.rawFlavor, item.hintBrand || null);
-        var el = document.createElement("div"); el.className = "vitem";
-        var ic = document.createElement("span"); ic.className = "vico";
-        var tx = document.createElement("div"); tx.className = "vtxt";
-        if(!best){
-          el.classList.add("ver"); ic.textContent = "?";
-          var st = document.createElement("strong"); st.textContent = item.rawFlavor;
-          var sb = document.createElement("span"); sb.className = "qav"; sb.textContent = "Not found in catalog";
-          tx.appendChild(st); tx.appendChild(sb); totalIssues++;
-        } else {
-          var k = skey(best.brand, best.flavor);
-          var avail = runStock[k] || 0;
-          var need = item.qty;
-          var canFill = Math.min(avail, need);
-          var short = need - canFill;
-          var ok = (short === 0);
-          runStock[k] = Math.max(0, avail - need);
-          if(ok){ el.classList.add("vok"); ic.textContent = "\u2713"; totalOk++; }
-          else  { el.classList.add("ver"); ic.textContent = "\u2715"; totalIssues++; }
-          var st = document.createElement("strong"); st.textContent = best.flavor;
-          var sb = document.createElement("span"); sb.className = "qav";
-          var detail = best.brand + " \u00b7 Need: " + need + " \u00b7 Stock: " + avail;
-          if(!ok){ detail += avail===0 ? " \u2014 OUT OF STOCK" : " \u00b7 Fill: "+canFill+" \u00b7 SHORT: "+short; }
-          sb.textContent = detail;
-          sb.style.color = ok ? "" : "var(--red)";
-          tx.appendChild(st); tx.appendChild(sb);
-        }
-        el.appendChild(ic); el.appendChild(tx); res.appendChild(el);
-      });
-    });
-    sumEl.innerHTML =
-      "<div style='display:flex;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700'>" +
-      "<span style='color:var(--grn)'>" + totalOk + " OK</span>" +
-      "<span style='color:var(--red)'>" + totalIssues + " Issues</span>" +
-      "<span style='color:var(--txt3)'>" + custList.length + " customer" + (custList.length!==1?"s":"") + "</span>" +
-      "</div>";
+(function(){var __el=document.getElementById("btn-verify");if(!__el)return;__el.addEventListener("click",function(){
+  var text=document.getElementById("oinput").value.trim();
+  if(!text){toast("Paste an order first","err");return;}
+  var raw=parseTextBlock(text); var res=document.getElementById("vresult"); res.innerHTML="";
+  if(!raw.length){res.innerHTML="<div class=\"vitem ver\"><span class=\"vico\">&#9888;</span><div class=\"vtxt\"><strong>Nothing parsed</strong>Use: - Miami Mint x3</div></div>";return;}
+  var results=[]; var okN=0;
+  raw.forEach(function(item){
+    var best=bestMatch(item.rawFlavor, item.hintBrand || null);
+    if(best){ var av=qty(best.brand,best.flavor); var ok=(av>=item.qty); if(ok)okN++; results.push({flavor:best.flavor,brand:best.brand,req:item.qty,av:av,ok:ok}); }
+    else results.push({flavor:item.rawFlavor,notFound:true,req:item.qty});
   });
-})();
+  var sum=document.createElement("div"); sum.style.cssText="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;font-weight:700";
+  sum.innerHTML="<span style=\"color:var(--grn)\">"+okN+" OK</span><span style=\"color:var(--red)\">"+(results.length-okN)+" Issues</span>";
+  res.appendChild(sum);
+  results.forEach(function(r){
+    var el=document.createElement("div"); el.className="vitem "+(r.notFound?"ver":r.ok?"vok":"ver");
+    var ic=document.createElement("span"); ic.className="vico"; ic.textContent=r.notFound?"?":r.ok?"✓":"✕";
+    var tx=document.createElement("div"); tx.className="vtxt";
+    var st=document.createElement("strong"); st.textContent=r.flavor;
+    var sb=document.createElement("span"); sb.className="qav";
+    sb.textContent=r.notFound?"Not found in catalog":r.brand+" · Need: "+r.req+" · Have: "+r.av+(r.ok?"":" — SHORT by "+(r.req-r.av));
+    tx.appendChild(st); tx.appendChild(sb); el.appendChild(ic); el.appendChild(tx); res.appendChild(el);
+  });
+})})();
 (function(){var __el=document.getElementById("btn-clro");if(!__el)return;__el.addEventListener("click",function(){
   document.getElementById("oinput").value=""; document.getElementById("vresult").innerHTML="";
 })})();
@@ -1902,23 +1911,45 @@ function renderHistory() {
   toShow.forEach(function(h) {
     var item = document.createElement("div"); item.className = "hitem";
     // Color left border by type
-    var borderColor = h.type==="purchase" ? "rgba(0,229,160,.5)" : h.type==="adj" ? "rgba(255,184,0,.5)" : "rgba(255,77,109,.5)";
+    var borderColor = h.type==="purchase" ? "rgba(0,229,160,.5)" : h.type==="adj" ? "rgba(255,184,0,.5)" : h.type==="sync" ? "rgba(91,79,232,.5)" : "rgba(255,77,109,.5)";
     item.style.borderLeft = "3px solid " + borderColor;
     item.style.paddingLeft = "11px";
     var meta = document.createElement("div"); meta.className = "hmeta";
     var tp = document.createElement("span");
-    tp.className = "htype " + (h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
-    tp.textContent = h.type==="purchase" ? "+ Purchase" : h.type==="adj" ? "~ Adjusted" : "- Sale";
-    var dt = document.createElement("span"); dt.className = "hdt"; dt.textContent = h.date;
-    meta.appendChild(tp); meta.appendChild(dt);
-    var det = document.createElement("div"); det.className = "hdtl";
-    var cat = h.category || catOfBrand(h.brand) || "";
-    det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
-    var st = document.createElement("strong");
-    var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
-    st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
-    st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
-    det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
+
+    if(h.type === "sync") {
+      // Sync entry — show direction and detail/error
+      var isErr = h.isError || h.direction === "error";
+      tp.className = "htype " + (isErr ? "sal" : "adj");
+      var dirLabel = h.direction === "push" ? "⬆ Saved to Drive"
+                   : h.direction === "pull" ? "⬇ Refreshed from Drive"
+                   : "⚠ Sync Error";
+      tp.textContent = dirLabel;
+      item.style.borderLeft = "3px solid " + (isErr ? "rgba(224,57,74,.6)" : "rgba(91,79,232,.5)");
+      var dt2 = document.createElement("span"); dt2.className = "hdt"; dt2.textContent = h.date;
+      meta.appendChild(tp); meta.appendChild(dt2);
+      var det2 = document.createElement("div"); det2.className = "hdtl";
+      if(h.detail) {
+        det2.textContent = h.detail;
+        det2.style.color = isErr ? "var(--red)" : "var(--txt3)";
+        det2.style.fontFamily = "'DM Mono', monospace";
+        det2.style.fontSize = "11px";
+      }
+      item.appendChild(meta); item.appendChild(det2); el.appendChild(item);
+    } else {
+      tp.className = "htype " + (h.type==="purchase"?"pur":h.type==="adj"?"adj":"sal");
+      tp.textContent = h.type==="purchase" ? "+ Purchase" : h.type==="adj" ? "~ Adjusted" : "- Sale";
+      var dt = document.createElement("span"); dt.className = "hdt"; dt.textContent = h.date;
+      meta.appendChild(tp); meta.appendChild(dt);
+      var det = document.createElement("div"); det.className = "hdtl";
+      var cat = h.category || catOfBrand(h.brand) || "";
+      det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
+      var st = document.createElement("strong");
+      var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
+      st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
+      st.style.color = h.type==="sale" ? "var(--red)" : h.type==="adj" ? "var(--amb)" : "var(--grn)";
+      det.appendChild(st); item.appendChild(meta); item.appendChild(det); el.appendChild(item);
+    }
   });
 
   var lm = document.getElementById("log-load-more");
@@ -2709,28 +2740,11 @@ function renderCatBrandScroll() {
   wrap.innerHTML = "";
   var brs = brandsForCat(catActiveCategory);
   brs.forEach(function(br) {
-    var row = document.createElement("div");
-    row.style.cssText = "display:flex;align-items:center;gap:6px;margin-bottom:5px";
-
-    var chip = document.createElement("div");
-    chip.className = "chip" + (br === catActiveBrand ? " on" : "");
-    chip.textContent = br;
-    chip.style.flex = "1";
-    chip.addEventListener("click", function() { catActiveBrand = br; renderCatBrandScroll(); renderCatFlavorList(); });
-
-    // Edit (rename) button
-    var editBtn = document.createElement("span");
-    editBtn.textContent = "✎";
-    editBtn.title = "Rename brand";
-    editBtn.style.cssText = "font-size:13px;cursor:pointer;padding:3px 7px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt3);flex-shrink:0;user-select:none";
-    editBtn.addEventListener("click", function(e) {
-      e.stopPropagation();
-      openRenameBrandModal(br);
-    });
-
-    row.appendChild(chip);
-    row.appendChild(editBtn);
-    wrap.appendChild(row);
+    var d = document.createElement("div");
+    d.className = "chip" + (br === catActiveBrand ? " on" : "");
+    d.textContent = br;
+    d.addEventListener("click", function() { catActiveBrand = br; renderCatBrandScroll(); renderCatFlavorList(); });
+    wrap.appendChild(d);
   });
 }
 
@@ -3993,122 +4007,11 @@ function renderAnalysisMargin(container) {
   });
 }
 
-
-// ── RENAME BRAND ──
-function openRenameBrandModal(br) {
-  var m = document.getElementById("rename-brand-modal"); if(!m) return;
-  document.getElementById("rename-brand-old").value = br;
-  document.getElementById("rename-brand-inp").value = br;
-  document.getElementById("rename-brand-hint").textContent = "Renaming: " + br;
-  m.classList.add("open");
-  setTimeout(function(){ var inp=document.getElementById("rename-brand-inp"); if(inp){inp.focus();inp.select();} }, 100);
+// gdPull for background polling
+function gdPull() {
+  if(!gdConnected) return;
+  // silent background refresh - same as gdRefresh but no UI feedback
 }
-function closeRenameBrandModal() {
-  var m = document.getElementById("rename-brand-modal"); if(m) m.classList.remove("open");
-}
-(function(){var el=document.getElementById("rename-brand-close");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
-(function(){var el=document.getElementById("btn-rename-brand-cancel");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
-(function(){var el=document.getElementById("rename-brand-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeRenameBrandModal();});})();
-(function(){
-  var el = document.getElementById("btn-rename-brand-save"); if(!el) return;
-  el.addEventListener("click", function() {
-    var oldName = document.getElementById("rename-brand-old").value;
-    var newName = (document.getElementById("rename-brand-inp").value||"").trim();
-    if(!newName) { toast("Enter a new name","err"); return; }
-    if(newName === oldName) { closeRenameBrandModal(); return; }
-    if(CATALOG[newName]) { toast("A brand named \""+newName+"\" already exists","err"); return; }
-
-    // 1. Rename in CATALOG
-    CATALOG[newName] = CATALOG[oldName] || [];
-    delete CATALOG[oldName];
-
-    // 2. Rename in BRANDS array
-    var bi = BRANDS.indexOf(oldName);
-    if(bi > -1) BRANDS[bi] = newName;
-
-    // 3. Rename in CATEGORIES
-    CATEGORY_NAMES.forEach(function(cat) {
-      var brs = CATEGORIES[cat] || [];
-      var ci = brs.indexOf(oldName);
-      if(ci > -1) brs[ci] = newName;
-    });
-
-    // 4. Rename in customFlavors keys
-    if(customFlavors["__brand__" + oldName] !== undefined) {
-      customFlavors["__brand__" + newName] = customFlavors["__brand__" + oldName];
-      delete customFlavors["__brand__" + oldName];
-    }
-    if(customFlavors["__catbrand__" + oldName] !== undefined) {
-      customFlavors["__catbrand__" + newName] = customFlavors["__catbrand__" + oldName];
-      delete customFlavors["__catbrand__" + oldName];
-    }
-    if(customFlavors[oldName]) {
-      customFlavors[newName] = customFlavors[oldName];
-      delete customFlavors[oldName];
-    }
-    // Fix deleted keys referencing old brand name
-    if(customFlavors["__deleted__"]) {
-      customFlavors["__deleted__"] = customFlavors["__deleted__"].map(function(k) {
-        return k.indexOf(oldName+"~~") === 0 ? newName + k.substring(oldName.length) : k;
-      });
-    }
-
-    // 5. Rename in stock keys
-    var oldPrefix = oldName + "~~";
-    Object.keys(stock).forEach(function(k) {
-      if(k.indexOf(oldPrefix) === 0) {
-        stock[newName + "~~" + k.substring(oldPrefix.length)] = stock[k];
-        delete stock[k];
-      }
-    });
-
-    // 6. Rename in txLog entries
-    txLog.forEach(function(entry) {
-      if(entry.brand === oldName) entry.brand = newName;
-    });
-
-    // 7. Rename in distributorPrices keys
-    Object.keys(distributorPrices).forEach(function(k) {
-      var parts = k.split("~~");
-      if(parts[1] === oldName) {
-        distributorPrices[parts[0]+"~~"+newName] = distributorPrices[k];
-        delete distributorPrices[k];
-      }
-    });
-
-    // 8. Rename in defaultPrices
-    if(defaultPrices[oldName] !== undefined) {
-      defaultPrices[newName] = defaultPrices[oldName];
-      delete defaultPrices[oldName];
-    }
-
-    // 9. Rename in customerPrices keys
-    Object.keys(customerPrices).forEach(function(k) {
-      var parts = k.split("~~");
-      if(parts[1] === oldName) {
-        customerPrices[parts[0]+"~~"+newName] = customerPrices[k];
-        delete customerPrices[k];
-      }
-    });
-
-    // Update active brand if it was the renamed one
-    if(catActiveBrand === oldName) catActiveBrand = newName;
-    if(activeBrand === oldName) activeBrand = newName;
-    if(purBrand === oldName) purBrand = newName;
-
-    // Save everything
-    saveCustomFlavors();
-    savePricing();
-    saveLocal();
-    updateStats();
-
-    closeRenameBrandModal();
-    renderCatBrandScroll();
-    renderCatFlavorList();
-    renderStockBrands();
-    toast("\""+oldName+"\" renamed to \""+newName+"\" ✓", "ok");
-  });
-})();
 
 // ── INIT ──
 loadLocal();
@@ -4116,13 +4019,18 @@ loadPricing();
 loadCustomFlavors();
 renderStock();
 updateStats();
+gdFileId = localStorage.getItem("vs5_gdfileid")||"";
 if(gdUrl){
   gdConnected=true; setSyncDot("busy","connecting...");
   document.getElementById("btn-gd-disc").style.display="";
+  var _sb3=document.getElementById("btn-save-drive"); if(_sb3)_sb3.style.display="inline-block";
+  var _rb3=document.getElementById("btn-refresh-drive"); if(_rb3)_rb3.style.display="inline-block";
   gdPull(); gdPollTimer=setInterval(gdPull,10000);
 } else { setSyncDot("","local"); }
 
 })();
+
+
 
 
 
