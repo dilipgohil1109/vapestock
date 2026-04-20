@@ -884,7 +884,7 @@ var CATEGORIES = { "Vape": Object.keys(CATALOG).slice() };
 var CATEGORY_NAMES = Object.keys(CATEGORIES);
 
 // Helper: get brands for a category
-function brandsForCat(cat) { return cat === "all" ? BRANDS : (CATEGORIES[cat] || []); }
+function brandsForCat(cat) { var arr = cat === "all" ? BRANDS : (CATEGORIES[cat] || []); return arr.slice().sort(function(a,b){ return a.toLowerCase().localeCompare(b.toLowerCase()); }); }
 // Helper: get category of a brand
 function catOfBrand(br) {
   var found = "Vape";
@@ -1412,7 +1412,7 @@ function renderStockGrid() {
     if(stockFlt==="low") return q>0&&q<=3;
     if(stockFlt==="out") return q===0;
     return true;
-  });
+  }).slice().sort(function(a,b){return a.toLowerCase().localeCompare(b.toLowerCase());});
   if(!flavors.length){
     var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
     empty.innerHTML="<div class='ei'>&#128235;</div><div class='et'>No items match</div>";
@@ -2769,7 +2769,7 @@ function renderCatFlavorList() {
   var q = catSearchQ.toLowerCase();
   var flavors = (CATALOG[catActiveBrand] || []).filter(function(fl) {
     return !q || fl.toLowerCase().indexOf(q) !== -1;
-  });
+  }).slice().sort(function(a,b){return a.toLowerCase().localeCompare(b.toLowerCase());});
 
   var block = document.createElement("div");
   block.className = "cat-brand-block";
