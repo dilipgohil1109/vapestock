@@ -867,27 +867,8 @@ function getFile() {
     </div>
   </div>
 
-<!-- RENAME BRAND MODAL -->
-<div class="modal-overlay" id="rename-brand-modal">
-  <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
-    <span class="modal-close" id="rename-brand-close">&#10005;</span>
-    <div class="modal-title">Rename Brand</div>
-    <div class="modal-sub" id="rename-brand-hint" style="font-size:12px;color:var(--txt3);margin-bottom:14px"></div>
-    <input type="hidden" id="rename-brand-old">
-    <div class="igrp">
-      <div class="ilbl">New Brand Name</div>
-      <input class="ifield" id="rename-brand-inp" placeholder="Enter new name">
-    </div>
-    <div class="brow" style="margin-top:12px">
-      <button class="btn bpri" id="btn-rename-brand-save">Rename</button>
-      <button class="btn bsec" id="btn-rename-brand-cancel">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-
 
 // openDistModal handled by listener
 
@@ -2757,139 +2738,17 @@ function renderCatCategorySection() {
   });
 }
 
-// ── RENAME BRAND ──
-function openRenameBrandModal(br) {
-  var m = document.getElementById("rename-brand-modal"); if(!m) return;
-  document.getElementById("rename-brand-old").value = br;
-  document.getElementById("rename-brand-inp").value = br;
-  document.getElementById("rename-brand-hint").textContent = "Current name: " + br;
-  m.classList.add("open");
-  setTimeout(function(){ var inp=document.getElementById("rename-brand-inp"); if(inp){inp.focus();inp.select();} }, 100);
-}
-function closeRenameBrandModal() {
-  var m = document.getElementById("rename-brand-modal"); if(m) m.classList.remove("open");
-}
-(function(){var el=document.getElementById("rename-brand-close");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
-(function(){var el=document.getElementById("btn-rename-brand-cancel");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
-(function(){var el=document.getElementById("rename-brand-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeRenameBrandModal();});})();
-(function(){
-  var el=document.getElementById("btn-rename-brand-save"); if(!el) return;
-  el.addEventListener("click", function(){
-    var oldName = document.getElementById("rename-brand-old").value;
-    var newName = (document.getElementById("rename-brand-inp").value||"").trim();
-    if(!newName){ toast("Enter a name","err"); return; }
-    if(newName === oldName){ closeRenameBrandModal(); return; }
-    if(CATALOG[newName]){ toast("\""+newName+"\" already exists","err"); return; }
-
-    // 1. CATALOG
-    CATALOG[newName] = CATALOG[oldName] || [];
-    delete CATALOG[oldName];
-
-    // 2. BRANDS array
-    var bi = BRANDS.indexOf(oldName);
-    if(bi > -1) BRANDS[bi] = newName;
-
-    // 3. CATEGORIES
-    CATEGORY_NAMES.forEach(function(cat){
-      var brs = CATEGORIES[cat]||[];
-      var ci = brs.indexOf(oldName);
-      if(ci > -1) brs[ci] = newName;
-    });
-
-    // 4. customFlavors keys
-    if(customFlavors["__brand__"+oldName] !== undefined){
-      customFlavors["__brand__"+newName] = customFlavors["__brand__"+oldName];
-      delete customFlavors["__brand__"+oldName];
-    }
-    if(customFlavors["__catbrand__"+oldName] !== undefined){
-      customFlavors["__catbrand__"+newName] = customFlavors["__catbrand__"+oldName];
-      delete customFlavors["__catbrand__"+oldName];
-    }
-    if(customFlavors[oldName]){
-      customFlavors[newName] = customFlavors[oldName];
-      delete customFlavors[oldName];
-    }
-    if(customFlavors["__deleted__"]){
-      customFlavors["__deleted__"] = customFlavors["__deleted__"].map(function(k){
-        return k.indexOf(oldName+"~~")===0 ? newName+k.substring(oldName.length) : k;
-      });
-    }
-
-    // 5. stock keys
-    var prefix = oldName+"~~";
-    Object.keys(stock).forEach(function(k){
-      if(k.indexOf(prefix)===0){
-        stock[newName+"~~"+k.substring(prefix.length)] = stock[k];
-        delete stock[k];
-      }
-    });
-
-    // 6. txLog entries
-    txLog.forEach(function(e){ if(e.brand===oldName) e.brand=newName; });
-
-    // 7. distributorPrices
-    Object.keys(distributorPrices).forEach(function(k){
-      var pts=k.split("~~");
-      if(pts[1]===oldName){
-        distributorPrices[pts[0]+"~~"+newName]=distributorPrices[k];
-        delete distributorPrices[k];
-      }
-    });
-
-    // 8. defaultPrices
-    if(defaultPrices[oldName]!==undefined){
-      defaultPrices[newName]=defaultPrices[oldName];
-      delete defaultPrices[oldName];
-    }
-
-    // 9. customerPrices
-    Object.keys(customerPrices).forEach(function(k){
-      var pts=k.split("~~");
-      if(pts[1]===oldName){
-        customerPrices[pts[0]+"~~"+newName]=customerPrices[k];
-        delete customerPrices[k];
-      }
-    });
-
-    // Update active state
-    if(catActiveBrand===oldName) catActiveBrand=newName;
-    if(activeBrand===oldName) activeBrand=newName;
-    if(purBrand===oldName) purBrand=newName;
-
-    saveCustomFlavors(); savePricing(); saveLocal(); updateStats();
-    closeRenameBrandModal();
-    renderCatBrandScroll();
-    renderCatFlavorList();
-    renderStockBrands();
-    toast("\""+oldName+"\" \u2192 \""+newName+"\" \u2713","ok");
-  });
-})();
-
-
 function renderCatBrandScroll() {
   var wrap = document.getElementById("cat-brand-scroll");
   if (!wrap) return;
   wrap.innerHTML = "";
   var brs = brandsForCat(catActiveCategory);
   brs.forEach(function(br) {
-    var row = document.createElement("div");
-    row.style.cssText = "display:flex;align-items:center;gap:6px;margin-bottom:5px";
-    var chip = document.createElement("div");
-    chip.className = "chip" + (br === catActiveBrand ? " on" : "");
-    chip.textContent = br;
-    chip.style.flex = "1";
-    chip.addEventListener("click", function() { catActiveBrand = br; renderCatBrandScroll(); renderCatFlavorList(); });
-    var editBtn = document.createElement("span");
-    editBtn.textContent = "\u270e";
-    editBtn.title = "Rename brand";
-    editBtn.style.cssText = "font-size:13px;cursor:pointer;padding:4px 8px;border-radius:6px;background:var(--sur2);border:1px solid var(--brd);color:var(--txt3);flex-shrink:0;user-select:none;line-height:1";
-    editBtn.addEventListener("click", function(e) {
-      e.stopPropagation();
-      openRenameBrandModal(br);
-    });
-    row.appendChild(chip);
-    row.appendChild(editBtn);
-    wrap.appendChild(row);
+    var d = document.createElement("div");
+    d.className = "chip" + (br === catActiveBrand ? " on" : "");
+    d.textContent = br;
+    d.addEventListener("click", function() { catActiveBrand = br; renderCatBrandScroll(); renderCatFlavorList(); });
+    wrap.appendChild(d);
   });
 }
 
@@ -2931,13 +2790,45 @@ function renderCatFlavorList() {
   nameWrap.appendChild(countEl);
   var actions = document.createElement("div");
   actions.className = "cat-brand-actions";
+  // Rename button — all brands
+  var renameBtn = document.createElement("button");
+  renameBtn.className = "cat-action-btn";
+  renameBtn.textContent = "\u270e Rename";
+  (function(oldBrand){
+    renameBtn.addEventListener("click", function(){
+      var newName = prompt("Rename \""+oldBrand+"\"\n\nEnter new name:", oldBrand);
+      if(!newName) return;
+      newName = newName.trim();
+      if(!newName || newName === oldBrand) return;
+      if(CATALOG[newName]){ toast("\""+newName+"\" already exists","err"); return; }
+      CATALOG[newName]=CATALOG[oldBrand]||[]; delete CATALOG[oldBrand];
+      var bi=BRANDS.indexOf(oldBrand); if(bi>-1) BRANDS[bi]=newName;
+      CATEGORY_NAMES.forEach(function(cat){ var arr=CATEGORIES[cat]||[]; var ci=arr.indexOf(oldBrand); if(ci>-1) arr[ci]=newName; });
+      if(customFlavors["__brand__"+oldBrand]!==undefined){ customFlavors["__brand__"+newName]=customFlavors["__brand__"+oldBrand]; delete customFlavors["__brand__"+oldBrand]; }
+      if(customFlavors["__catbrand__"+oldBrand]!==undefined){ customFlavors["__catbrand__"+newName]=customFlavors["__catbrand__"+oldBrand]; delete customFlavors["__catbrand__"+oldBrand]; }
+      if(customFlavors[oldBrand]){ customFlavors[newName]=customFlavors[oldBrand]; delete customFlavors[oldBrand]; }
+      if(customFlavors["__deleted__"]){ customFlavors["__deleted__"]=customFlavors["__deleted__"].map(function(k){ return k.indexOf(oldBrand+"~~")===0?newName+k.substring(oldBrand.length):k; }); }
+      var pfx=oldBrand+"~~"; Object.keys(stock).forEach(function(k){ if(k.indexOf(pfx)===0){ stock[newName+"~~"+k.substring(pfx.length)]=stock[k]; delete stock[k]; } });
+      txLog.forEach(function(e){ if(e.brand===oldBrand) e.brand=newName; });
+      Object.keys(distributorPrices).forEach(function(k){ var pts=k.split("~~"); if(pts[1]===oldBrand){ distributorPrices[pts[0]+"~~"+newName]=distributorPrices[k]; delete distributorPrices[k]; } });
+      if(defaultPrices[oldBrand]!==undefined){ defaultPrices[newName]=defaultPrices[oldBrand]; delete defaultPrices[oldBrand]; }
+      Object.keys(customerPrices).forEach(function(k){ var pts=k.split("~~"); if(pts[1]===oldBrand){ customerPrices[pts[0]+"~~"+newName]=customerPrices[k]; delete customerPrices[k]; } });
+      if(catActiveBrand===oldBrand) catActiveBrand=newName;
+      if(activeBrand===oldBrand) activeBrand=newName;
+      if(purBrand===oldBrand) purBrand=newName;
+      saveCustomFlavors(); savePricing(); saveLocal(); updateStats();
+      renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
+      toast("\""+oldBrand+"\" \u2192 \""+newName+"\" \u2713","ok");
+    });
+  })(catActiveBrand);
+  actions.appendChild(renameBtn);
   // Delete brand button (only for custom brands)
   var isCustomBrand = customFlavors["__brand__" + catActiveBrand] !== undefined;
   if (isCustomBrand) {
     var delBrandBtn = document.createElement("button");
     delBrandBtn.className = "cat-action-btn cat-action-del";
     delBrandBtn.textContent = "Delete Brand";
-    delBrandBtn.addEventListener("click", function() { confirmDeleteBrand(catActiveBrand); });
+    (function(br){ delBrandBtn.addEventListener("click", function() { confirmDeleteBrand(br); }); })(catActiveBrand);
     actions.appendChild(delBrandBtn);
   }
   header.appendChild(nameWrap);
@@ -3215,14 +3106,13 @@ function openCustModal(id) {
     if(editId) editId.value = id;
     if(nameInp) nameInp.value = cust.name || "";
     if(phoneInp) phoneInp.value = cust.phone || "";
-    var co=document.getElementById("cust-contact-inp");
+    var co=document.getElementById("cust-contact-inp"); if(co) co.value=cust.contact||"";
     var a1=document.getElementById("cust-addr1-inp"), a2=document.getElementById("cust-addr2-inp");
     var ci=document.getElementById("cust-city-inp"), st=document.getElementById("cust-state-inp");
     var zi=document.getElementById("cust-zip-inp"), no=document.getElementById("cust-notes-inp");
     if(a1) a1.value=cust.addr1||""; if(a2) a2.value=cust.addr2||"";
     if(ci) ci.value=cust.city||""; if(st) st.value=cust.state||"";
     if(zi) zi.value=cust.zip||""; if(no) no.value=cust.notes||"";
-    if(co) co.value=cust.contact||"";
   } else {
     if(title) title.textContent = "Add Customer";
     if(editId) editId.value = "";
@@ -3261,8 +3151,7 @@ function closeCustModal() {
     var zip   = (document.getElementById("cust-zip-inp")||{}).value||"";
     var notes = (document.getElementById("cust-notes-inp")||{}).value||"";
     var phone = phoneInp ? phoneInp.value.trim() : "";
-    var contact = (document.getElementById("cust-contact-inp")||{}).value||"";
-    contact = contact.trim();
+    var contact = ((document.getElementById("cust-contact-inp")||{}).value||"").trim();
     if (id) {
       var cust = customers.find(function(c){ return c.id === id; });
       if (cust) { cust.name=name; cust.phone=phone; cust.contact=contact; cust.addr1=addr1.trim(); cust.addr2=addr2.trim(); cust.city=city.trim(); cust.state=state; cust.zip=zip.trim(); cust.notes=notes.trim(); }
@@ -3298,14 +3187,7 @@ function renderCustomers() {
     if (cityLine) addrParts.push(cityLine);
     var addrStr = addrParts.join(" · ");
     ph.textContent = [cust.phone, addrStr, cust.notes].filter(Boolean).join("  |  ") || "No contact info";
-    if(cust.contact) {
-      var co = document.createElement("div"); co.className = "pcard-phone";
-      co.style.cssText = "font-size:11px;color:var(--txt3);margin-top:2px";
-      co.textContent = "Contact: " + cust.contact;
-      info.appendChild(nm); info.appendChild(co); info.appendChild(ph);
-    } else {
-      info.appendChild(nm); info.appendChild(ph);
-    }
+    if(cust.contact) { var co3=document.createElement("div"); co3.style.cssText="font-size:11px;color:var(--acc);font-weight:600;margin-bottom:2px"; co3.textContent="Contact: "+cust.contact; info.appendChild(nm); info.appendChild(co3); info.appendChild(ph); } else { info.appendChild(nm); info.appendChild(ph); }
     var btns = document.createElement("div"); btns.style.cssText = "display:flex;gap:6px";
     var editBtn = document.createElement("button"); editBtn.className = "btn bsec bsm"; editBtn.textContent = "Edit";
     (function(id){ editBtn.addEventListener("click", function(){ openCustModal(id); }); })(cust.id);
@@ -4186,7 +4068,6 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
-
 
 
 
