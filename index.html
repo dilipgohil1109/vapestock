@@ -403,6 +403,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
       </label>
     </div>
 
+    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="ps-show-qty" style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
+        <span style="font-size:13px;font-weight:600">Show quantity on print</span>
+      </label>
+    </div>
+
     <button class="btn bpri" id="btn-ps-print" style="margin-bottom:12px">&#128438; Print Stock List</button>
 
     <div style="padding:10px 12px;background:rgba(196,125,0,.08);border:1px solid rgba(196,125,0,.35);border-radius:var(--rs)">
@@ -3643,6 +3650,8 @@ function renderPsPage() {
   el.addEventListener("click", function() {
     var inStockOnly = document.getElementById("ps-in-stock-only");
     var onlyInStock = inStockOnly ? inStockOnly.checked : true;
+    var showQtyEl = document.getElementById("ps-show-qty");
+    var showQty = showQtyEl ? showQtyEl.checked : false;
     var cats = psCatFilter === "all" ? CATEGORY_NAMES : [psCatFilter];
     var content = document.getElementById("stock-print-content");
     if (!content) return;
@@ -3685,7 +3694,7 @@ function renderPsPage() {
         flavors.forEach(function(fl) {
           var item = document.createElement("div");
           item.className = "sp-flavor";
-          item.textContent = fl;
+          item.textContent = fl + (showQty ? "  —  " + qty(br, fl) : "");
           grid.appendChild(item);
         });
         catDiv.appendChild(grid);
