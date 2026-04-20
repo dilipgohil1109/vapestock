@@ -888,6 +888,7 @@ function getFile() {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 
+
 // openDistModal handled by listener
 
 
@@ -2756,6 +2757,115 @@ function renderCatCategorySection() {
   });
 }
 
+// ── RENAME BRAND ──
+function openRenameBrandModal(br) {
+  var m = document.getElementById("rename-brand-modal"); if(!m) return;
+  document.getElementById("rename-brand-old").value = br;
+  document.getElementById("rename-brand-inp").value = br;
+  document.getElementById("rename-brand-hint").textContent = "Current name: " + br;
+  m.classList.add("open");
+  setTimeout(function(){ var inp=document.getElementById("rename-brand-inp"); if(inp){inp.focus();inp.select();} }, 100);
+}
+function closeRenameBrandModal() {
+  var m = document.getElementById("rename-brand-modal"); if(m) m.classList.remove("open");
+}
+(function(){var el=document.getElementById("rename-brand-close");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
+(function(){var el=document.getElementById("btn-rename-brand-cancel");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
+(function(){var el=document.getElementById("rename-brand-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeRenameBrandModal();});})();
+(function(){
+  var el=document.getElementById("btn-rename-brand-save"); if(!el) return;
+  el.addEventListener("click", function(){
+    var oldName = document.getElementById("rename-brand-old").value;
+    var newName = (document.getElementById("rename-brand-inp").value||"").trim();
+    if(!newName){ toast("Enter a name","err"); return; }
+    if(newName === oldName){ closeRenameBrandModal(); return; }
+    if(CATALOG[newName]){ toast("\""+newName+"\" already exists","err"); return; }
+
+    // 1. CATALOG
+    CATALOG[newName] = CATALOG[oldName] || [];
+    delete CATALOG[oldName];
+
+    // 2. BRANDS array
+    var bi = BRANDS.indexOf(oldName);
+    if(bi > -1) BRANDS[bi] = newName;
+
+    // 3. CATEGORIES
+    CATEGORY_NAMES.forEach(function(cat){
+      var brs = CATEGORIES[cat]||[];
+      var ci = brs.indexOf(oldName);
+      if(ci > -1) brs[ci] = newName;
+    });
+
+    // 4. customFlavors keys
+    if(customFlavors["__brand__"+oldName] !== undefined){
+      customFlavors["__brand__"+newName] = customFlavors["__brand__"+oldName];
+      delete customFlavors["__brand__"+oldName];
+    }
+    if(customFlavors["__catbrand__"+oldName] !== undefined){
+      customFlavors["__catbrand__"+newName] = customFlavors["__catbrand__"+oldName];
+      delete customFlavors["__catbrand__"+oldName];
+    }
+    if(customFlavors[oldName]){
+      customFlavors[newName] = customFlavors[oldName];
+      delete customFlavors[oldName];
+    }
+    if(customFlavors["__deleted__"]){
+      customFlavors["__deleted__"] = customFlavors["__deleted__"].map(function(k){
+        return k.indexOf(oldName+"~~")===0 ? newName+k.substring(oldName.length) : k;
+      });
+    }
+
+    // 5. stock keys
+    var prefix = oldName+"~~";
+    Object.keys(stock).forEach(function(k){
+      if(k.indexOf(prefix)===0){
+        stock[newName+"~~"+k.substring(prefix.length)] = stock[k];
+        delete stock[k];
+      }
+    });
+
+    // 6. txLog entries
+    txLog.forEach(function(e){ if(e.brand===oldName) e.brand=newName; });
+
+    // 7. distributorPrices
+    Object.keys(distributorPrices).forEach(function(k){
+      var pts=k.split("~~");
+      if(pts[1]===oldName){
+        distributorPrices[pts[0]+"~~"+newName]=distributorPrices[k];
+        delete distributorPrices[k];
+      }
+    });
+
+    // 8. defaultPrices
+    if(defaultPrices[oldName]!==undefined){
+      defaultPrices[newName]=defaultPrices[oldName];
+      delete defaultPrices[oldName];
+    }
+
+    // 9. customerPrices
+    Object.keys(customerPrices).forEach(function(k){
+      var pts=k.split("~~");
+      if(pts[1]===oldName){
+        customerPrices[pts[0]+"~~"+newName]=customerPrices[k];
+        delete customerPrices[k];
+      }
+    });
+
+    // Update active state
+    if(catActiveBrand===oldName) catActiveBrand=newName;
+    if(activeBrand===oldName) activeBrand=newName;
+    if(purBrand===oldName) purBrand=newName;
+
+    saveCustomFlavors(); savePricing(); saveLocal(); updateStats();
+    closeRenameBrandModal();
+    renderCatBrandScroll();
+    renderCatFlavorList();
+    renderStockBrands();
+    toast("\""+oldName+"\" \u2192 \""+newName+"\" \u2713","ok");
+  });
+})();
+
+
 function renderCatBrandScroll() {
   var wrap = document.getElementById("cat-brand-scroll");
   if (!wrap) return;
@@ -4060,114 +4170,6 @@ function gdPull() {
   // silent background refresh - same as gdRefresh but no UI feedback
 }
 
-// ── RENAME BRAND ──
-function openRenameBrandModal(br) {
-  var m = document.getElementById("rename-brand-modal"); if(!m) return;
-  document.getElementById("rename-brand-old").value = br;
-  document.getElementById("rename-brand-inp").value = br;
-  document.getElementById("rename-brand-hint").textContent = "Current name: " + br;
-  m.classList.add("open");
-  setTimeout(function(){ var inp=document.getElementById("rename-brand-inp"); if(inp){inp.focus();inp.select();} }, 100);
-}
-function closeRenameBrandModal() {
-  var m = document.getElementById("rename-brand-modal"); if(m) m.classList.remove("open");
-}
-(function(){var el=document.getElementById("rename-brand-close");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
-(function(){var el=document.getElementById("btn-rename-brand-cancel");if(!el)return;el.addEventListener("click",closeRenameBrandModal);})();
-(function(){var el=document.getElementById("rename-brand-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el)closeRenameBrandModal();});})();
-(function(){
-  var el=document.getElementById("btn-rename-brand-save"); if(!el) return;
-  el.addEventListener("click", function(){
-    var oldName = document.getElementById("rename-brand-old").value;
-    var newName = (document.getElementById("rename-brand-inp").value||"").trim();
-    if(!newName){ toast("Enter a name","err"); return; }
-    if(newName === oldName){ closeRenameBrandModal(); return; }
-    if(CATALOG[newName]){ toast("\""+newName+"\" already exists","err"); return; }
-
-    // 1. CATALOG
-    CATALOG[newName] = CATALOG[oldName] || [];
-    delete CATALOG[oldName];
-
-    // 2. BRANDS array
-    var bi = BRANDS.indexOf(oldName);
-    if(bi > -1) BRANDS[bi] = newName;
-
-    // 3. CATEGORIES
-    CATEGORY_NAMES.forEach(function(cat){
-      var brs = CATEGORIES[cat]||[];
-      var ci = brs.indexOf(oldName);
-      if(ci > -1) brs[ci] = newName;
-    });
-
-    // 4. customFlavors keys
-    if(customFlavors["__brand__"+oldName] !== undefined){
-      customFlavors["__brand__"+newName] = customFlavors["__brand__"+oldName];
-      delete customFlavors["__brand__"+oldName];
-    }
-    if(customFlavors["__catbrand__"+oldName] !== undefined){
-      customFlavors["__catbrand__"+newName] = customFlavors["__catbrand__"+oldName];
-      delete customFlavors["__catbrand__"+oldName];
-    }
-    if(customFlavors[oldName]){
-      customFlavors[newName] = customFlavors[oldName];
-      delete customFlavors[oldName];
-    }
-    if(customFlavors["__deleted__"]){
-      customFlavors["__deleted__"] = customFlavors["__deleted__"].map(function(k){
-        return k.indexOf(oldName+"~~")===0 ? newName+k.substring(oldName.length) : k;
-      });
-    }
-
-    // 5. stock keys
-    var prefix = oldName+"~~";
-    Object.keys(stock).forEach(function(k){
-      if(k.indexOf(prefix)===0){
-        stock[newName+"~~"+k.substring(prefix.length)] = stock[k];
-        delete stock[k];
-      }
-    });
-
-    // 6. txLog entries
-    txLog.forEach(function(e){ if(e.brand===oldName) e.brand=newName; });
-
-    // 7. distributorPrices
-    Object.keys(distributorPrices).forEach(function(k){
-      var pts=k.split("~~");
-      if(pts[1]===oldName){
-        distributorPrices[pts[0]+"~~"+newName]=distributorPrices[k];
-        delete distributorPrices[k];
-      }
-    });
-
-    // 8. defaultPrices
-    if(defaultPrices[oldName]!==undefined){
-      defaultPrices[newName]=defaultPrices[oldName];
-      delete defaultPrices[oldName];
-    }
-
-    // 9. customerPrices
-    Object.keys(customerPrices).forEach(function(k){
-      var pts=k.split("~~");
-      if(pts[1]===oldName){
-        customerPrices[pts[0]+"~~"+newName]=customerPrices[k];
-        delete customerPrices[k];
-      }
-    });
-
-    // Update active state
-    if(catActiveBrand===oldName) catActiveBrand=newName;
-    if(activeBrand===oldName) activeBrand=newName;
-    if(purBrand===oldName) purBrand=newName;
-
-    saveCustomFlavors(); savePricing(); saveLocal(); updateStats();
-    closeRenameBrandModal();
-    renderCatBrandScroll();
-    renderCatFlavorList();
-    renderStockBrands();
-    toast("\""+oldName+"\" \u2192 \""+newName+"\" \u2713","ok");
-  });
-})();
-
 // ── INIT ──
 loadLocal();
 loadPricing();
@@ -4184,6 +4186,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
