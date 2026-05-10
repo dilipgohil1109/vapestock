@@ -227,6 +227,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
+      <span id="sync-time-lbl" style="display:none;font-size:9px;color:var(--txt3);margin-left:4px"></span>
       <button id="btn-save-drive" style="display:none;margin-left:6px;padding:3px 10px;border-radius:50px;border:1.5px solid #00a870;background:transparent;color:#00a870;font-size:10px;font-weight:700;cursor:pointer">⬆ Save</button>
       <button id="btn-refresh-drive" style="display:none;margin-left:4px;padding:3px 10px;border-radius:50px;border:1.5px solid #5b4fe8;background:transparent;color:#5b4fe8;font-size:10px;font-weight:700;cursor:pointer">⬇ Refresh</button>
       <div class="hstats">
@@ -254,6 +255,11 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <!-- STOCK PAGE -->
 <div class="pg on" id="pg-stock">
+  <div id="drive-load-banner" style="display:none;background:linear-gradient(135deg,rgba(0,168,112,.12),rgba(91,79,232,.1));border:1px solid rgba(0,168,112,.3);border-radius:10px;padding:10px 14px;margin-bottom:12px;position:relative">
+    <div id="banner-title" style="font-size:12px;font-weight:700;color:#00a870">&#9729; Data loaded from Google Drive</div>
+    <div id="banner-msg" style="font-size:11px;color:var(--txt2);margin-top:2px"></div>
+    <span id="banner-close" style="position:absolute;top:8px;right:12px;font-size:18px;cursor:pointer;color:var(--txt3);line-height:1">&#10005;</span>
+  </div>
   <div class="cat-chips" id="s-cat-chips"></div>
   <div class="bscroll" id="sb"></div>
   <div class="frow" id="sf-row">
@@ -357,6 +363,16 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
   <!-- MANUAL pane -->
   <div id="sell-manual-pane" style="display:none">
+    <!-- Edit mode banner -->
+    <div id="edit-mode-banner" style="display:none;background:rgba(91,79,232,.1);border:1px solid var(--acc);border-radius:8px;padding:8px 12px;margin-bottom:10px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div id="edit-mode-title" style="font-size:13px;font-weight:700;color:var(--acc)">Editing EST-0000</div>
+          <div style="font-size:11px;color:var(--txt3);margin-top:1px">Add or remove items. Stock is temporarily restored.</div>
+        </div>
+        <button class="btn bsec bsm" id="btn-cancel-edit">Cancel Edit</button>
+      </div>
+    </div>
     <div class="igrp">
       <div class="ilbl">Customer (optional)</div>
       <select class="ifield" id="sell-cust-select" style="margin-bottom:6px">
@@ -376,7 +392,11 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div id="sell-cart-wrap" style="display:none">
       <div class="stitle" style="margin-top:12px">Sale Cart</div>
       <div id="sell-cart"></div>
-      <button class="btn bdgr" id="btn-confirm-manual-sell" style="width:100%">&#10003; Commit Sale &amp; Save Estimate</button>
+      <div id="sell-action-btns" style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn bdgr" id="btn-confirm-manual-sell" style="width:100%">&#10003; Commit Sale &amp; Save Estimate</button>
+        <button class="btn bpri" id="btn-save-edit" style="width:100%;display:none">&#10003; Save Changes to Estimate</button>
+        <button class="btn bdgr" id="btn-finalise-est" style="width:100%;display:none">&#128274; Finalise &amp; Lock Estimate</button>
+      </div>
     </div>
   </div>
 
@@ -925,6 +945,11 @@ function getFile() {
 
 
 
+
+
+
+
+
 // openDistModal handled by listener
 
 
@@ -1366,8 +1391,34 @@ function gdRefresh() {
     var stockCount = Object.keys(stockData&&stockData.stock||{}).length;
     var masterTs = masterData && masterData.ts ? new Date(masterData.ts).toLocaleTimeString() : "no ts";
     var stockTs  = stockData  && stockData.ts  ? new Date(stockData.ts).toLocaleTimeString()  : "no ts";
-    addSyncLog("pull", "Loaded · " + stockCount + " stock entries · stock:" + stockTs + " master:" + masterTs);
-    toast("Updated from Drive ✓","ok");
+    // Format human-readable timestamp from the Drive data
+    var latestTs = Math.max((stockData&&stockData.ts)||0, (masterData&&masterData.ts)||0);
+    var latestDate = latestTs ? new Date(latestTs) : new Date();
+    var dateStr = latestDate.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    var timeStr = latestDate.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+    var fullStamp = dateStr + " at " + timeStr;
+
+    // Update header time label
+    var stl = document.getElementById("sync-time-lbl");
+    if(stl){ stl.textContent = "• " + timeStr; stl.style.display = "inline"; }
+
+    // Show banner
+    var banner = document.getElementById("drive-load-banner");
+    var bannerTitle = document.getElementById("banner-title");
+    var bannerMsg = document.getElementById("banner-msg");
+    if(banner && bannerTitle && bannerMsg) {
+      bannerTitle.textContent = (typeof _startupLoad !== "undefined" && _startupLoad)
+        ? "☁ App opened — latest data loaded from Google Drive"
+        : "↓ Refreshed from Google Drive";
+      bannerMsg.textContent = "Last change: " + fullStamp + "  ·  " + stockCount + " stock items";
+      banner.style.display = "block";
+      setTimeout(function(){ var b=document.getElementById("drive-load-banner"); if(b)b.style.display="none"; }, 10000);
+    }
+    if(typeof _startupLoad !== "undefined") _startupLoad = false;
+
+    setSyncDot("ok", "synced " + timeStr);
+    addSyncLog("pull", "Loaded · " + stockCount + " stock entries · Last change: " + fullStamp);
+    toast("✓ Loaded · Last change: " + fullStamp, "ok");
   })
   .catch(function(err) {
     if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
@@ -2395,6 +2446,7 @@ var sellCart = {};
 var estimates = [];        // [{id, num, date, custId, custName, items, showPrice, total}]
 var nextEstimateNum = 1;   // auto-increment
 var activeCarts = {};      // { custId: { k: {qty,price} } } — per-customer carts
+var editingEstId = null;   // non-null when editing an existing estimate
 
 function populateSellCustDropdown() {
   var sel = document.getElementById("sell-cust-select"); if(!sel) return;
@@ -2585,7 +2637,7 @@ function renderSellCart() {
     });
     // Save estimate record
     var estRecord = { id:estId, num:estNum, date:saleDate, custId:custId,
-      custName:custName, items:estItems, showPrice:includePrice, total:grandTotal };
+      custName:custName, items:estItems, showPrice:includePrice, total:grandTotal, locked:false };
     estimates.unshift(estRecord);
     afterChange(); savePricing();
     // Print estimate
@@ -4514,15 +4566,29 @@ function renderEstimatesList() {
     left.appendChild(idLine); left.appendChild(metaLine);
 
     // ── Buttons ──
-    var btns = document.createElement("div"); btns.style.cssText = "display:flex;gap:5px;flex-shrink:0";
+    var btns = document.createElement("div");
+    btns.style.cssText = "display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end";
+    if(est.locked) {
+      var lockBadge = document.createElement("span");
+      lockBadge.style.cssText = "font-size:10px;font-weight:700;color:var(--txt3);background:var(--sur2);border:1px solid var(--brd);border-radius:4px;padding:2px 6px;align-self:center";
+      lockBadge.textContent = "🔒 FINAL";
+      btns.appendChild(lockBadge);
+    }
     var printBtn = document.createElement("button");
-    printBtn.className = "btn bpri bsm"; printBtn.textContent = "🖨 Print PDF";
-    (function(estObj){ printBtn.addEventListener("click", function(){
-      printEstimate(estObj);
-    }); })(est);
-
+    printBtn.className = "btn bpri bsm";
+    printBtn.textContent = "🖨 Print";
+    (function(estObj){ printBtn.addEventListener("click", function(){ printEstimate(estObj); }); })(est);
+    btns.appendChild(printBtn);
+    if(!est.locked) {
+      var editBtn = document.createElement("button");
+      editBtn.className = "btn bsec bsm";
+      editBtn.textContent = "✎ Edit";
+      (function(id){ editBtn.addEventListener("click", function(){ openEstimateEdit(id); }); })(est.id);
+      btns.appendChild(editBtn);
+    }
     var delBtn = document.createElement("button");
-    delBtn.className = "btn bdgr bsm"; delBtn.textContent = "×";
+    delBtn.className = "btn bdgr bsm";
+    delBtn.textContent = "×";
     delBtn.title = "Delete estimate";
     (function(id){ delBtn.addEventListener("click", function(){
       if(!confirm("Delete estimate " + id + "?")) return;
@@ -4530,8 +4596,7 @@ function renderEstimatesList() {
       savePricing(); renderEstimatesList();
       toast("Estimate deleted","warn");
     }); })(est.id);
-
-    btns.appendChild(printBtn); btns.appendChild(delBtn);
+    btns.appendChild(delBtn);
     topRow.appendChild(left); topRow.appendChild(btns);
     card.appendChild(topRow);
 
@@ -4593,6 +4658,173 @@ window.addEventListener("beforeunload", function(e) {
   }
 });
 
+(function(){
+  var bc = document.getElementById("banner-close");
+  if(bc) bc.addEventListener("click", function(){ var b=document.getElementById("drive-load-banner"); if(b)b.style.display="none"; });
+})();
+
+
+// ── ESTIMATE EDIT ──
+function openEstimateEdit(estId) {
+  var est = estimates.find(function(e){ return e.id === estId; });
+  if(!est || est.locked) return;
+
+  editingEstId = estId;
+
+  // Restore stock for items in this estimate (so user can re-add them)
+  (est.items||[]).forEach(function(it){
+    var k = it.brand + "~~" + it.flavor;
+    stock[k] = (stock[k]||0) + it.qty;
+  });
+
+  // Load items back into sellCart
+  sellCart = {};
+  (est.items||[]).forEach(function(it){
+    var k = it.brand + "~~" + it.flavor;
+    sellCart[k] = { qty: it.qty, price: it.unitPrice||"" };
+  });
+
+  // Set customer dropdown
+  populateSellCustDropdown();
+  var sel = document.getElementById("sell-cust-select");
+  if(sel) sel.value = est.custId || "";
+
+  // Set show-price checkbox
+  var sp = document.getElementById("sell-show-price");
+  if(sp) sp.checked = est.showPrice !== false;
+
+  // Show edit mode banner
+  var banner = document.getElementById("edit-mode-banner");
+  var title  = document.getElementById("edit-mode-title");
+  if(banner){ banner.style.display = "block"; }
+  if(title)  title.textContent = "Editing " + estId;
+
+  // Swap buttons
+  var commitBtn   = document.getElementById("btn-confirm-manual-sell");
+  var saveBtn     = document.getElementById("btn-save-edit");
+  var finaliseBtn = document.getElementById("btn-finalise-est");
+  if(commitBtn)   commitBtn.style.display   = "none";
+  if(saveBtn)     saveBtn.style.display     = "";
+  if(finaliseBtn) finaliseBtn.style.display = "";
+
+  // Switch to Manual Sale tab
+  document.querySelectorAll("#stabs .tab").forEach(function(t){ t.classList.remove("on"); });
+  var manTab = document.querySelector("#stabs [data-st='manual']");
+  if(manTab) manTab.classList.add("on");
+  document.getElementById("sell-upload-pane").style.display = "none";
+  document.getElementById("sell-estimates-pane").style.display = "none";
+  document.getElementById("sell-manual-pane").style.display = "block";
+
+  renderSellBrands(); renderSellFlavors(); renderSellCart();
+  saveLocal(); updateStats();
+  toast("Editing " + estId + " — add or remove items", "ok");
+}
+
+function cancelEstimateEdit() {
+  if(!editingEstId) return;
+  var est = estimates.find(function(e){ return e.id === editingEstId; });
+  if(est) {
+    // Re-deduct original items back from stock
+    (est.items||[]).forEach(function(it){
+      var k = it.brand + "~~" + it.flavor;
+      stock[k] = Math.max(0, (stock[k]||0) - it.qty);
+    });
+  }
+  editingEstId = null;
+  sellCart = {};
+  exitEditMode();
+  saveLocal(); updateStats();
+  toast("Edit cancelled", "warn");
+}
+
+function exitEditMode() {
+  editingEstId = null;
+  var banner     = document.getElementById("edit-mode-banner");
+  var commitBtn  = document.getElementById("btn-confirm-manual-sell");
+  var saveBtn    = document.getElementById("btn-save-edit");
+  var finalBtn   = document.getElementById("btn-finalise-est");
+  if(banner)    banner.style.display    = "none";
+  if(commitBtn) commitBtn.style.display = "";
+  if(saveBtn)   saveBtn.style.display   = "none";
+  if(finalBtn)  finalBtn.style.display  = "none";
+  sellCart = {};
+  renderSellCart(); renderSellFlavors();
+}
+
+function saveEstimateEdit(lock) {
+  if(!editingEstId) return;
+  var est = estimates.find(function(e){ return e.id === editingEstId; });
+  if(!est) return;
+
+  var keys = Object.keys(sellCart);
+  if(!keys.length){ toast("Cart is empty — add items first", "err"); return; }
+
+  var custId = getSellCustId();
+  var custObj = custId ? customers.find(function(c){ return c.id===custId; }) : null;
+  var custName = custObj ? custObj.name : "Walk-in";
+  var sp = document.getElementById("sell-show-price");
+  var showPrice = sp ? sp.checked : true;
+
+  var newItems = [];
+  var grandTotal = 0;
+  keys.forEach(function(k){
+    var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
+    var entry = sellCart[k];
+    var q = entry && typeof entry==="object" ? (entry.qty||1) : (parseInt(entry,10)||1);
+    var unitPrice = entry && typeof entry==="object" ? (entry.price!==""?parseFloat(entry.price)||0:0) : 0;
+    var lineTotal = unitPrice * q;
+    grandTotal += lineTotal;
+    // Deduct from stock
+    stock[k] = Math.max(0, (stock[k]||0) - q);
+    newItems.push({ brand:br, flavor:fl, qty:q, unitPrice:unitPrice, total:lineTotal });
+  });
+
+  // Update txLog entries for this estimate
+  txLog = txLog.filter(function(e){ return e.estId !== editingEstId; });
+  var saleDate = new Date().toLocaleString();
+  newItems.forEach(function(it){
+    txLog.unshift({ type:"sale", category:catOfBrand(it.brand), brand:it.brand, flavor:it.flavor,
+      qty:it.qty, custId:custId, custName:custName, unitPrice:it.unitPrice, total:it.total,
+      date:saleDate, estId:editingEstId });
+  });
+
+  // Update estimate record
+  est.items     = newItems;
+  est.total     = grandTotal;
+  est.custId    = custId;
+  est.custName  = custName;
+  est.showPrice = showPrice;
+  est.date      = saleDate + (lock ? "" : " (edited)");
+  est.locked    = lock || false;
+
+  afterChange(); savePricing();
+  exitEditMode();
+  renderEstimatesList();
+
+  // Switch back to Estimates tab
+  document.querySelectorAll("#stabs .tab").forEach(function(t){ t.classList.remove("on"); });
+  var estTab = document.querySelector("#stabs [data-st='estimates']");
+  if(estTab) estTab.classList.add("on");
+  document.getElementById("sell-manual-pane").style.display = "none";
+  document.getElementById("sell-estimates-pane").style.display = "block";
+
+  if(lock) {
+    printEstimate(est);
+    toast(editingEstId + " finalised & locked 🔒", "ok");
+  } else {
+    toast(editingEstId + " updated ✓", "ok");
+  }
+  editingEstId = null;
+}
+
+
+(function(){var el=document.getElementById("btn-cancel-edit"); if(!el)return; el.addEventListener("click",cancelEstimateEdit); })();
+(function(){var el=document.getElementById("btn-save-edit");   if(!el)return; el.addEventListener("click",function(){ saveEstimateEdit(false); }); })();
+(function(){var el=document.getElementById("btn-finalise-est");if(!el)return; el.addEventListener("click",function(){
+  if(!confirm("Finalise and lock " + (editingEstId||"estimate") + "?\n\nThis cannot be undone. The estimate will be locked and printed.")) return;
+  saveEstimateEdit(true);
+}); })();
+
 // ── INIT ──
 loadLocal();
 loadPricing();
@@ -4612,6 +4844,11 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
+
+
+
 
 
 
