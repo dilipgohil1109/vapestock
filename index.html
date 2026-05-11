@@ -392,6 +392,17 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div id="sell-cart-wrap" style="display:none">
       <div class="stitle" style="margin-top:12px">Sale Cart</div>
       <div id="sell-cart"></div>
+      <!-- Estimate details -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;margin-top:10px">
+        <div style="flex:1">
+          <div class="ilbl">Estimate #</div>
+          <input class="ifield" id="est-num-inp" placeholder="e.g. 001 or INV-2025" style="margin-bottom:0">
+        </div>
+        <div style="flex:1">
+          <div class="ilbl">Date</div>
+          <input class="ifield" id="est-date-inp" type="date" style="margin-bottom:0">
+        </div>
+      </div>
       <div id="sell-action-btns" style="display:flex;flex-direction:column;gap:8px">
         <button class="btn bdgr" id="btn-confirm-manual-sell" style="width:100%">&#10003; Commit Sale &amp; Save Estimate</button>
         <button class="btn bpri" id="btn-save-edit" style="width:100%;display:none">&#10003; Save Changes to Estimate</button>
@@ -937,6 +948,7 @@ function getFile() {
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
 
 
 
@@ -2448,6 +2460,16 @@ var nextEstimateNum = 1;   // auto-increment
 var activeCarts = {};      // { custId: { k: {qty,price} } } — per-customer carts
 var editingEstId = null;   // non-null when editing an existing estimate
 
+function setEstimateDefaults() {
+  var numInp  = document.getElementById("est-num-inp");
+  var dateInp = document.getElementById("est-date-inp");
+  // Only set if empty (don't override user input or edit mode values)
+  if(dateInp && !dateInp.value) {
+    var today = new Date();
+    dateInp.value = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
+  }
+}
+
 function populateSellCustDropdown() {
   var sel = document.getElementById("sell-cust-select"); if(!sel) return;
   var cur = sel.value;
@@ -2472,6 +2494,7 @@ function populatePurDistDropdown() {
 
 function renderSellBrands() {
   populateSellCustDropdown();
+  setEstimateDefaults();
   renderCatChips("sell-cat-chips", sellCategory, function(cat) {
     sellCategory = cat;
     var brs = brandsForCat(cat);
@@ -2615,9 +2638,17 @@ function renderSellCart() {
     var includePrice = showPrice ? showPrice.checked : true;
     var count = 0, warn = 0;
     var estItems = [];
-    var saleDate = new Date().toLocaleString();
-    var estNum = nextEstimateNum++;
-    var estId = "EST-" + String(estNum).padStart(4,"0");
+    // Read user-entered estimate number and date
+    var estNumInp  = (document.getElementById("est-num-inp")||{}).value||"";
+    var estDateInp = (document.getElementById("est-date-inp")||{}).value||"";
+    var estId = estNumInp.trim() || ("EST-" + Date.now().toString().slice(-5));
+    var saleDate = estDateInp
+      ? new Date(estDateInp).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
+      : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    // Check duplicate estimate number (warn, don't block)
+    if(estNumInp.trim() && estimates.some(function(e){ return e.id===estId && !editingEstId; })) {
+      if(!confirm("Estimate number \"" + estId + "\" already exists.\n\nContinue anyway?")) return;
+    }
     var grandTotal = 0;
     keys.forEach(function(k) {
       var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
@@ -2643,6 +2674,9 @@ function renderSellCart() {
     // Print estimate
     printEstimate(estRecord);
     sellCart = {};
+    // Clear estimate fields for next sale
+    var _ni = document.getElementById("est-num-inp"); if(_ni) _ni.value = "";
+    var _di = document.getElementById("est-date-inp"); if(_di) _di.value = "";
     renderSellCart(); renderSellFlavors();
     // Switch to Estimates tab to show the saved record
     document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
@@ -4693,6 +4727,20 @@ function openEstimateEdit(estId) {
   var sp = document.getElementById("sell-show-price");
   if(sp) sp.checked = est.showPrice !== false;
 
+  // Pre-fill estimate number and date fields
+  var numInp2 = document.getElementById("est-num-inp");
+  if(numInp2) numInp2.value = est.id || "";
+  var dateInp2 = document.getElementById("est-date-inp");
+  if(dateInp2) {
+    // Parse date back to YYYY-MM-DD for the date input
+    try {
+      var d = est.date ? new Date(est.date) : new Date();
+      if(!isNaN(d.getTime())) {
+        dateInp2.value = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+      }
+    } catch(ex) { dateInp2.value = ""; }
+  }
+
   // Show edit mode banner
   var banner = document.getElementById("edit-mode-banner");
   var title  = document.getElementById("edit-mode-title");
@@ -4739,6 +4787,8 @@ function cancelEstimateEdit() {
 
 function exitEditMode() {
   editingEstId = null;
+  var _ni2 = document.getElementById("est-num-inp"); if(_ni2) _ni2.value = "";
+  var _di2 = document.getElementById("est-date-inp"); if(_di2) _di2.value = "";
   var banner     = document.getElementById("edit-mode-banner");
   var commitBtn  = document.getElementById("btn-confirm-manual-sell");
   var saveBtn    = document.getElementById("btn-save-edit");
@@ -4764,6 +4814,13 @@ function saveEstimateEdit(lock) {
   var custName = custObj ? custObj.name : "Walk-in";
   var sp = document.getElementById("sell-show-price");
   var showPrice = sp ? sp.checked : true;
+  // Read user-entered estimate number and date
+  var editNumInp  = (document.getElementById("est-num-inp")||{}).value||"";
+  var editDateInp = (document.getElementById("est-date-inp")||{}).value||"";
+  var newEstId = editNumInp.trim() || est.id;
+  var newEstDate = editDateInp
+    ? new Date(editDateInp).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
+    : est.date;
 
   var newItems = [];
   var grandTotal = 0;
@@ -4789,12 +4846,18 @@ function saveEstimateEdit(lock) {
   });
 
   // Update estimate record
+  // Update id if user changed the estimate number
+  if(newEstId !== est.id) {
+    // Update txLog entries to use new id
+    txLog.forEach(function(e){ if(e.estId === est.id) e.estId = newEstId; });
+    est.id = newEstId;
+  }
   est.items     = newItems;
   est.total     = grandTotal;
   est.custId    = custId;
   est.custName  = custName;
   est.showPrice = showPrice;
-  est.date      = saleDate + (lock ? "" : " (edited)");
+  est.date      = newEstDate;
   est.locked    = lock || false;
 
   afterChange(); savePricing();
@@ -4844,6 +4907,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
