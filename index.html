@@ -214,8 +214,8 @@ body[data-print-mode="invoice"] .no-print{display:none!important}
 body[data-print-mode="invoice"] .hdr{display:none!important}
 body[data-print-mode="invoice"] .tabs{display:none!important}
 .inv-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
-.inv-table th{background:#f0f0f0;padding:6px 8px;text-align:left;border:1px solid #ccc;font-size:11px}
-.inv-table td{padding:6px 8px;border:1px solid #ddd;vertical-align:top}
+.inv-table th{background:#f0f0f0;padding:6px 8px;text-align:left;border:1px solid #ccc}
+.inv-table td{padding:6px 8px;border:1px solid #ddd}
 .inv-table tr:nth-child(even) td{background:#fafafa}
 .inv-total{text-align:right;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}
 </style>
@@ -223,11 +223,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 <body>
 <div class="hdr">
   <div class="hdr-top">
-    <div class="logo">Krazy<b>Stock</b> <span style="font-size:9px;font-weight:400;color:var(--txt3)">v3.2</span></div>
+    <div class="logo">Krazy<b>Stock</b> <span style="font-size:9px;font-weight:400;color:var(--txt3)">v3.1</span></div>
     <div class="sync-row">
       <div class="sdot" id="sdot"></div>
       <span class="slbl" id="slbl">local</span>
-      <span id="sync-time-lbl" style="display:none;font-size:9px;color:var(--txt3);margin-left:4px"></span>
       <button id="btn-save-drive" style="display:none;margin-left:6px;padding:3px 10px;border-radius:50px;border:1.5px solid #00a870;background:transparent;color:#00a870;font-size:10px;font-weight:700;cursor:pointer">⬆ Save</button>
       <button id="btn-refresh-drive" style="display:none;margin-left:4px;padding:3px 10px;border-radius:50px;border:1.5px solid #5b4fe8;background:transparent;color:#5b4fe8;font-size:10px;font-weight:700;cursor:pointer">⬇ Refresh</button>
       <div class="hstats">
@@ -255,11 +254,6 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <!-- STOCK PAGE -->
 <div class="pg on" id="pg-stock">
-  <div id="drive-load-banner" style="display:none;background:linear-gradient(135deg,rgba(0,168,112,.12),rgba(91,79,232,.1));border:1px solid rgba(0,168,112,.3);border-radius:10px;padding:10px 14px;margin-bottom:12px;position:relative">
-    <div id="banner-title" style="font-size:12px;font-weight:700;color:#00a870">&#9729; Data loaded from Google Drive</div>
-    <div id="banner-msg" style="font-size:11px;color:var(--txt2);margin-top:2px"></div>
-    <span id="banner-close" style="position:absolute;top:8px;right:12px;font-size:18px;cursor:pointer;color:var(--txt3);line-height:1">&#10005;</span>
-  </div>
   <div class="cat-chips" id="s-cat-chips"></div>
   <div class="bscroll" id="sb"></div>
   <div class="frow" id="sf-row">
@@ -312,12 +306,6 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
   <!-- MANUAL pane -->
   <div id="pur-manual-pane" style="display:none">
-    <div class="igrp">
-      <div class="ilbl">Distributor (optional)</div>
-      <select class="ifield" id="pur-dist-select" style="margin-bottom:0">
-        <option value="">— No distributor —</option>
-      </select>
-    </div>
     <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="pur-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
     <div class="igrp">
       <div class="ilbl">Select Flavors</div>
@@ -363,24 +351,12 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
   <!-- MANUAL pane -->
   <div id="sell-manual-pane" style="display:none">
-    <!-- Edit mode banner -->
-    <div id="edit-mode-banner" style="display:none;background:rgba(91,79,232,.1);border:1px solid var(--acc);border-radius:8px;padding:8px 12px;margin-bottom:10px;display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div id="edit-mode-title" style="font-size:13px;font-weight:700;color:var(--acc)">Editing EST-0000</div>
-          <div style="font-size:11px;color:var(--txt3);margin-top:1px">Add or remove items. Stock is temporarily restored.</div>
-        </div>
-        <button class="btn bsec bsm" id="btn-cancel-edit">Cancel Edit</button>
-      </div>
-    </div>
     <div class="igrp">
       <div class="ilbl">Customer (optional)</div>
-      <select class="ifield" id="sell-cust-select" style="margin-bottom:6px">
-        <option value="">— Walk-in / No customer —</option>
-      </select>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt3);cursor:pointer;user-select:none;margin-top:4px">
+      <select class="ifield" id="sell-cust-select" style="margin-bottom:6px"><option value="">&#8212; Walk-in &#8212;</option></select>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt3);cursor:pointer;user-select:none">
         <input type="checkbox" id="sell-show-price" checked style="width:16px;height:16px;accent-color:var(--acc)">
-        <span>Show prices on invoice</span>
+        <span>Show prices on estimate</span>
       </label>
     </div>
     <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="sell-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="sell-brand-scroll"></div></div>
@@ -392,29 +368,27 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div id="sell-cart-wrap" style="display:none">
       <div class="stitle" style="margin-top:12px">Sale Cart</div>
       <div id="sell-cart"></div>
-      <!-- Estimate details -->
-      <div style="display:flex;gap:8px;margin-bottom:10px;margin-top:10px">
-        <div style="flex:1">
-          <div class="ilbl">Estimate #</div>
-          <input class="ifield" id="est-num-inp" placeholder="e.g. 001 or INV-2025" style="margin-bottom:0">
-        </div>
-        <div style="flex:1">
-          <div class="ilbl">Date</div>
-          <input class="ifield" id="est-date-inp" type="date" style="margin-bottom:0">
-        </div>
+      <div style="display:flex;gap:8px;margin:10px 0">
+        <div style="flex:1"><div class="ilbl">Estimate #</div><input class="ifield" id="est-num-inp" placeholder="e.g. 001" style="margin-bottom:0"></div>
+        <div style="flex:1"><div class="ilbl">Date</div><input class="ifield" id="est-date-inp" type="date" style="margin-bottom:0"></div>
       </div>
-      <div id="sell-action-btns" style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn bdgr" id="btn-confirm-manual-sell" style="width:100%">&#10003; Commit Sale &amp; Save Estimate</button>
-        <button class="btn bpri" id="btn-save-edit" style="width:100%;display:none">&#10003; Save Changes to Estimate</button>
-        <button class="btn bdgr" id="btn-finalise-est" style="width:100%;display:none">&#128274; Finalise &amp; Lock Estimate</button>
+        <button class="btn bpri" id="btn-save-edit" style="width:100%;display:none">&#10003; Save Changes</button>
+        <button class="btn bdgr" id="btn-finalise-est" style="width:100%;display:none">&#128274; Finalise &amp; Lock</button>
       </div>
     </div>
   </div>
-
-  <!-- ESTIMATES PANE -->
+  <div id="edit-mode-banner" style="display:none;background:rgba(91,79,232,.1);border:1px solid var(--acc);border-radius:8px;padding:8px 12px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div id="edit-mode-title" style="font-size:13px;font-weight:700;color:var(--acc)">Editing</div>
+        <div style="font-size:11px;color:var(--txt3)">Stock temporarily restored. Add or remove items.</div></div>
+      <button class="btn bsec bsm" id="btn-cancel-edit">Cancel</button>
+    </div>
+  </div>
   <div id="sell-estimates-pane" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <p class="stitle" style="margin:0">Saved Estimates</p>
+      <p class="stitle" style="margin:0">Estimates</p>
       <span id="est-count-badge" style="font-size:11px;color:var(--txt3)"></span>
     </div>
     <div id="est-list"></div>
@@ -442,13 +416,8 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="gen-cat-chips"></div><div class="ilbl">Brand Filter</div><div class="bscroll" id="gb"></div></div>
     <div class="frow" id="gf-row">
       <div class="fc on" data-gf="in">In Stock</div>
+      <div class="fc" data-gf="low">Low Only</div>
       <div class="fc" data-gf="all">All Flavors</div>
-    </div>
-    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
-        <input type="checkbox" id="gen-show-qty" style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
-        <span style="font-size:13px;font-weight:600">Show quantity in list</span>
-      </label>
     </div>
     <button class="btn bpri" id="btn-gen" style="margin-bottom:10px">Generate List</button>
     <textarea class="ota" id="gout" placeholder="WhatsApp list appears here..." readonly style="min-height:220px"></textarea>
@@ -461,7 +430,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   <!-- PRINT STOCK PANE -->
   <div id="ops-pane" style="display:none">
     <p class="stitle">Print Stock List</p>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:12px">Prints available flavors grouped by Category → Brand. Optionally show quantities.</p>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:12px">Prints available flavors grouped by Category → Brand. No quantities shown.</p>
 
     <div class="igrp">
       <div class="ilbl">Category</div>
@@ -472,13 +441,6 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
         <input type="checkbox" id="ps-in-stock-only" checked style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
         <span style="font-size:13px;font-weight:600">Only show flavors with stock > 0</span>
-      </label>
-    </div>
-
-    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
-        <input type="checkbox" id="ps-show-qty" style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
-        <span style="font-size:13px;font-weight:600">Show quantity on print</span>
       </label>
     </div>
 
@@ -652,10 +614,6 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
         <input class="ifield" id="cust-name-inp" placeholder="e.g. Ahmed Trading">
       </div>
       <div class="igrp">
-        <div class="ilbl">Contact Person (optional)</div>
-        <input class="ifield" id="cust-contact-inp" placeholder="e.g. John Smith">
-      </div>
-      <div class="igrp">
         <div class="ilbl">Phone (optional)</div>
         <input class="ifield" id="cust-phone-inp" placeholder="+1 234 567 8900" type="tel">
       </div>
@@ -818,6 +776,33 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
       <span id="conn-status-text">Not connected</span>
     </div>
   </div>
+
+  <div style="background:var(--sur2);border-radius:10px;padding:14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Sync Controls</div>
+    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px">
+      <div><div style="font-size:13px;font-weight:600">Auto-load on open</div>
+        <div style="font-size:11px;color:var(--txt3)">Load latest Drive data when app starts</div></div>
+      <div id="toggle-autorefresh" style="width:44px;height:24px;border-radius:50px;background:var(--acc);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        <div id="toggle-autorefresh-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:22px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>
+      </div>
+    </label>
+    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:14px">
+      <div><div style="font-size:13px;font-weight:600">Auto-backup before save</div>
+        <div style="font-size:11px;color:var(--txt3)">Timestamped backup written to Drive before each save</div></div>
+      <div id="toggle-backup" style="width:44px;height:24px;border-radius:50px;background:var(--acc);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        <div id="toggle-backup-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:22px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>
+      </div>
+    </label>
+    <button class="btn bpri" id="btn-force-push" style="width:100%;margin-bottom:8px">&#8679; Force Push to Drive <span style="font-size:10px;opacity:.7">(overwrite Drive with this device)</span></button>
+    <div style="font-size:10px;color:var(--txt3);text-align:center">Use when this device has the latest data and you want to overwrite Drive.</div>
+  </div>
+
+  <div style="background:var(--sur2);border-radius:10px;padding:14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Backups on Drive</div>
+    <button class="btn bsec bsm" id="btn-list-backups" style="margin-bottom:8px">&#128196; Show Backups</button>
+    <div id="backup-list" style="font-size:12px;color:var(--txt3)"></div>
+  </div>
+
   <div class="info-box">
     <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
     <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
@@ -950,18 +935,6 @@ function getFile() {
 <script>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // openDistModal handled by listener
 
 
@@ -970,15 +943,13 @@ function getFile() {
 
 var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
 var BRANDS = Object.keys(CATALOG);
-// Sort all built-in flavor arrays alphabetically at startup
-Object.keys(CATALOG).forEach(function(br){ CATALOG[br].sort(function(a,b){ a=a.toLowerCase(); b=b.toLowerCase(); return a<b?-1:a>b?1:0; }); });
 // CATEGORIES: { catName: [brandName, ...] }
 // All built-in brands start under "Vape"
 var CATEGORIES = { "Vape": Object.keys(CATALOG).slice() };
 var CATEGORY_NAMES = Object.keys(CATEGORIES);
 
 // Helper: get brands for a category
-function brandsForCat(cat) { var arr = cat === "all" ? BRANDS : (CATEGORIES[cat] || []); return arr.slice().sort(function(a,b){ a=a.toLowerCase(); b=b.toLowerCase(); return a<b?-1:a>b?1:0; }); }
+function brandsForCat(cat) { return cat === "all" ? BRANDS : (CATEGORIES[cat] || []); }
 // Helper: get category of a brand
 function catOfBrand(br) {
   var found = "Vape";
@@ -1002,9 +973,14 @@ var genFlt = "in";
 var gdUrl = "";
 var gdFileId = "";
 var gdConnected = false;
-var isDirty      = false;   // true when local changes haven't been saved to Drive
-var lastSaveTs   = 0;       // timestamp of last successful save to Drive
-var lastDriveTs  = 0;       // timestamp of data currently on Drive
+var isDirty = false;
+var lastSaveTs = 0;
+var lastDriveTs = 0;
+var autoRefreshEnabled = true;
+var backupBeforeSave = true;
+var estimates = [];
+var nextEstimateNum = 1;
+var editingEstId = null;
 var gdPollTimer = null;
 var gdPushTimer = null;
 var gdLastTs = 0;
@@ -1270,6 +1246,11 @@ function gdSave(onDone) {
   });
 
   // Save both files in parallel
+  if(backupBeforeSave){
+    var backupTs=new Date(saveTs).toISOString().replace(/[:.]/g,"-").substring(0,16);
+    var bkPayload=JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,distributors:distributors,distributorPrices:distributorPrices,estimates:estimates,ts:saveTs,label:"Backup "+backupTs});
+    gasPost(gdUrl+"?file=backup_"+backupTs,bkPayload).catch(function(){});
+  }
   Promise.all([
     gasPost(gdUrl + "?file=stock", stockPayload),
     gasPost(gdUrl + "?file=master", masterPayload)
@@ -1286,9 +1267,8 @@ function gdSave(onDone) {
       toast("GAS error: " + String(err).substring(0,40), "err");
     } else {
       setSyncDot("ok","saved ✓");
-      isDirty = false; lastSaveTs = saveTs;
-      updateDirtyIndicator();
       var stockCount = Object.keys(stock).length;
+      isDirty = false; lastSaveTs = saveTs; updateDirtyIndicator();
       addSyncLog("push", "Saved · " + stockCount + " stock entries + master data · " + new Date(saveTs).toLocaleTimeString());
       toast("Saved to Drive ✓","ok");
     }
@@ -1322,25 +1302,6 @@ function gdRefresh() {
     if(stockData && stockData.error)  throw new Error("Stock read error: " + stockData.error);
     if(masterData && masterData.error) throw new Error("Master read error: " + masterData.error);
 
-    // Collision check: Drive has newer data AND we have unsaved local changes
-    var driveTs = stockData && stockData.ts ? stockData.ts : 0;
-    if(isDirty && driveTs > lastSaveTs && lastSaveTs > 0) {
-      // Another device saved after our last save — warn user
-      var proceed = confirm(
-        "\u26a0 Conflict detected!\n\n" +
-        "Drive has newer data (saved " + new Date(driveTs).toLocaleTimeString() + ").\n" +
-        "You also have local unsaved changes.\n\n" +
-        "Tap OK to load Drive data (local changes lost).\n" +
-        "Tap Cancel to keep your changes (save first, then refresh)."
-      )
-      if(!proceed) {
-        if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
-        setSyncDot("ok","local changes kept");
-        toast("Refresh cancelled — your changes are safe","warn");
-        return;
-      }
-    }
-
     var changed = false;
 
     // Apply MASTER data (full replace — source of truth)
@@ -1355,7 +1316,7 @@ function gdRefresh() {
       if(masterData.customerPrices) customerPrices = masterData.customerPrices;
       if(masterData.distributors)   distributors = masterData.distributors;
       if(masterData.distributorPrices) distributorPrices = masterData.distributorPrices;
-      if(masterData.estimates)      estimates = masterData.estimates;
+      if(masterData.estimates)       estimates = masterData.estimates;
       if(masterData.nextEstimateNum) nextEstimateNum = masterData.nextEstimateNum;
       changed = true;
     }
@@ -1382,9 +1343,7 @@ function gdRefresh() {
       changed = true;
     }
 
-    if(stockData && stockData.ts) { gdLastTs = stockData.ts; lastDriveTs = stockData.ts; }
-    isDirty = false; lastSaveTs = Date.now();
-    updateDirtyIndicator();
+    if(stockData && stockData.ts) gdLastTs = stockData.ts;
 
     if(changed) { savePricing(); saveLocal(); }
     renderStock(); renderHistory(); updateStats();
@@ -1393,9 +1352,6 @@ function gdRefresh() {
     if(document.getElementById("pg-pricing")&&document.getElementById("pg-pricing").classList.contains("on")) renderPricingPage();
     if(document.getElementById("pg-distributor")&&document.getElementById("pg-distributor").classList.contains("on")) renderDistributors();
     if(document.getElementById("pg-analysis")&&document.getElementById("pg-analysis").classList.contains("on")) renderAnalysisPage();
-    // Re-render estimates if that pane is visible
-    var estPane = document.getElementById("sell-estimates-pane");
-    if(estPane && estPane.style.display !== "none") renderEstimatesList();
 
     if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
     setSyncDot("ok","updated ✓");
@@ -1403,34 +1359,8 @@ function gdRefresh() {
     var stockCount = Object.keys(stockData&&stockData.stock||{}).length;
     var masterTs = masterData && masterData.ts ? new Date(masterData.ts).toLocaleTimeString() : "no ts";
     var stockTs  = stockData  && stockData.ts  ? new Date(stockData.ts).toLocaleTimeString()  : "no ts";
-    // Format human-readable timestamp from the Drive data
-    var latestTs = Math.max((stockData&&stockData.ts)||0, (masterData&&masterData.ts)||0);
-    var latestDate = latestTs ? new Date(latestTs) : new Date();
-    var dateStr = latestDate.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
-    var timeStr = latestDate.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
-    var fullStamp = dateStr + " at " + timeStr;
-
-    // Update header time label
-    var stl = document.getElementById("sync-time-lbl");
-    if(stl){ stl.textContent = "• " + timeStr; stl.style.display = "inline"; }
-
-    // Show banner
-    var banner = document.getElementById("drive-load-banner");
-    var bannerTitle = document.getElementById("banner-title");
-    var bannerMsg = document.getElementById("banner-msg");
-    if(banner && bannerTitle && bannerMsg) {
-      bannerTitle.textContent = (typeof _startupLoad !== "undefined" && _startupLoad)
-        ? "☁ App opened — latest data loaded from Google Drive"
-        : "↓ Refreshed from Google Drive";
-      bannerMsg.textContent = "Last change: " + fullStamp + "  ·  " + stockCount + " stock items";
-      banner.style.display = "block";
-      setTimeout(function(){ var b=document.getElementById("drive-load-banner"); if(b)b.style.display="none"; }, 10000);
-    }
-    if(typeof _startupLoad !== "undefined") _startupLoad = false;
-
-    setSyncDot("ok", "synced " + timeStr);
-    addSyncLog("pull", "Loaded · " + stockCount + " stock entries · Last change: " + fullStamp);
-    toast("✓ Loaded · Last change: " + fullStamp, "ok");
+    addSyncLog("pull", "Loaded · " + stockCount + " stock entries · stock:" + stockTs + " master:" + masterTs);
+    toast("Updated from Drive ✓","ok");
   })
   .catch(function(err) {
     if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
@@ -1480,6 +1410,7 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   if(pg==="distributor") renderDistributors();
   if(pg==="analysis") renderAnalysisPage();
   if(pg==="export") renderExportPage();
+  if(pg==="sync") renderSyncToggles();
   updateStats();
 });
 
@@ -1570,7 +1501,7 @@ function renderStockGrid() {
     if(stockFlt==="low") return q>0&&q<=3;
     if(stockFlt==="out") return q===0;
     return true;
-  }).slice().sort(function(a,b){ a=a.toLowerCase(); b=b.toLowerCase(); return a<b?-1:a>b?1:0; });
+  });
   if(!flavors.length){
     var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
     empty.innerHTML="<div class='ei'>&#128235;</div><div class='et'>No items match</div>";
@@ -1796,7 +1727,7 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
     }
     var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
     stock[k] = (stock[k] || 0) + item.qty;
-    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString(), distId:"", distName:"", unitPrice:0, total:0 });
+    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString() });
     count++;
   });
   afterChange();
@@ -1826,7 +1757,6 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
 
 // ── MANUAL PURCHASE ──
 function renderPurBrands(){
-  populatePurDistDropdown();
   renderCatChips("pur-cat-chips", purCategory, function(cat) {
     purCategory = cat;
     var brs = brandsForCat(cat);
@@ -1868,55 +1798,29 @@ function renderCart(){
   var keys=Object.keys(cart);
   document.getElementById("pcart-wrap").style.display=keys.length?"block":"none";
   var el=document.getElementById("pcart"); el.innerHTML="";
-  var distId = getPurDistId();
   keys.forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
-    var sugPrice = distId ? getDistPrice(distId, br) : null;
-    if(cart[k] && typeof cart[k] === "object") {
-      // already object
-    } else {
-      cart[k] = { qty: typeof cart[k] === "number" ? cart[k] : 1, price: sugPrice !== null ? sugPrice : "" };
-    }
     var item=document.createElement("div"); item.className="citem";
-    item.style.flexDirection="column"; item.style.alignItems="stretch"; item.style.gap="6px";
-    var topRow=document.createElement("div"); topRow.style.cssText="display:flex;align-items:center;justify-content:space-between";
-    var info=document.createElement("div"); info.className="cinfo"; info.style.flex="1";
+    var info=document.createElement("div"); info.className="cinfo";
     var ne=document.createElement("div"); ne.className="cin"; ne.textContent=fl;
     var be=document.createElement("div"); be.className="cbr"; be.textContent=br;
     info.appendChild(ne); info.appendChild(be);
+    var right=document.createElement("div"); right.className="cqwrap";
+    var inp=document.createElement("input"); inp.type="number"; inp.min="1"; inp.value=String(cart[k]); inp.className="cqinp";
+    inp.addEventListener("change",function(){cart[k]=Math.max(1,parseInt(this.value,10)||1);});
     var rm=document.createElement("span"); rm.className="crm"; rm.textContent="×";
     rm.addEventListener("click",function(){delete cart[k];renderPurFlavors();renderCart();});
-    topRow.appendChild(info); topRow.appendChild(rm);
-    var botRow=document.createElement("div"); botRow.style.cssText="display:flex;align-items:center;gap:10px";
-    var qLbl=document.createElement("span"); qLbl.style.cssText="font-size:11px;color:var(--txt3);flex-shrink:0"; qLbl.textContent="Qty:";
-    var qInp=document.createElement("input"); qInp.type="number"; qInp.min="1";
-    qInp.value=String(cart[k].qty); qInp.className="cqinp"; qInp.style.width="60px";
-    qInp.addEventListener("change",function(){cart[k].qty=Math.max(1,parseInt(this.value,10)||1);});
-    var pLbl=document.createElement("span"); pLbl.style.cssText="font-size:11px;color:var(--txt3);flex-shrink:0"; pLbl.textContent="Unit $:";
-    var pInp=document.createElement("input"); pInp.type="number"; pInp.min="0"; pInp.step="0.01";
-    pInp.value=cart[k].price!==""?cart[k].price:""; pInp.placeholder="0.00"; pInp.className="cqinp"; pInp.style.width="80px";
-    pInp.addEventListener("change",function(){var v=parseFloat(this.value);cart[k].price=isNaN(v)?"":v;});
-    botRow.appendChild(qLbl); botRow.appendChild(qInp);
-    botRow.appendChild(pLbl); botRow.appendChild(pInp);
-    item.appendChild(topRow); item.appendChild(botRow);
-    el.appendChild(item);
+    right.appendChild(inp); right.appendChild(rm);
+    item.appendChild(info); item.appendChild(right); el.appendChild(item);
   });
 }
 (function(){var __el=document.getElementById("btn-confirm-pur");if(!__el)return;__el.addEventListener("click",function(){
   var keys=Object.keys(cart);
   if(!keys.length){toast("No items selected","err");return;}
-  var distId=getPurDistId();
-  var distObj=distId?distributors.find(function(d){return d.id===distId;}):null;
-  var distName=distObj?distObj.name:"";
-  var purDate=new Date().toLocaleString();
   keys.forEach(function(k){
-    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
-    var entry=cart[k];
-    var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
-    var unitPrice=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~"),q=parseInt(cart[k],10)||1;
     stock[k]=(stock[k]||0)+q;
-    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,
-      distId:distId,distName:distName,unitPrice:unitPrice,total:unitPrice*q,date:purDate});
+    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,date:new Date().toLocaleString()});
   });
   afterChange(); cart={}; renderCart(); renderPurFlavors();
   toast(keys.length+" item(s) added to stock","ok");
@@ -2014,8 +1918,6 @@ function renderGenBrands(){
 (function(){var __el=document.getElementById("btn-gen");if(!__el)return;__el.addEventListener("click",function(){
   var allBrsInCat = genCategory === "all" ? BRANDS : brandsForCat(genCategory);
   var brs=genBrand==="all"?allBrsInCat:[genBrand];
-  var showQtyGen = document.getElementById("gen-show-qty");
-  var showQty = showQtyGen ? showQtyGen.checked : false;
   var lines=["*VAPE STOCK LIST*","Date: "+new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),""];
   var hasAny=false;
   brs.forEach(function(br){
@@ -2031,9 +1933,7 @@ function renderGenBrands(){
     lines.push("*"+br+"*");
     fls.forEach(function(fl){
       var q=qty(br,fl);
-      var prefix = q===0 ? "[OUT] " : "";
-      var suffix = showQty ? " - "+q : "";
-      lines.push("  "+prefix+fl+suffix);
+      lines.push("  "+(q===0?"[OUT]":q<=3?"[LOW]":"[OK] ")+" "+fl+" - "+q+" units");
     });
     lines.push("");
   });
@@ -2136,9 +2036,7 @@ function renderHistory() {
       meta.appendChild(tp); meta.appendChild(dt);
       var det = document.createElement("div"); det.className = "hdtl";
       var cat = h.category || catOfBrand(h.brand) || "";
-      var custDistTag = h.custName ? " · Customer: "+h.custName : (h.distName ? " · Dist: "+h.distName : "");
-      var priceTag = h.unitPrice ? " · $"+h.unitPrice.toFixed(2)+"/unit" : "";
-      det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"") + custDistTag + priceTag;
+      det.textContent = (cat ? cat + " · " : "") + (h.brand||"") + " · " + (h.flavor||"");
       var st = document.createElement("strong");
       var sign = h.type==="sale" ? "−" : (h.qty > 0 ? "+" : "");
       st.textContent = " " + sign + Math.abs(h.qty||0) + " units";
@@ -2322,11 +2220,6 @@ function rebuildCatalogFromCustomFlavors() {
       CATALOG[br] = CATALOG[br].filter(function(f) { return f !== fl; });
     }
   });
-
-  // Step 7: Sort all flavor arrays alphabetically
-  Object.keys(CATALOG).forEach(function(br) {
-    CATALOG[br].sort(function(a,b){ a=a.toLowerCase(); b=b.toLowerCase(); return a<b?-1:a>b?1:0; });
-  });
 }
 
 function saveCustomFlavors() {
@@ -2444,10 +2337,9 @@ function renderCustomFlavorList() {
     tab.classList.add("on");
     document.getElementById("sell-upload-pane").style.display = st === "upload" ? "block" : "none";
     document.getElementById("sell-manual-pane").style.display = st === "manual" ? "block" : "none";
-    var epane = document.getElementById("sell-estimates-pane");
-    if(epane) epane.style.display = st === "estimates" ? "block" : "none";
-    if (st === "manual") { renderSellBrands(); renderSellFlavors(); }
-    if (st === "estimates") { renderEstimatesList(); }
+    var _ep=document.getElementById("sell-estimates-pane"); if(_ep) _ep.style.display=st==="estimates"?"block":"none";
+    if(st === "manual") { renderSellBrands(); renderSellFlavors(); }
+    if(st === "estimates") { renderEstimatesList(); }
   });
 })();
 
@@ -2455,46 +2347,18 @@ function renderCustomFlavorList() {
 var sellBrand = BRANDS[0];
 var genCategory = "all";
 var sellCart = {};
-var estimates = [];        // [{id, num, date, custId, custName, items, showPrice, total}]
-var nextEstimateNum = 1;   // auto-increment
-var activeCarts = {};      // { custId: { k: {qty,price} } } — per-customer carts
-var editingEstId = null;   // non-null when editing an existing estimate
-
-function setEstimateDefaults() {
-  var numInp  = document.getElementById("est-num-inp");
-  var dateInp = document.getElementById("est-date-inp");
-  // Only set if empty (don't override user input or edit mode values)
-  if(dateInp && !dateInp.value) {
-    var today = new Date();
-    dateInp.value = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
-  }
-}
 
 function populateSellCustDropdown() {
-  var sel = document.getElementById("sell-cust-select"); if(!sel) return;
-  var cur = sel.value;
-  sel.innerHTML = '<option value="">\u2014 Walk-in / No customer \u2014</option>';
-  customers.forEach(function(c) {
-    var opt = document.createElement("option"); opt.value = c.id; opt.textContent = c.name;
-    if(c.id === cur) opt.selected = true;
-    sel.appendChild(opt);
-  });
+  var sel=document.getElementById("sell-cust-select"); if(!sel) return;
+  var cur=sel.value; sel.innerHTML='<option value="">\u2014 Walk-in \u2014</option>';
+  customers.forEach(function(c){ var o=document.createElement("option"); o.value=c.id; o.textContent=c.name; if(c.id===cur) o.selected=true; sel.appendChild(o); });
 }
-
-function populatePurDistDropdown() {
-  var sel = document.getElementById("pur-dist-select"); if(!sel) return;
-  var cur = sel.value;
-  sel.innerHTML = '<option value="">\u2014 No distributor \u2014</option>';
-  distributors.forEach(function(d) {
-    var opt = document.createElement("option"); opt.value = d.id; opt.textContent = d.name;
-    if(d.id === cur) opt.selected = true;
-    sel.appendChild(opt);
-  });
+function getSellCustId(){ var s=document.getElementById("sell-cust-select"); return s?s.value:""; }
+function setEstimateDefaults(){
+  var di=document.getElementById("est-date-inp");
+  if(di&&!di.value){ var t=new Date(); di.value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); }
 }
-
 function renderSellBrands() {
-  populateSellCustDropdown();
-  setEstimateDefaults();
   renderCatChips("sell-cat-chips", sellCategory, function(cat) {
     sellCategory = cat;
     var brs = brandsForCat(cat);
@@ -2561,15 +2425,6 @@ function renderSellFlavors() {
   });
 }
 
-function getSellCustId() {
-  var sel = document.getElementById("sell-cust-select");
-  return sel ? sel.value : "";
-}
-function getPurDistId() {
-  var sel = document.getElementById("pur-dist-select");
-  return sel ? sel.value : "";
-}
-
 function renderSellCart() {
   var keys = Object.keys(sellCart);
   var wrap = document.getElementById("sell-cart-wrap");
@@ -2577,50 +2432,28 @@ function renderSellCart() {
   var el = document.getElementById("sell-cart");
   if (!el) return;
   el.innerHTML = "";
-  var custId = getSellCustId();
   keys.forEach(function(k) {
     var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
     var avail = qty(br, fl);
-    // Get price: customer price > default price > blank
-    var suggestedPrice = custId ? getEffectivePrice(custId, br) : (defaultPrices[br] !== undefined ? defaultPrices[br] : null);
-    if(sellCart[k] && typeof sellCart[k] === "object") {
-      // already initialized
-    } else {
-      sellCart[k] = { qty: typeof sellCart[k] === "number" ? sellCart[k] : 1, price: suggestedPrice !== null ? suggestedPrice : "" };
-    }
     var item = document.createElement("div"); item.className = "citem";
-    item.style.flexDirection = "column"; item.style.alignItems = "stretch"; item.style.gap = "6px";
-    // Top row: name + remove
-    var topRow = document.createElement("div"); topRow.style.cssText = "display:flex;align-items:center;justify-content:space-between";
-    var info = document.createElement("div"); info.className = "cinfo"; info.style.flex = "1";
+    var info = document.createElement("div"); info.className = "cinfo";
     var ne = document.createElement("div"); ne.className = "cin"; ne.textContent = fl;
     var be = document.createElement("div"); be.className = "cbr";
-    be.textContent = br + " \u00b7 Stock: " + avail;
-    be.style.color = avail < (sellCart[k].qty || 1) ? "var(--red)" : "var(--txt3)";
+    be.textContent = br + " \u00b7 Have: " + avail;
+    be.style.color = avail < (sellCart[k] || 1) ? "var(--red)" : "var(--txt3)";
     info.appendChild(ne); info.appendChild(be);
-    var rm = document.createElement("span"); rm.className = "crm"; rm.textContent = "\u00d7";
-    rm.addEventListener("click", function() { delete sellCart[k]; renderSellFlavors(); renderSellCart(); });
-    topRow.appendChild(info); topRow.appendChild(rm);
-    // Bottom row: qty + price
-    var botRow = document.createElement("div"); botRow.style.cssText = "display:flex;align-items:center;gap:10px";
-    var qLbl = document.createElement("span"); qLbl.style.cssText = "font-size:11px;color:var(--txt3);flex-shrink:0"; qLbl.textContent = "Qty:";
-    var qInp = document.createElement("input"); qInp.type = "number"; qInp.min = "1";
-    qInp.value = String(sellCart[k].qty); qInp.className = "cqinp"; qInp.style.width = "60px";
-    qInp.addEventListener("change", function() {
-      sellCart[k].qty = Math.max(1, parseInt(this.value,10)||1);
+    var right = document.createElement("div"); right.className = "cqwrap";
+    var inp = document.createElement("input"); inp.type = "number"; inp.min = "1";
+    inp.max = String(avail || 99); inp.value = String(sellCart[k]);
+    inp.className = "cqinp";
+    inp.addEventListener("change", function() {
+      sellCart[k] = Math.max(1, parseInt(this.value, 10) || 1);
       renderSellCart();
     });
-    var pLbl = document.createElement("span"); pLbl.style.cssText = "font-size:11px;color:var(--txt3);flex-shrink:0"; pLbl.textContent = "Unit $:";
-    var pInp = document.createElement("input"); pInp.type = "number"; pInp.min = "0"; pInp.step = "0.01";
-    pInp.value = sellCart[k].price !== "" ? sellCart[k].price : "";
-    pInp.placeholder = "0.00"; pInp.className = "cqinp"; pInp.style.width = "80px";
-    pInp.addEventListener("change", function() {
-      var v = parseFloat(this.value);
-      sellCart[k].price = isNaN(v) ? "" : v;
-    });
-    botRow.appendChild(qLbl); botRow.appendChild(qInp);
-    botRow.appendChild(pLbl); botRow.appendChild(pInp);
-    item.appendChild(topRow); item.appendChild(botRow);
+    var rm = document.createElement("span"); rm.className = "crm"; rm.textContent = "\u00d7";
+    rm.addEventListener("click", function() { delete sellCart[k]; renderSellFlavors(); renderSellCart(); });
+    right.appendChild(inp); right.appendChild(rm);
+    item.appendChild(info); item.appendChild(right);
     el.appendChild(item);
   });
 }
@@ -2632,64 +2465,38 @@ function renderSellCart() {
     var keys = Object.keys(sellCart);
     if (!keys.length) { toast("No items in cart", "err"); return; }
     var custId = getSellCustId();
-    var custObj = custId ? customers.find(function(c){ return c.id===custId; }) : null;
+    var custObj = custId ? customers.find(function(c){return c.id===custId;}) : null;
     var custName = custObj ? custObj.name : "Walk-in";
-    var showPrice = document.getElementById("sell-show-price");
-    var includePrice = showPrice ? showPrice.checked : true;
-    var count = 0, warn = 0;
-    var estItems = [];
-    // Read user-entered estimate number and date
-    var estNumInp  = (document.getElementById("est-num-inp")||{}).value||"";
-    var estDateInp = (document.getElementById("est-date-inp")||{}).value||"";
-    var estId = estNumInp.trim() || ("EST-" + Date.now().toString().slice(-5));
-    var saleDate = estDateInp
-      ? new Date(estDateInp).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
-      : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
-    // Check duplicate estimate number (warn, don't block)
-    if(estNumInp.trim() && estimates.some(function(e){ return e.id===estId && !editingEstId; })) {
-      if(!confirm("Estimate number \"" + estId + "\" already exists.\n\nContinue anyway?")) return;
-    }
-    var grandTotal = 0;
-    keys.forEach(function(k) {
-      var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
-      var entry = sellCart[k];
-      var q = entry && typeof entry === "object" ? (entry.qty||1) : (parseInt(entry,10)||1);
-      var unitPrice = entry && typeof entry === "object" ? (entry.price !== "" ? parseFloat(entry.price)||0 : 0) : 0;
-      var lineTotal = unitPrice * q;
-      grandTotal += lineTotal;
-      var cur = stock[k] || 0;
-      if (q > cur) warn++;
-      stock[k] = Math.max(0, cur - q);
-      txLog.unshift({ type:"sale", category:catOfBrand(br), brand:br, flavor:fl, qty:q,
-        custId:custId, custName:custName, unitPrice:unitPrice, total:lineTotal,
-        date:saleDate, estId:estId });
-      estItems.push({ brand:br, flavor:fl, qty:q, unitPrice:unitPrice, total:lineTotal });
-      count++;
+    var spEl = document.getElementById("sell-show-price");
+    var showPrice = spEl ? spEl.checked : true;
+    var niVal = (document.getElementById("est-num-inp")||{}).value||"";
+    var diVal = (document.getElementById("est-date-inp")||{}).value||"";
+    var estId = niVal.trim() || ("EST-"+Date.now().toString().slice(-5));
+    var saleDate = diVal ? new Date(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}) : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    var grandTotal=0, estItems=[], count=0, warn=0;
+    keys.forEach(function(k){
+      var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+      var entry=sellCart[k];
+      var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
+      var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
+      var lt=up*q; grandTotal+=lt;
+      var cur=stock[k]||0; if(q>cur) warn++; stock[k]=Math.max(0,cur-q);
+      txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:q,custId:custId,custName:custName,unitPrice:up,total:lt,date:saleDate,estId:estId});
+      estItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt}); count++;
     });
-    // Save estimate record
-    var estRecord = { id:estId, num:estNum, date:saleDate, custId:custId,
-      custName:custName, items:estItems, showPrice:includePrice, total:grandTotal, locked:false };
-    estimates.unshift(estRecord);
-    afterChange(); savePricing();
-    // Print estimate
-    printEstimate(estRecord);
-    sellCart = {};
-    // Clear estimate fields for next sale
-    var _ni = document.getElementById("est-num-inp"); if(_ni) _ni.value = "";
-    var _di = document.getElementById("est-date-inp"); if(_di) _di.value = "";
+    var rec={id:estId,num:nextEstimateNum++,date:saleDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false};
+    estimates.unshift(rec); afterChange(); savePricing(); printEstimate(rec);
+    sellCart={};
+    var ni=document.getElementById("est-num-inp"); if(ni) ni.value="";
+    var di=document.getElementById("est-date-inp"); if(di) di.value="";
     renderSellCart(); renderSellFlavors();
-    // Switch to Estimates tab to show the saved record
     document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
-    var estTab = document.querySelector("#stabs [data-st='estimates']");
-    if(estTab) estTab.classList.add("on");
-    ["sell-upload-pane","sell-manual-pane"].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.style.display="none";
-    });
-    var ep = document.getElementById("sell-estimates-pane");
-    if(ep) ep.style.display = "block";
+    var et=document.querySelector("#stabs [data-st='estimates']"); if(et) et.classList.add("on");
+    document.getElementById("sell-upload-pane").style.display="none";
+    document.getElementById("sell-manual-pane").style.display="none";
+    var ep=document.getElementById("sell-estimates-pane"); if(ep) ep.style.display="block";
     renderEstimatesList();
-    if (warn > 0) toast(count + " items sold. " + warn + " went below 0", "warn");
-    else toast(estId + " saved & printed \u2713", "ok");
+    if(warn>0) toast(count+" sold. "+warn+" below 0","warn"); else toast(estId+" saved \u2713","ok");
   });
 })();
 
@@ -3081,7 +2888,7 @@ function renderCatFlavorList() {
   var q = catSearchQ.toLowerCase();
   var flavors = (CATALOG[catActiveBrand] || []).filter(function(fl) {
     return !q || fl.toLowerCase().indexOf(q) !== -1;
-  }).slice().sort(function(a,b){ a=a.toLowerCase(); b=b.toLowerCase(); return a<b?-1:a>b?1:0; });
+  });
 
   var block = document.createElement("div");
   block.className = "cat-brand-block";
@@ -3102,45 +2909,13 @@ function renderCatFlavorList() {
   nameWrap.appendChild(countEl);
   var actions = document.createElement("div");
   actions.className = "cat-brand-actions";
-  // Rename button — all brands
-  var renameBtn = document.createElement("button");
-  renameBtn.className = "cat-action-btn";
-  renameBtn.textContent = "\u270e Rename";
-  (function(oldBrand){
-    renameBtn.addEventListener("click", function(){
-      var newName = prompt("Rename \""+oldBrand+"\"\n\nEnter new name:", oldBrand);
-      if(!newName) return;
-      newName = newName.trim();
-      if(!newName || newName === oldBrand) return;
-      if(CATALOG[newName]){ toast("\""+newName+"\" already exists","err"); return; }
-      CATALOG[newName]=CATALOG[oldBrand]||[]; delete CATALOG[oldBrand];
-      var bi=BRANDS.indexOf(oldBrand); if(bi>-1) BRANDS[bi]=newName;
-      CATEGORY_NAMES.forEach(function(cat){ var arr=CATEGORIES[cat]||[]; var ci=arr.indexOf(oldBrand); if(ci>-1) arr[ci]=newName; });
-      if(customFlavors["__brand__"+oldBrand]!==undefined){ customFlavors["__brand__"+newName]=customFlavors["__brand__"+oldBrand]; delete customFlavors["__brand__"+oldBrand]; }
-      if(customFlavors["__catbrand__"+oldBrand]!==undefined){ customFlavors["__catbrand__"+newName]=customFlavors["__catbrand__"+oldBrand]; delete customFlavors["__catbrand__"+oldBrand]; }
-      if(customFlavors[oldBrand]){ customFlavors[newName]=customFlavors[oldBrand]; delete customFlavors[oldBrand]; }
-      if(customFlavors["__deleted__"]){ customFlavors["__deleted__"]=customFlavors["__deleted__"].map(function(k){ return k.indexOf(oldBrand+"~~")===0?newName+k.substring(oldBrand.length):k; }); }
-      var pfx=oldBrand+"~~"; Object.keys(stock).forEach(function(k){ if(k.indexOf(pfx)===0){ stock[newName+"~~"+k.substring(pfx.length)]=stock[k]; delete stock[k]; } });
-      txLog.forEach(function(e){ if(e.brand===oldBrand) e.brand=newName; });
-      Object.keys(distributorPrices).forEach(function(k){ var pts=k.split("~~"); if(pts[1]===oldBrand){ distributorPrices[pts[0]+"~~"+newName]=distributorPrices[k]; delete distributorPrices[k]; } });
-      if(defaultPrices[oldBrand]!==undefined){ defaultPrices[newName]=defaultPrices[oldBrand]; delete defaultPrices[oldBrand]; }
-      Object.keys(customerPrices).forEach(function(k){ var pts=k.split("~~"); if(pts[1]===oldBrand){ customerPrices[pts[0]+"~~"+newName]=customerPrices[k]; delete customerPrices[k]; } });
-      if(catActiveBrand===oldBrand) catActiveBrand=newName;
-      if(activeBrand===oldBrand) activeBrand=newName;
-      if(purBrand===oldBrand) purBrand=newName;
-      saveCustomFlavors(); savePricing(); saveLocal(); updateStats();
-      renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
-      toast("\""+oldBrand+"\" \u2192 \""+newName+"\" \u2713","ok");
-    });
-  })(catActiveBrand);
-  actions.appendChild(renameBtn);
   // Delete brand button (only for custom brands)
   var isCustomBrand = customFlavors["__brand__" + catActiveBrand] !== undefined;
   if (isCustomBrand) {
     var delBrandBtn = document.createElement("button");
     delBrandBtn.className = "cat-action-btn cat-action-del";
     delBrandBtn.textContent = "Delete Brand";
-    (function(br){ delBrandBtn.addEventListener("click", function() { confirmDeleteBrand(br); }); })(catActiveBrand);
+    delBrandBtn.addEventListener("click", function() { confirmDeleteBrand(catActiveBrand); });
     actions.appendChild(delBrandBtn);
   }
   header.appendChild(nameWrap);
@@ -3392,7 +3167,7 @@ function savePricing() {
     localStorage.setItem("vs5_estimates", JSON.stringify(estimates));
     localStorage.setItem("vs5_estnum", String(nextEstimateNum));
   } catch(e) {}
-  saveMasterToDrive();
+  saveMasterToDrive(); // Auto-save master on pricing/customer change
 }
 function loadPricing() {
   try {
@@ -3422,7 +3197,6 @@ function openCustModal(id) {
     if(editId) editId.value = id;
     if(nameInp) nameInp.value = cust.name || "";
     if(phoneInp) phoneInp.value = cust.phone || "";
-    var co=document.getElementById("cust-contact-inp"); if(co) co.value=cust.contact||"";
     var a1=document.getElementById("cust-addr1-inp"), a2=document.getElementById("cust-addr2-inp");
     var ci=document.getElementById("cust-city-inp"), st=document.getElementById("cust-state-inp");
     var zi=document.getElementById("cust-zip-inp"), no=document.getElementById("cust-notes-inp");
@@ -3434,7 +3208,6 @@ function openCustModal(id) {
     if(editId) editId.value = "";
     if(nameInp) { nameInp.value = ""; nameInp.focus(); }
     if(phoneInp) phoneInp.value = "";
-    var co2=document.getElementById("cust-contact-inp"); if(co2) co2.value="";
     ["cust-addr1-inp","cust-addr2-inp","cust-city-inp","cust-zip-inp","cust-notes-inp"].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value="";
     });
@@ -3467,12 +3240,11 @@ function closeCustModal() {
     var zip   = (document.getElementById("cust-zip-inp")||{}).value||"";
     var notes = (document.getElementById("cust-notes-inp")||{}).value||"";
     var phone = phoneInp ? phoneInp.value.trim() : "";
-    var contact = ((document.getElementById("cust-contact-inp")||{}).value||"").trim();
     if (id) {
       var cust = customers.find(function(c){ return c.id === id; });
-      if (cust) { cust.name=name; cust.phone=phone; cust.contact=contact; cust.addr1=addr1.trim(); cust.addr2=addr2.trim(); cust.city=city.trim(); cust.state=state; cust.zip=zip.trim(); cust.notes=notes.trim(); }
+      if (cust) { cust.name=name; cust.phone=phone; cust.addr1=addr1.trim(); cust.addr2=addr2.trim(); cust.city=city.trim(); cust.state=state; cust.zip=zip.trim(); cust.notes=notes.trim(); }
     } else {
-      customers.push({ id:"c"+Date.now(), name:name, phone:phone, contact:contact, addr1:addr1.trim(), addr2:addr2.trim(), city:city.trim(), state:state, zip:zip.trim(), notes:notes.trim() });
+      customers.push({ id:"c"+Date.now(), name:name, phone:phone, addr1:addr1.trim(), addr2:addr2.trim(), city:city.trim(), state:state, zip:zip.trim(), notes:notes.trim() });
     }
     savePricing(); closeCustModal(); renderCustomers();
     toast((id ? "Customer updated" : "Customer added") + "!", "ok");
@@ -3503,7 +3275,7 @@ function renderCustomers() {
     if (cityLine) addrParts.push(cityLine);
     var addrStr = addrParts.join(" · ");
     ph.textContent = [cust.phone, addrStr, cust.notes].filter(Boolean).join("  |  ") || "No contact info";
-    if(cust.contact) { var co3=document.createElement("div"); co3.style.cssText="font-size:11px;color:var(--acc);font-weight:600;margin-bottom:2px"; co3.textContent="Contact: "+cust.contact; info.appendChild(nm); info.appendChild(co3); info.appendChild(ph); } else { info.appendChild(nm); info.appendChild(ph); }
+    info.appendChild(nm); info.appendChild(ph);
     var btns = document.createElement("div"); btns.style.cssText = "display:flex;gap:6px";
     var editBtn = document.createElement("button"); editBtn.className = "btn bsec bsm"; editBtn.textContent = "Edit";
     (function(id){ editBtn.addEventListener("click", function(){ openCustModal(id); }); })(cust.id);
@@ -3952,8 +3724,6 @@ function renderPsPage() {
   el.addEventListener("click", function() {
     var inStockOnly = document.getElementById("ps-in-stock-only");
     var onlyInStock = inStockOnly ? inStockOnly.checked : true;
-    var showQtyEl = document.getElementById("ps-show-qty");
-    var showQty = showQtyEl ? showQtyEl.checked : false;
     var cats = psCatFilter === "all" ? CATEGORY_NAMES : [psCatFilter];
     var content = document.getElementById("stock-print-content");
     if (!content) return;
@@ -3996,7 +3766,7 @@ function renderPsPage() {
         flavors.forEach(function(fl) {
           var item = document.createElement("div");
           item.className = "sp-flavor";
-          item.textContent = fl + (showQty ? "  —  " + qty(br, fl) : "");
+          item.textContent = fl;
           grid.appendChild(item);
         });
         catDiv.appendChild(grid);
@@ -4371,554 +4141,235 @@ function gdPull() {
 }
 
 
-// ── SALE INVOICE GENERATOR ──
-function generateSaleInvoice(opts) { printEstimate({ id:opts.id||"EST-000", date:opts.date, custId:"", custName:"", items:opts.items, showPrice:opts.showPrice, total:(opts.items||[]).reduce(function(s,it){return s+(it.total||0);},0) }); } function generateSaleInvoice_UNUSED(opts) {
-  var content = document.getElementById("invoice-print-content");
-  if(!content) return;
-  var cust = opts.customer;
-  var items = opts.items || [];
-  var showPrice = opts.showPrice !== false;
-  var grandTotal = 0;
-  items.forEach(function(it){ grandTotal += it.total||0; });
-
-  var html = "";
-  // Header
-  html += "<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #000'>";
-  html += "<div><div style='font-size:26px;font-weight:900;letter-spacing:-.5px'>Krazy Wholesale</div>";
-  html += "<div style='font-size:12px;color:#555;margin-top:2px'>Invoice / Sale Receipt</div></div>";
-  html += "<div style='text-align:right;font-size:12px'>";
-  html += "<div><strong>" + opts.id + "</strong></div>";
-  html += "<div style='color:#555'>" + opts.date + "</div></div>";
-  html += "</div>";
-
-  // Customer info
-  if(cust) {
-    html += "<div style='margin-bottom:14px;padding:10px 14px;background:#f8f8f8;border-radius:6px;border:1px solid #e0e0e0'>";
-    html += "<div style='font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px'>Bill To</div>";
-    html += "<div style='font-size:15px;font-weight:700'>" + cust.name + "</div>";
-    if(cust.contact) html += "<div style='font-size:12px;color:#444'>Contact: " + cust.contact + "</div>";
-    if(cust.phone) html += "<div style='font-size:12px;color:#444'>" + cust.phone + "</div>";
-    var addr = [cust.addr1, cust.addr2, [cust.city,cust.state,cust.zip].filter(Boolean).join(", ")].filter(Boolean).join(", ");
-    if(addr) html += "<div style='font-size:12px;color:#444'>" + addr + "</div>";
-    html += "</div>";
-  } else {
-    html += "<div style='margin-bottom:14px;padding:8px 14px;background:#f8f8f8;border-radius:6px;font-size:13px;color:#666'>Walk-in Sale</div>";
-  }
-
-  // Items table
-  var cols = showPrice
-    ? ["Brand","Flavor","Qty","Unit Price","Total"]
-    : ["Brand","Flavor","Qty"];
-  html += "<table class='inv-table'><thead><tr>";
-  cols.forEach(function(c){ html += "<th>" + c + "</th>"; });
-  html += "</tr></thead><tbody>";
-  items.forEach(function(it){
-    html += "<tr><td>" + it.brand + "</td><td>" + it.flavor + "</td><td style='text-align:center'>" + it.qty + "</td>";
-    if(showPrice) {
-      html += "<td style='text-align:right;font-family:monospace'>$" + (it.unitPrice||0).toFixed(2) + "</td>";
-      html += "<td style='text-align:right;font-family:monospace;font-weight:700'>$" + (it.total||0).toFixed(2) + "</td>";
-    }
-    html += "</tr>";
-  });
-  html += "</tbody></table>";
-
-  // Total
-  if(showPrice) {
-    html += "<div class='inv-total'>Grand Total: $" + grandTotal.toFixed(2) + "</div>";
-  }
-
-  // Items count footer
-  html += "<div style='margin-top:16px;padding-top:10px;border-top:1px solid #ccc;font-size:11px;color:#888;display:flex;justify-content:space-between'>";
-  html += "<span>" + items.length + " item(s) · " + items.reduce(function(s,it){return s+it.qty;},0) + " units</span>";
-  html += "<span>Thank you for your business!</span></div>";
-
-  content.innerHTML = html;
-
-  // Trigger print
-  var area = document.getElementById("invoice-print-area");
-  if(area) area.style.display = "block";
-  document.body.setAttribute("data-print-mode","invoice");
-  setTimeout(function(){
-    window.print();
-    setTimeout(function(){
-      if(area) area.style.display = "none";
-      document.body.removeAttribute("data-print-mode");
-    }, 800);
-  }, 150);
+function updateDirtyIndicator(){
+  var sb=document.getElementById("btn-save-drive"); if(!sb) return;
+  if(isDirty){sb.textContent="\u2b06 Save \u2022";sb.style.borderColor="var(--amb)";sb.style.color="var(--amb)";}
+  else{sb.textContent="\u2b06 Save";sb.style.borderColor="";sb.style.color="";}
 }
+function renderSyncToggles(){
+  function st(id,kid,on){var t=document.getElementById(id),k=document.getElementById(kid);if(!t||!k)return;t.style.background=on?"var(--acc)":"#ccc";k.style.left=on?"22px":"2px";}
+  st("toggle-autorefresh","toggle-autorefresh-knob",autoRefreshEnabled);
+  st("toggle-backup","toggle-backup-knob",backupBeforeSave);
+}
+(function(){var el=document.getElementById("toggle-autorefresh");if(!el)return;el.addEventListener("click",function(){autoRefreshEnabled=!autoRefreshEnabled;localStorage.setItem("vs5_autorefresh",autoRefreshEnabled?"1":"0");renderSyncToggles();toast(autoRefreshEnabled?"Auto-load ON":"Auto-load OFF \u2014 manual Refresh only","ok");});})();
+(function(){var el=document.getElementById("toggle-backup");if(!el)return;el.addEventListener("click",function(){backupBeforeSave=!backupBeforeSave;localStorage.setItem("vs5_backup",backupBeforeSave?"1":"0");renderSyncToggles();toast(backupBeforeSave?"Auto-backup ON":"Auto-backup OFF","ok");});})();
+(function(){var el=document.getElementById("btn-force-push");if(!el)return;el.addEventListener("click",function(){
+  if(!gdConnected){toast("Connect to Google Drive first","err");return;}
+  var localTs=lastSaveTs||Date.now();
+  if(lastDriveTs&&lastDriveTs>localTs&&lastDriveTs-localTs>60000){
+    var dT=new Date(lastDriveTs).toLocaleString(),lT=new Date(localTs).toLocaleString();
+    if(!confirm("\u26a0 Drive has newer data!\nDrive: "+dT+"\nLocal: "+lT+"\n\nForce Push will OVERWRITE Drive. Continue?")) return;
+  } else if(!confirm("Force Push will overwrite Google Drive with this device's data.\n\nContinue?")) return;
+  var orig=lastDriveTs; lastDriveTs=0;
+  toast("Force pushing\u2026","ok");
+  gdSave(function(){lastDriveTs=orig;toast("Force Push complete \u2713","ok");});
+});})();
+(function(){var el=document.getElementById("btn-list-backups");if(!el)return;el.addEventListener("click",function(){
+  if(!gdConnected){toast("Connect to Google Drive first","err");return;}
+  var el2=document.getElementById("backup-list"); if(el2) el2.textContent="Loading...";
+  gasPost(gdUrl+"?file=backup_list&mode=read","{}").then(function(resp){
+    if(!el2)return;
+    if(resp&&resp.files&&resp.files.length){
+      el2.innerHTML="";
+      resp.files.sort(function(a,b){return b.name.localeCompare(a.name);}).forEach(function(f){
+        var row=document.createElement("div"); row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--brd)";
+        var lbl=document.createElement("span"); lbl.style.cssText="font-size:12px;font-family:'DM Mono',monospace"; lbl.textContent=f.name.replace("backup_","").replace(/-/g,"/").replace("T","  ");
+        var rbtn=document.createElement("button"); rbtn.className="btn bsec bsm"; rbtn.textContent="Restore";
+        (function(fn){rbtn.addEventListener("click",function(){
+          if(!confirm("Restore from backup "+fn+"?\n\nThis will overwrite Drive and local data.")) return;
+          gasPost(gdUrl+"?file="+fn+"&mode=read","{}").then(function(d){
+            if(!d||d.error){toast("Failed to read backup","err");return;}
+            if(d.stock)stock=d.stock; if(d.txLog)txLog=d.txLog;
+            if(d.customFlavors){customFlavors=d.customFlavors;rebuildCatalogFromCustomFlavors();}
+            if(d.customers)customers=d.customers; if(d.defaultPrices)defaultPrices=d.defaultPrices;
+            if(d.customerPrices)customerPrices=d.customerPrices; if(d.distributors)distributors=d.distributors;
+            if(d.distributorPrices)distributorPrices=d.distributorPrices; if(d.estimates)estimates=d.estimates;
+            saveLocal(); savePricing();
+            gdSave(function(){toast("Backup restored \u2713","ok"); renderStock(); updateStats();});
+          }).catch(function(){toast("Failed to restore","err");});
+        });})(f.name);
+        row.appendChild(lbl); row.appendChild(rbtn); el2.appendChild(row);
+      });
+    } else { el2.textContent="No backups found. Backups appear here after your first save with Auto-backup ON."; }
+  }).catch(function(){if(el2)el2.textContent="Could not load backup list.";});
+});})();
 
-
-// When customer changes, reset cart prices to new customer prices
-(function(){
-  var el = document.getElementById("sell-cust-select");
-  if(!el) return;
-  el.addEventListener("change", function(){
-    // Reset cart price suggestions for new customer
-    var custId = el.value;
-    Object.keys(sellCart).forEach(function(k){
-      var pts = k.split("~~"), br = pts[0];
-      var newPrice = custId ? getEffectivePrice(custId, br) : (defaultPrices[br]!==undefined?defaultPrices[br]:null);
-      if(typeof sellCart[k] === "object") sellCart[k].price = newPrice!==null?newPrice:"";
-      else sellCart[k] = { qty: sellCart[k]||1, price: newPrice!==null?newPrice:"" };
-    });
-    renderSellCart();
-  });
-})();
-
-// When distributor changes, reset cart prices
-(function(){
-  var el = document.getElementById("pur-dist-select");
-  if(!el) return;
-  el.addEventListener("change", function(){
-    var distId = el.value;
-    Object.keys(cart).forEach(function(k){
-      var pts = k.split("~~"), br = pts[0];
-      var newPrice = distId ? getDistPrice(distId, br) : null;
-      if(typeof cart[k] === "object") cart[k].price = newPrice!==null?newPrice:"";
-      else cart[k] = { qty: cart[k]||1, price: newPrice!==null?newPrice:"" };
-    });
-    renderCart();
-  });
-})();
-
-
-// ── ESTIMATES ──
-function printEstimate(est) {
-  var content = document.getElementById("invoice-print-content");
-  if(!content) return;
-  var cust = est.custId ? customers.find(function(c){ return c.id===est.custId; }) : null;
-  var showPrice = est.showPrice !== false;
-
-  var h = "";
-  // Header
-  h += "<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #000'>";
-  h += "<div><div style='font-size:26px;font-weight:900;letter-spacing:-.5px'>Krazy Wholesale</div>";
-  h += "<div style='font-size:11px;color:#666;margin-top:2px;letter-spacing:1px;text-transform:uppercase'>Estimate</div></div>";
-  h += "<div style='text-align:right'>";
-  h += "<div style='font-size:18px;font-weight:800;color:#333'>" + est.id + "</div>";
-  h += "<div style='font-size:12px;color:#666;margin-top:2px'>" + est.date + "</div>";
-  h += "</div></div>";
-
-  // Customer
-  if(cust) {
-    h += "<div style='margin-bottom:14px;padding:10px 14px;background:#f8f8f8;border-radius:6px;border:1px solid #e0e0e0'>";
-    h += "<div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px'>Prepared for</div>";
-    h += "<div style='font-size:15px;font-weight:700'>" + cust.name + "</div>";
-    if(cust.contact) h += "<div style='font-size:12px;color:#444'>Contact: " + cust.contact + "</div>";
-    if(cust.phone) h += "<div style='font-size:12px;color:#444'>" + cust.phone + "</div>";
-    var addr = [cust.addr1, cust.addr2, [cust.city,cust.state,cust.zip].filter(Boolean).join(", ")].filter(Boolean).join(", ");
-    if(addr) h += "<div style='font-size:12px;color:#444'>" + addr + "</div>";
-    h += "</div>";
+function printEstimate(est){
+  var content=document.getElementById("invoice-print-content"); if(!content)return;
+  var cust=est.custId?customers.find(function(c){return c.id===est.custId;}):null;
+  var showPrice=est.showPrice!==false;
+  var h="";
+  h+="<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #000'>";
+  h+="<div><div style='font-size:26px;font-weight:900'>Krazy Wholesale</div><div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px'>Estimate</div></div>";
+  h+="<div style='text-align:right'><div style='font-size:18px;font-weight:800'>"+(est.id||"")+"</div><div style='font-size:12px;color:#666'>"+(est.date||"")+"</div></div></div>";
+  if(cust){
+    h+="<div style='margin-bottom:14px;padding:10px 14px;background:#f8f8f8;border-radius:6px;border:1px solid #e0e0e0'>";
+    h+="<div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px'>Prepared for</div>";
+    h+="<div style='font-size:15px;font-weight:700'>"+cust.name+"</div>";
+    if(cust.contact)h+="<div style='font-size:12px;color:#444'>Contact: "+cust.contact+"</div>";
+    if(cust.phone)h+="<div style='font-size:12px;color:#444'>"+cust.phone+"</div>";
+    h+="</div>";
   } else {
-    h += "<div style='margin-bottom:14px;padding:8px 14px;background:#f8f8f8;border-radius:6px;font-size:13px;color:#666'><strong>" + (est.custName||"Walk-in") + "</strong></div>";
+    h+="<div style='margin-bottom:14px;padding:8px 14px;background:#f8f8f8;border-radius:6px;font-size:13px'><strong>"+(est.custName||"Walk-in")+"</strong></div>";
   }
-
-  // Items table
-  h += "<table class='inv-table'><thead><tr><th>Brand</th><th>Flavor</th><th style='text-align:center'>Qty</th>";
-  if(showPrice) h += "<th style='text-align:right'>Unit Price</th><th style='text-align:right'>Total</th>";
-  h += "</tr></thead><tbody>";
+  h+="<table class='inv-table'><thead><tr><th>Brand</th><th>Flavor</th><th style='text-align:center'>Qty</th>";
+  if(showPrice)h+="<th style='text-align:right'>Unit $</th><th style='text-align:right'>Total</th>";
+  h+="</tr></thead><tbody>";
   (est.items||[]).forEach(function(it){
-    h += "<tr><td>" + it.brand + "</td><td>" + it.flavor + "</td><td style='text-align:center'>" + it.qty + "</td>";
-    if(showPrice) {
-      h += "<td style='text-align:right;font-family:monospace'>$" + (it.unitPrice||0).toFixed(2) + "</td>";
-      h += "<td style='text-align:right;font-family:monospace;font-weight:700'>$" + (it.total||0).toFixed(2) + "</td>";
-    }
-    h += "</tr>";
+    h+="<tr><td>"+it.brand+"</td><td>"+it.flavor+"</td><td style='text-align:center'>"+it.qty+"</td>";
+    if(showPrice){h+="<td style='text-align:right;font-family:monospace'>$"+(it.unitPrice||0).toFixed(2)+"</td><td style='text-align:right;font-family:monospace;font-weight:700'>$"+(it.total||0).toFixed(2)+"</td>";}
+    h+="</tr>";
   });
-  h += "</tbody></table>";
-
-  if(showPrice && est.total) {
-    h += "<div class='inv-total'>Total: $" + est.total.toFixed(2) + "</div>";
-  }
-
-  h += "<div style='margin-top:20px;padding-top:10px;border-top:1px solid #ccc;font-size:10px;color:#aaa;display:flex;justify-content:space-between'>";
-  h += "<span>Items: " + (est.items||[]).reduce(function(s,it){return s+it.qty;},0) + " units (" + (est.items||[]).length + " lines)</span>";
-  h += "<span>This is an estimate, not a final bill.</span></div>";
-
-  content.innerHTML = h;
-  var area = document.getElementById("invoice-print-area");
-  if(area) area.style.display = "block";
+  h+="</tbody></table>";
+  if(showPrice&&est.total)h+="<div class='inv-total'>Total: $"+est.total.toFixed(2)+"</div>";
+  h+="<div style='margin-top:16px;padding-top:10px;border-top:1px solid #ccc;font-size:10px;color:#aaa;display:flex;justify-content:space-between'><span>"+(est.items||[]).reduce(function(s,it){return s+it.qty;},0)+" units</span><span>This is an estimate, not a final bill.</span></div>";
+  content.innerHTML=h;
+  var area=document.getElementById("invoice-print-area"); if(area)area.style.display="block";
   document.body.setAttribute("data-print-mode","invoice");
-  setTimeout(function(){
-    window.print();
-    setTimeout(function(){
-      if(area) area.style.display = "none";
-      document.body.removeAttribute("data-print-mode");
-    }, 800);
-  }, 150);
+  setTimeout(function(){window.print();setTimeout(function(){if(area)area.style.display="none";document.body.removeAttribute("data-print-mode");},800);},150);
 }
 
-function renderEstimatesList() {
-  var el = document.getElementById("est-list"); if(!el) return;
-  var badge = document.getElementById("est-count-badge");
-  if(badge) badge.textContent = estimates.length + " estimate" + (estimates.length!==1?"s":"");
-
-  el.innerHTML = "";
-
-  // Drive sync notice
-  var notice = document.createElement("div");
-  notice.style.cssText = "font-size:11px;color:var(--txt3);background:var(--sur2);border-radius:8px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;gap:6px";
-  notice.innerHTML = "<span style='color:var(--acc)'>&#9729;</span> Estimates are saved to Google Drive. Use <strong>&#11015; Refresh</strong> to load estimates from another device.";
+function renderEstimatesList(){
+  var el=document.getElementById("est-list"); if(!el)return;
+  var badge=document.getElementById("est-count-badge"); if(badge)badge.textContent=estimates.length+" estimate"+(estimates.length!==1?"s":"");
+  el.innerHTML="";
+  var notice=document.createElement("div"); notice.style.cssText="font-size:11px;color:var(--txt3);background:var(--sur2);border-radius:8px;padding:8px 12px;margin-bottom:12px";
+  notice.innerHTML="<span style='color:var(--acc)'>&#9729;</span> Saved to Drive. Use <strong>&#11015; Refresh</strong> to sync across devices.";
   el.appendChild(notice);
-
-  if(!estimates.length) {
-    var empty = document.createElement("div"); empty.className = "empty";
-    empty.innerHTML = "<div class='ei'>&#128203;</div><div class='et'>No estimates yet.<br>Go to <strong>Manual Sale</strong>, pick a customer and items, then tap <strong>Commit Sale</strong>.</div>";
-    el.appendChild(empty);
-    return;
+  if(!estimates.length){
+    var empty=document.createElement("div"); empty.className="empty";
+    empty.innerHTML="<div class='ei'>&#128203;</div><div class='et'>No estimates yet.<br>Go to <strong>Manual Sale</strong> and tap <strong>Commit Sale</strong>.</div>";
+    el.appendChild(empty); return;
   }
-
-  estimates.forEach(function(est, idx) {
-    var card = document.createElement("div");
-    card.className = "pcard"; card.style.marginBottom = "10px";
-
-    // ── Top row: number + customer + date ──
-    var topRow = document.createElement("div");
-    topRow.style.cssText = "display:flex;align-items:flex-start;justify-content:space-between;gap:8px";
-
-    var left = document.createElement("div"); left.style.flex = "1";
-    var idLine = document.createElement("div"); idLine.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:3px";
-    var idBadge = document.createElement("span");
-    idBadge.style.cssText = "font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:var(--acc);background:rgba(91,79,232,.1);padding:2px 8px;border-radius:4px";
-    idBadge.textContent = est.id;
-    var custName = document.createElement("span");
-    custName.style.cssText = "font-size:14px;font-weight:700;color:var(--txt)";
-    custName.textContent = est.custName || "Walk-in";
-    idLine.appendChild(idBadge); idLine.appendChild(custName);
-
-    var metaLine = document.createElement("div");
-    metaLine.style.cssText = "font-size:11px;color:var(--txt3)";
-    var units = (est.items||[]).reduce(function(s,it){return s+it.qty;},0);
-    metaLine.textContent = est.date + "  ·  " + (est.items||[]).length + " lines  ·  " + units + " units";
-    if(est.total) {
-      var tot = document.createElement("span");
-      tot.style.cssText = "font-family:'DM Mono',monospace;font-weight:700;color:var(--grn);margin-left:8px";
-      tot.textContent = "$" + est.total.toFixed(2);
-      metaLine.appendChild(tot);
+  estimates.forEach(function(est){
+    var card=document.createElement("div"); card.className="pcard"; card.style.marginBottom="10px";
+    var topRow=document.createElement("div"); topRow.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;gap:8px";
+    var left=document.createElement("div"); left.style.flex="1";
+    var idLine=document.createElement("div"); idLine.style.cssText="display:flex;align-items:center;gap:8px;margin-bottom:3px";
+    var idBadge=document.createElement("span"); idBadge.style.cssText="font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:var(--acc);background:rgba(91,79,232,.1);padding:2px 8px;border-radius:4px"; idBadge.textContent=est.id;
+    var cSpan=document.createElement("span"); cSpan.style.cssText="font-size:14px;font-weight:700"; cSpan.textContent=est.custName||"Walk-in";
+    idLine.appendChild(idBadge); idLine.appendChild(cSpan);
+    var meta=document.createElement("div"); meta.style.cssText="font-size:11px;color:var(--txt3)";
+    var units=(est.items||[]).reduce(function(s,it){return s+it.qty;},0);
+    meta.textContent=est.date+"  \u00b7  "+(est.items||[]).length+" lines  \u00b7  "+units+" units";
+    if(est.total){var tot=document.createElement("span");tot.style.cssText="font-family:'DM Mono',monospace;font-weight:700;color:var(--grn);margin-left:8px";tot.textContent="$"+est.total.toFixed(2);meta.appendChild(tot);}
+    left.appendChild(idLine); left.appendChild(meta);
+    var btns=document.createElement("div"); btns.style.cssText="display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end";
+    if(est.locked){var lb=document.createElement("span");lb.style.cssText="font-size:10px;font-weight:700;color:var(--txt3);background:var(--sur2);border:1px solid var(--brd);border-radius:4px;padding:2px 6px;align-self:center";lb.textContent="\uD83D\uDD12 FINAL";btns.appendChild(lb);}
+    var pBtn=document.createElement("button"); pBtn.className="btn bpri bsm"; pBtn.textContent="\uD83D\uDDA8 Print";
+    (function(e){pBtn.addEventListener("click",function(){printEstimate(e);});})(est); btns.appendChild(pBtn);
+    if(!est.locked){
+      var eBtn=document.createElement("button"); eBtn.className="btn bsec bsm"; eBtn.textContent="\u270E Edit";
+      (function(id){eBtn.addEventListener("click",function(){openEstimateEdit(id);});})(est.id); btns.appendChild(eBtn);
     }
-
-    left.appendChild(idLine); left.appendChild(metaLine);
-
-    // ── Buttons ──
-    var btns = document.createElement("div");
-    btns.style.cssText = "display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end";
-    if(est.locked) {
-      var lockBadge = document.createElement("span");
-      lockBadge.style.cssText = "font-size:10px;font-weight:700;color:var(--txt3);background:var(--sur2);border:1px solid var(--brd);border-radius:4px;padding:2px 6px;align-self:center";
-      lockBadge.textContent = "🔒 FINAL";
-      btns.appendChild(lockBadge);
-    }
-    var printBtn = document.createElement("button");
-    printBtn.className = "btn bpri bsm";
-    printBtn.textContent = "🖨 Print";
-    (function(estObj){ printBtn.addEventListener("click", function(){ printEstimate(estObj); }); })(est);
-    btns.appendChild(printBtn);
-    if(!est.locked) {
-      var editBtn = document.createElement("button");
-      editBtn.className = "btn bsec bsm";
-      editBtn.textContent = "✎ Edit";
-      (function(id){ editBtn.addEventListener("click", function(){ openEstimateEdit(id); }); })(est.id);
-      btns.appendChild(editBtn);
-    }
-    var delBtn = document.createElement("button");
-    delBtn.className = "btn bdgr bsm";
-    delBtn.textContent = "×";
-    delBtn.title = "Delete estimate";
-    (function(id){ delBtn.addEventListener("click", function(){
-      if(!confirm("Delete estimate " + id + "?")) return;
-      estimates = estimates.filter(function(e){ return e.id!==id; });
-      savePricing(); renderEstimatesList();
-      toast("Estimate deleted","warn");
-    }); })(est.id);
-    btns.appendChild(delBtn);
-    topRow.appendChild(left); topRow.appendChild(btns);
-    card.appendChild(topRow);
-
-    // ── Item lines (expandable) ──
-    var itemsDiv = document.createElement("div");
-    itemsDiv.style.cssText = "margin-top:8px;border-top:1px solid var(--brd);padding-top:8px";
-    var shown = 4;
-    var items = est.items || [];
-    items.slice(0, shown).forEach(function(it){
-      var row = document.createElement("div");
-      row.style.cssText = "display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:var(--txt2)";
-      var left2 = document.createElement("span");
-      left2.textContent = it.brand + "  –  " + it.flavor + "  ×" + it.qty;
-      row.appendChild(left2);
-      if(est.showPrice && it.unitPrice) {
-        var right = document.createElement("span");
-        right.style.cssText = "font-family:'DM Mono',monospace;font-size:11px;color:var(--txt3)";
-        right.textContent = "$" + (it.total||0).toFixed(2);
-        row.appendChild(right);
-      }
-      itemsDiv.appendChild(row);
-    });
-    if(items.length > shown) {
-      var more = document.createElement("div");
-      more.style.cssText = "font-size:11px;color:var(--txt3);padding-top:3px";
-      more.textContent = "+ " + (items.length - shown) + " more items";
-      itemsDiv.appendChild(more);
-    }
-    card.appendChild(itemsDiv);
+    var dBtn=document.createElement("button"); dBtn.className="btn bdgr bsm"; dBtn.textContent="\u00D7"; dBtn.title="Delete";
+    (function(id){dBtn.addEventListener("click",function(){if(!confirm("Delete estimate "+id+"?"))return;estimates=estimates.filter(function(e){return e.id!==id;});savePricing();renderEstimatesList();toast("Deleted","warn");});})(est.id); btns.appendChild(dBtn);
+    topRow.appendChild(left); topRow.appendChild(btns); card.appendChild(topRow);
+    var preview=document.createElement("div"); preview.style.cssText="font-size:11px;color:var(--txt3);margin-top:6px;padding-top:6px;border-top:1px solid var(--brd)";
+    var shown=(est.items||[]).slice(0,4).map(function(it){return it.brand+" \u2013 "+it.flavor+" \u00d7"+it.qty;});
+    if((est.items||[]).length>4)shown.push("+"+(est.items.length-4)+" more...");
+    preview.textContent=shown.join("  \u00b7  "); card.appendChild(preview);
     el.appendChild(card);
   });
 }
 
-
-function updateDirtyIndicator() {
-  var sb = document.getElementById("btn-save-drive");
-  if(!sb) return;
-  if(isDirty) {
-    sb.textContent = "⬆ Save •";   // bullet dot = unsaved
-    sb.style.borderColor = "var(--amb)";
-    sb.style.color = "var(--amb)";
-    sb.title = "You have unsaved changes";
-  } else {
-    sb.textContent = "⬆ Save";
-    sb.style.borderColor = "";
-    sb.style.color = "";
-    sb.title = "";
-  }
-}
-
-
-// Warn before leaving page if there are unsaved changes
-window.addEventListener("beforeunload", function(e) {
-  if(isDirty && gdConnected) {
-    var msg = "You have unsaved changes. Save to Drive before leaving?";
-    e.preventDefault();
-    e.returnValue = msg;
-    return msg;
-  }
-});
-
-(function(){
-  var bc = document.getElementById("banner-close");
-  if(bc) bc.addEventListener("click", function(){ var b=document.getElementById("drive-load-banner"); if(b)b.style.display="none"; });
-})();
-
-
-// ── ESTIMATE EDIT ──
-function openEstimateEdit(estId) {
-  var est = estimates.find(function(e){ return e.id === estId; });
-  if(!est || est.locked) return;
-
-  editingEstId = estId;
-
-  // Restore stock for items in this estimate (so user can re-add them)
-  (est.items||[]).forEach(function(it){
-    var k = it.brand + "~~" + it.flavor;
-    stock[k] = (stock[k]||0) + it.qty;
-  });
-
-  // Load items back into sellCart
-  sellCart = {};
-  (est.items||[]).forEach(function(it){
-    var k = it.brand + "~~" + it.flavor;
-    sellCart[k] = { qty: it.qty, price: it.unitPrice||"" };
-  });
-
-  // Set customer dropdown
+function openEstimateEdit(estId){
+  var est=estimates.find(function(e){return e.id===estId;}); if(!est||est.locked)return;
+  editingEstId=estId;
+  (est.items||[]).forEach(function(it){var k=it.brand+"~~"+it.flavor;stock[k]=(stock[k]||0)+it.qty;});
+  sellCart={};
+  (est.items||[]).forEach(function(it){sellCart[it.brand+"~~"+it.flavor]={qty:it.qty,price:it.unitPrice||""};});
   populateSellCustDropdown();
-  var sel = document.getElementById("sell-cust-select");
-  if(sel) sel.value = est.custId || "";
-
-  // Set show-price checkbox
-  var sp = document.getElementById("sell-show-price");
-  if(sp) sp.checked = est.showPrice !== false;
-
-  // Pre-fill estimate number and date fields
-  var numInp2 = document.getElementById("est-num-inp");
-  if(numInp2) numInp2.value = est.id || "";
-  var dateInp2 = document.getElementById("est-date-inp");
-  if(dateInp2) {
-    // Parse date back to YYYY-MM-DD for the date input
-    try {
-      var d = est.date ? new Date(est.date) : new Date();
-      if(!isNaN(d.getTime())) {
-        dateInp2.value = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
-      }
-    } catch(ex) { dateInp2.value = ""; }
-  }
-
-  // Show edit mode banner
-  var banner = document.getElementById("edit-mode-banner");
-  var title  = document.getElementById("edit-mode-title");
-  if(banner){ banner.style.display = "block"; }
-  if(title)  title.textContent = "Editing " + estId;
-
-  // Swap buttons
-  var commitBtn   = document.getElementById("btn-confirm-manual-sell");
-  var saveBtn     = document.getElementById("btn-save-edit");
-  var finaliseBtn = document.getElementById("btn-finalise-est");
-  if(commitBtn)   commitBtn.style.display   = "none";
-  if(saveBtn)     saveBtn.style.display     = "";
-  if(finaliseBtn) finaliseBtn.style.display = "";
-
-  // Switch to Manual Sale tab
-  document.querySelectorAll("#stabs .tab").forEach(function(t){ t.classList.remove("on"); });
-  var manTab = document.querySelector("#stabs [data-st='manual']");
-  if(manTab) manTab.classList.add("on");
-  document.getElementById("sell-upload-pane").style.display = "none";
-  document.getElementById("sell-estimates-pane").style.display = "none";
-  document.getElementById("sell-manual-pane").style.display = "block";
-
+  var sel=document.getElementById("sell-cust-select"); if(sel)sel.value=est.custId||"";
+  var sp=document.getElementById("sell-show-price"); if(sp)sp.checked=est.showPrice!==false;
+  var ni=document.getElementById("est-num-inp"); if(ni)ni.value=est.id||"";
+  var di=document.getElementById("est-date-inp");
+  if(di){try{var d=new Date(est.date);if(!isNaN(d.getTime()))di.value=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}catch(x){di.value="";}}
+  var banner=document.getElementById("edit-mode-banner"); if(banner)banner.style.display="block";
+  var title=document.getElementById("edit-mode-title"); if(title)title.textContent="Editing "+estId;
+  var cb=document.getElementById("btn-confirm-manual-sell"); if(cb)cb.style.display="none";
+  var sb=document.getElementById("btn-save-edit"); if(sb)sb.style.display="";
+  var fb=document.getElementById("btn-finalise-est"); if(fb)fb.style.display="";
+  document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
+  var mt=document.querySelector("#stabs [data-st='manual']"); if(mt)mt.classList.add("on");
+  document.getElementById("sell-upload-pane").style.display="none";
+  var ep=document.getElementById("sell-estimates-pane"); if(ep)ep.style.display="none";
+  document.getElementById("sell-manual-pane").style.display="block";
   renderSellBrands(); renderSellFlavors(); renderSellCart();
-  saveLocal(); updateStats();
-  toast("Editing " + estId + " — add or remove items", "ok");
+  saveLocal(); updateStats(); toast("Editing "+estId+" \u2014 add or remove items","ok");
 }
-
-function cancelEstimateEdit() {
-  if(!editingEstId) return;
-  var est = estimates.find(function(e){ return e.id === editingEstId; });
-  if(est) {
-    // Re-deduct original items back from stock
-    (est.items||[]).forEach(function(it){
-      var k = it.brand + "~~" + it.flavor;
-      stock[k] = Math.max(0, (stock[k]||0) - it.qty);
-    });
-  }
-  editingEstId = null;
-  sellCart = {};
-  exitEditMode();
-  saveLocal(); updateStats();
-  toast("Edit cancelled", "warn");
+function cancelEstimateEdit(){
+  if(!editingEstId)return;
+  var est=estimates.find(function(e){return e.id===editingEstId;});
+  if(est)(est.items||[]).forEach(function(it){var k=it.brand+"~~"+it.flavor;stock[k]=Math.max(0,(stock[k]||0)-it.qty);});
+  editingEstId=null; sellCart={}; exitEditMode(); saveLocal(); updateStats(); toast("Edit cancelled","warn");
 }
-
-function exitEditMode() {
-  editingEstId = null;
-  var _ni2 = document.getElementById("est-num-inp"); if(_ni2) _ni2.value = "";
-  var _di2 = document.getElementById("est-date-inp"); if(_di2) _di2.value = "";
-  var banner     = document.getElementById("edit-mode-banner");
-  var commitBtn  = document.getElementById("btn-confirm-manual-sell");
-  var saveBtn    = document.getElementById("btn-save-edit");
-  var finalBtn   = document.getElementById("btn-finalise-est");
-  if(banner)    banner.style.display    = "none";
-  if(commitBtn) commitBtn.style.display = "";
-  if(saveBtn)   saveBtn.style.display   = "none";
-  if(finalBtn)  finalBtn.style.display  = "none";
-  sellCart = {};
-  renderSellCart(); renderSellFlavors();
+function exitEditMode(){
+  editingEstId=null;
+  var ni=document.getElementById("est-num-inp"); if(ni)ni.value="";
+  var di=document.getElementById("est-date-inp"); if(di)di.value="";
+  var banner=document.getElementById("edit-mode-banner"); if(banner)banner.style.display="none";
+  var cb=document.getElementById("btn-confirm-manual-sell"); if(cb)cb.style.display="";
+  var sb=document.getElementById("btn-save-edit"); if(sb)sb.style.display="none";
+  var fb=document.getElementById("btn-finalise-est"); if(fb)fb.style.display="none";
+  sellCart={}; renderSellCart(); renderSellFlavors();
 }
-
-function saveEstimateEdit(lock) {
-  if(!editingEstId) return;
-  var est = estimates.find(function(e){ return e.id === editingEstId; });
-  if(!est) return;
-
-  var keys = Object.keys(sellCart);
-  if(!keys.length){ toast("Cart is empty — add items first", "err"); return; }
-
-  var custId = getSellCustId();
-  var custObj = custId ? customers.find(function(c){ return c.id===custId; }) : null;
-  var custName = custObj ? custObj.name : "Walk-in";
-  var sp = document.getElementById("sell-show-price");
-  var showPrice = sp ? sp.checked : true;
-  // Read user-entered estimate number and date
-  var editNumInp  = (document.getElementById("est-num-inp")||{}).value||"";
-  var editDateInp = (document.getElementById("est-date-inp")||{}).value||"";
-  var newEstId = editNumInp.trim() || est.id;
-  var newEstDate = editDateInp
-    ? new Date(editDateInp).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
-    : est.date;
-
-  var newItems = [];
-  var grandTotal = 0;
+function saveEstimateEdit(lock){
+  if(!editingEstId)return;
+  var est=estimates.find(function(e){return e.id===editingEstId;}); if(!est)return;
+  var keys=Object.keys(sellCart); if(!keys.length){toast("Cart is empty","err");return;}
+  var custId=getSellCustId(); var custObj=custId?customers.find(function(c){return c.id===custId;}):null;
+  var custName=custObj?custObj.name:"Walk-in";
+  var sp=document.getElementById("sell-show-price"); var showPrice=sp?sp.checked:true;
+  var ni=(document.getElementById("est-num-inp")||{}).value||"";
+  var di=(document.getElementById("est-date-inp")||{}).value||"";
+  var newId=ni.trim()||est.id;
+  var newDate=di?new Date(di).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):est.date;
+  var newItems=[],grandTotal=0; var saleDate=new Date().toLocaleString();
   keys.forEach(function(k){
-    var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
-    var entry = sellCart[k];
-    var q = entry && typeof entry==="object" ? (entry.qty||1) : (parseInt(entry,10)||1);
-    var unitPrice = entry && typeof entry==="object" ? (entry.price!==""?parseFloat(entry.price)||0:0) : 0;
-    var lineTotal = unitPrice * q;
-    grandTotal += lineTotal;
-    // Deduct from stock
-    stock[k] = Math.max(0, (stock[k]||0) - q);
-    newItems.push({ brand:br, flavor:fl, qty:q, unitPrice:unitPrice, total:lineTotal });
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    var entry=sellCart[k]; var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
+    var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
+    var lt=up*q; grandTotal+=lt; stock[k]=Math.max(0,(stock[k]||0)-q);
+    newItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt});
   });
-
-  // Update txLog entries for this estimate
-  txLog = txLog.filter(function(e){ return e.estId !== editingEstId; });
-  var saleDate = new Date().toLocaleString();
-  newItems.forEach(function(it){
-    txLog.unshift({ type:"sale", category:catOfBrand(it.brand), brand:it.brand, flavor:it.flavor,
-      qty:it.qty, custId:custId, custName:custName, unitPrice:it.unitPrice, total:it.total,
-      date:saleDate, estId:editingEstId });
-  });
-
-  // Update estimate record
-  // Update id if user changed the estimate number
-  if(newEstId !== est.id) {
-    // Update txLog entries to use new id
-    txLog.forEach(function(e){ if(e.estId === est.id) e.estId = newEstId; });
-    est.id = newEstId;
-  }
-  est.items     = newItems;
-  est.total     = grandTotal;
-  est.custId    = custId;
-  est.custName  = custName;
-  est.showPrice = showPrice;
-  est.date      = newEstDate;
-  est.locked    = lock || false;
-
-  afterChange(); savePricing();
-  exitEditMode();
-  renderEstimatesList();
-
-  // Switch back to Estimates tab
-  document.querySelectorAll("#stabs .tab").forEach(function(t){ t.classList.remove("on"); });
-  var estTab = document.querySelector("#stabs [data-st='estimates']");
-  if(estTab) estTab.classList.add("on");
-  document.getElementById("sell-manual-pane").style.display = "none";
-  document.getElementById("sell-estimates-pane").style.display = "block";
-
-  if(lock) {
-    printEstimate(est);
-    toast(editingEstId + " finalised & locked 🔒", "ok");
-  } else {
-    toast(editingEstId + " updated ✓", "ok");
-  }
-  editingEstId = null;
+  txLog=txLog.filter(function(e){return e.estId!==editingEstId;});
+  newItems.forEach(function(it){txLog.unshift({type:"sale",category:catOfBrand(it.brand),brand:it.brand,flavor:it.flavor,qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice,total:it.total,date:saleDate,estId:newId});});
+  if(newId!==est.id){txLog.forEach(function(e){if(e.estId===est.id)e.estId=newId;});est.id=newId;}
+  est.items=newItems;est.total=grandTotal;est.custId=custId;est.custName=custName;est.showPrice=showPrice;est.date=newDate;est.locked=lock||false;
+  afterChange(); savePricing(); exitEditMode(); renderEstimatesList();
+  document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
+  var et=document.querySelector("#stabs [data-st='estimates']"); if(et)et.classList.add("on");
+  document.getElementById("sell-manual-pane").style.display="none";
+  var ep=document.getElementById("sell-estimates-pane"); if(ep)ep.style.display="block";
+  if(lock){printEstimate(est);toast(est.id+" finalised \uD83D\uDD12","ok");}else toast(est.id+" updated \u2713","ok");
+  editingEstId=null;
 }
-
-
-(function(){var el=document.getElementById("btn-cancel-edit"); if(!el)return; el.addEventListener("click",cancelEstimateEdit); })();
-(function(){var el=document.getElementById("btn-save-edit");   if(!el)return; el.addEventListener("click",function(){ saveEstimateEdit(false); }); })();
-(function(){var el=document.getElementById("btn-finalise-est");if(!el)return; el.addEventListener("click",function(){
-  if(!confirm("Finalise and lock " + (editingEstId||"estimate") + "?\n\nThis cannot be undone. The estimate will be locked and printed.")) return;
-  saveEstimateEdit(true);
-}); })();
-
+(function(){var el=document.getElementById("btn-cancel-edit");if(!el)return;el.addEventListener("click",cancelEstimateEdit);})();
+(function(){var el=document.getElementById("btn-save-edit");if(!el)return;el.addEventListener("click",function(){saveEstimateEdit(false);});})();
+(function(){var el=document.getElementById("btn-finalise-est");if(!el)return;el.addEventListener("click",function(){if(!confirm("Finalise and lock "+(editingEstId||"estimate")+"?\n\nThis cannot be undone."))return;saveEstimateEdit(true);});})();
 // ── INIT ──
-loadLocal();
-loadPricing();
-loadCustomFlavors();
+loadLocal(); loadPricing(); loadCustomFlavors();
+var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
+var _bk=localStorage.getItem('vs5_backup'); if(_bk!==null) backupBeforeSave=(_bk==='1');
 renderStock();
 updateStats();
 gdFileId = localStorage.getItem("vs5_gdfileid")||"";
 if(gdUrl){
   gdConnected=true; setSyncDot("busy","connecting...");
   document.getElementById("btn-gd-disc").style.display="";
-  var _sb3=document.getElementById("btn-save-drive"); if(_sb3){ _sb3.style.display="inline-block"; updateDirtyIndicator(); }
+  var _sb3=document.getElementById("btn-save-drive"); if(_sb3)_sb3.style.display="inline-block";
   var _rb3=document.getElementById("btn-refresh-drive"); if(_rb3)_rb3.style.display="inline-block";
-  // AUTO-LOAD from Drive on startup — always load latest before user starts working
-  setSyncDot("busy","loading latest data...");
-  toast("Loading latest data from Drive…","ok");
-  gdRefresh();
+  if(autoRefreshEnabled){
+    setSyncDot("busy","loading latest data...");
+    var _startupLoad=true; gdRefresh();
+  } else {
+    setSyncDot("ok","connected \u2014 auto-load off");
+    toast("Connected. Auto-load is OFF","warn");
+  }
 } else { setSyncDot("","local"); }
 
 })();
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4958,15 +4409,7 @@ if(gdUrl){
 </div>
 </div>
 </div>
-<!-- INVOICE PRINT AREA -->
-<div id="invoice-print-area" style="display:none">
-  <div id="invoice-print-content"></div>
-</div>
 
-<!-- STOCK PRINT AREA -->
-<div id="stock-print-area" style="display:none">
-  <div id="stock-print-content"></div>
-</div>
-
+<div id="invoice-print-area" style="display:none"><div id="invoice-print-content"></div></div>
 </body>
 </html>
