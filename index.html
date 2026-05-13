@@ -804,9 +804,37 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   </div>
 
   <div class="info-box">
-    <p><strong style="color:var(--acc)">How it works:</strong> All app data is saved as one JSON file in your Google Drive. Every device reads and writes the same file — changes sync within seconds.</p>
-    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock quantities &middot; Transaction log &middot; Custom categories &middot; Custom brands &middot; Custom flavors &middot; Deleted built-in flavors</p>
-    <p style="color:var(--grn)">&#10003; The Google Apps Script code has not changed — no update needed if you already set it up.</p>
+    <p><strong style="color:var(--acc)">How sync works:</strong> All data is saved to your Google Drive as JSON files. Every device reads and writes the same files — stock, master data, estimates all sync.</p>
+
+    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock &middot; Purchase/sale log &middot; Catalog &middot; Customers &middot; Prices &middot; Distributors &middot; Estimates</p>
+
+    <div style="background:rgba(200,124,0,.1);border:1px solid var(--amb);border-radius:8px;padding:10px 12px;margin:10px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--amb);margin-bottom:6px">&#9888; GAS Update Required for Backups</div>
+      <div style="font-size:11px;color:var(--txt2);line-height:1.6">
+        The <strong>Auto-backup</strong> and <strong>Show Backups</strong> features require an updated Google Apps Script.
+        Your current GAS only handles stock and master files.<br><br>
+        <strong>To enable backups:</strong><br>
+        1. Open your GAS project at <a href="https://script.google.com" target="_blank" style="color:var(--acc)">script.google.com</a><br>
+        2. Replace all code with the updated version below<br>
+        3. Click <strong>Deploy → Manage deployments → New version</strong><br>
+        4. Copy the new URL and paste it here in the GAS URL field
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Updated GAS Code</div>
+      <div style="position:relative">
+        <button class="btn bsec bsm" id="btn-copy-gas" style="position:absolute;top:6px;right:6px;z-index:1">Copy</button>
+        <pre id="gas-code-display" style="background:var(--sur2);border:1px solid var(--brd);border-radius:8px;padding:10px 10px 10px 12px;font-size:9px;font-family:'DM Mono',monospace;overflow-x:auto;white-space:pre;color:var(--txt2);max-height:200px;overflow-y:auto;margin:0"></pre>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;font-size:11px;color:var(--txt3)">
+      <strong>Files created in Drive (inside KrazyStock_Data folder):</strong><br>
+      &bull; <code>vapestock_stock.json</code> — stock quantities + transaction log<br>
+      &bull; <code>vapestock_master.json</code> — catalog, customers, prices, distributors, estimates<br>
+      &bull; <code>backup_2026-05-12T14-30.json</code> — timestamped backup (one per save, if enabled)
+    </div>
   </div>
   <div class="scard">
     <div class="scard-t">Step 1 &mdash; One-time Setup</div>
@@ -935,6 +963,8 @@ function getFile() {
 <script>
 
 
+
+
 // openDistModal handled by listener
 
 
@@ -957,7 +987,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  try {\n    var mode = (e.parameter && e.parameter.mode) || 'write';\n    var file_param = (e.parameter && e.parameter.file) || 'stock';\n    var fileName = file_param === 'master' ? 'vapestock_master.json' : 'vapestock_stock.json';\n    \n    if (mode === 'read') {\n      var file = getNamedFile(fileName);\n      return ContentService.createTextOutput(file.getBlob().getDataAsString() || '{}')\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n    \n    // Write\n    var file = getNamedFile(fileName);\n    file.setContent(e.postData.contents);\n    return ContentService.createTextOutput(JSON.stringify({ok:true, fileId:file.getId(), file:fileName}))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ok:false, error:err.message}))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  try {\n    var file_param = (e.parameter && e.parameter.file) || 'stock';\n    var fileName = file_param === 'master' ? 'vapestock_master.json' : 'vapestock_stock.json';\n    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || '{}')\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction getNamedFile(name) {\n  var folder = DriveApp.getRootFolder();\n  var files = folder.getFilesByName(name);\n  var file = files.hasNext() ? files.next()\n    : folder.createFile(name, '{}', MimeType.PLAIN_TEXT);\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
+var GAS_CODE = "function doPost(e) {\n  try {\n    var mode      = (e.parameter && e.parameter.mode) || 'write';\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n\n    // Resolve file name\n    var fileName = getFileName(fileParam);\n\n    if (mode === 'read') {\n      // Special: list all backup files\n      if (fileParam === 'backup_list') {\n        var folder = getAppFolder();\n        var files  = folder.getFiles();\n        var list   = [];\n        while (files.hasNext()) {\n          var f = files.next();\n          if (f.getName().indexOf('backup_') === 0) {\n            list.push({ name: f.getName(), id: f.getId(), updated: f.getLastUpdated().toISOString() });\n          }\n        }\n        list.sort(function(a,b){ return b.name > a.name ? 1 : -1; });\n        return ContentService.createTextOutput(JSON.stringify({ ok:true, files:list }))\n          .setMimeType(ContentService.MimeType.JSON);\n      }\n      // Normal read\n      var file = getNamedFile(fileName);\n      return ContentService.createTextOutput(file.getBlob().getDataAsString() || '{}')\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n\n    // Write\n    var file = getNamedFile(fileName);\n    file.setContent(e.postData.contents);\n    return ContentService.createTextOutput(JSON.stringify({ ok:true, fileId:file.getId(), file:fileName }))\n      .setMimeType(ContentService.MimeType.JSON);\n\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ ok:false, error:err.message }))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  try {\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n    var fileName  = getFileName(fileParam);\n    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || '{}')\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\n// Map short file param to actual filename\nfunction getFileName(param) {\n  if (param === 'master')      return 'vapestock_master.json';\n  if (param === 'stock')       return 'vapestock_stock.json';\n  if (param.indexOf('backup_') === 0) return param + '.json';\n  return param + '.json';  // fallback: use as-is\n}\n\n// Get or create a file in the KrazyStock folder\nfunction getAppFolder() {\n  var root    = DriveApp.getRootFolder();\n  var folders = root.getFoldersByName('KrazyStock_Data');\n  return folders.hasNext() ? folders.next() : root.createFolder('KrazyStock_Data');\n}\n\nfunction getNamedFile(name) {\n  var folder = getAppFolder();\n  var files  = folder.getFilesByName(name);\n  var file   = files.hasNext() ? files.next()\n             : folder.createFile(name, '{}', MimeType.PLAIN_TEXT);\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
 
 var stock = {};
 var txLog = [];
@@ -1410,7 +1440,11 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   if(pg==="distributor") renderDistributors();
   if(pg==="analysis") renderAnalysisPage();
   if(pg==="export") renderExportPage();
-  if(pg==="sync") renderSyncToggles();
+  if(pg==="sync") {
+    renderSyncToggles();
+    var _pre=document.getElementById("gas-code-display");
+    if(_pre && !_pre.textContent) _pre.textContent = typeof GAS_CODE !== "undefined" ? GAS_CODE : "";
+  }
   updateStats();
 });
 
@@ -4348,6 +4382,31 @@ function saveEstimateEdit(lock){
 (function(){var el=document.getElementById("btn-cancel-edit");if(!el)return;el.addEventListener("click",cancelEstimateEdit);})();
 (function(){var el=document.getElementById("btn-save-edit");if(!el)return;el.addEventListener("click",function(){saveEstimateEdit(false);});})();
 (function(){var el=document.getElementById("btn-finalise-est");if(!el)return;el.addEventListener("click",function(){if(!confirm("Finalise and lock "+(editingEstId||"estimate")+"?\n\nThis cannot be undone."))return;saveEstimateEdit(true);});})();
+
+// Populate GAS code display and wire copy button
+(function(){
+  var pre = document.getElementById("gas-code-display");
+  if(pre) pre.textContent = typeof GAS_CODE !== "undefined" ? GAS_CODE : "";
+  var btn = document.getElementById("btn-copy-gas");
+  if(!btn) return;
+  btn.addEventListener("click", function(){
+    var code = typeof GAS_CODE !== "undefined" ? GAS_CODE : "";
+    if(navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied \u2713";
+        setTimeout(function(){ btn.textContent = "Copy"; }, 2000);
+      });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = code; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); document.body.removeChild(ta);
+      btn.textContent = "Copied \u2713";
+      setTimeout(function(){ btn.textContent = "Copy"; }, 2000);
+    }
+  });
+})();
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -4370,6 +4429,8 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
 
 
 
