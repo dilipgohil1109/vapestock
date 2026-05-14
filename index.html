@@ -863,6 +863,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 // openDistModal handled by listener
 
 
@@ -1042,8 +1043,10 @@ function toast(msg, t) {
 
 // ── SYNC DOT ──
 function setSyncDot(state, label) {
-  document.getElementById("sdot").className = "sdot " + (state||"");
-  document.getElementById("slbl").textContent = label || "local";
+  var sdotEl = document.getElementById("sdot");
+  var slblEl = document.getElementById("slbl");
+  if(sdotEl) sdotEl.className = "sdot " + (state||"");
+  if(slblEl) slblEl.textContent = label || "local";
   // Update connection pill in Sync tab
   var dot = document.getElementById("conn-status-dot");
   var txt = document.getElementById("conn-status-text");
@@ -1188,11 +1191,11 @@ function gdSave(onDone) {
     var stockResp = results[0], masterResp = results[1];
     var stockOk = stockResp && stockResp.ok;
     var masterOk = masterResp && masterResp.ok;
-    var err = (!stockOk && stockResp && stockResp.error) || (!masterOk && masterResp && masterResp.error);
+    var err = (!stockOk ? (stockResp && stockResp.error) : null) || (!masterOk ? (masterResp && masterResp.error) : null);
     if(err) {
       setSyncDot("err","error");
       addSyncLog("error", "Save error: " + err, true);
-      toast("GAS error: " + String(err).substring(0,40), "err");
+      toast("Save error: " + String(err).substring(0,80), "err");
     } else {
       setSyncDot("ok","saved ✓");
       var stockCount = Object.keys(stock).length;
@@ -1203,10 +1206,11 @@ function gdSave(onDone) {
     if(onDone) onDone();
   })
   .catch(function(err) {
-    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
+    if(sb) { sb.textContent = "\u2b06 Save"; sb.disabled = false; }
     setSyncDot("err","error");
-    addSyncLog("error", "Save failed: " + (err.message||err), true);
-    toast("Save failed: " + (err.message||err).substring(0,40),"err");
+    var msg = err.message || String(err);
+    addSyncLog("error", "Save failed: " + msg, true);
+    toast("Save failed: " + msg.substring(0,60), "err");
   });
 }
 
@@ -1302,7 +1306,7 @@ function gdConnect(url) {
   if(!url||url.indexOf("script.google.com")===-1){ showGdStatus("err","Invalid URL"); return; }
   gdUrl=url.trim(); gdConnected=true; saveLocal();
   setSyncDot("busy","connecting..."); showGdStatus("busy","Connecting...");
-  document.getElementById("btn-gd-disc").style.display="";
+  var _disc=document.getElementById("btn-gd-disc"); if(_disc)_disc.style.display="";
   var _sb=document.getElementById("btn-save-drive"); if(_sb)_sb.style.display="inline-block";
   var _rb=document.getElementById("btn-refresh-drive"); if(_rb)_rb.style.display="inline-block";
   clearInterval(gdPollTimer);
@@ -1318,14 +1322,14 @@ function gdConnect(url) {
 }
 function gdDisconnect() {
   gdConnected=false; gdUrl=""; clearInterval(gdPollTimer);
-  setSyncDot("","local"); document.getElementById("btn-gd-disc").style.display="none";
+  setSyncDot("","local"); var _d1=document.getElementById("btn-gd-disc"); if(_d1)_d1.style.display="none";
   var _sb2=document.getElementById("btn-save-drive"); if(_sb2)_sb2.style.display="none";
   var _rb2=document.getElementById("btn-refresh-drive"); if(_rb2)_rb2.style.display="none";
   document.getElementById("gd-url").value=""; hideGdStatus(); saveLocal();
   toast("Disconnected","warn");
 }
 function showGdStatus(type,msg){ var el=document.getElementById("gd-status"); el.textContent=msg; el.className="status-box "+type; el.style.display="block"; }
-function hideGdStatus(){ document.getElementById("gd-status").style.display="none"; }
+function hideGdStatus(){ var _gs=document.getElementById("gd-status"); if(_gs)_gs.style.display="none"; }
 
 // ── MAIN TABS ──
 document.getElementById("mtabs").addEventListener("click",function(e){
@@ -2021,7 +2025,7 @@ function renderHistory() {
 // ── SYNC PAGE ──
 function renderSyncPage(){
   if(gdUrl) document.getElementById("gd-url").value=gdUrl;
-  if(gdConnected){ document.getElementById("btn-gd-disc").style.display=""; showGdStatus("ok","Connected: "+gdUrl); }
+  if(gdConnected){ var _d2=document.getElementById("btn-gd-disc"); if(_d2)_d2.style.display=""; showGdStatus("ok","Connected: "+gdUrl); }
   renderSyncToggles();
   var _gp=document.getElementById("gas-code-display");
   if(_gp && !_gp.textContent && typeof GAS_CODE !== "undefined") _gp.textContent=GAS_CODE.replace(/\\n/g,"\n");
@@ -4390,7 +4394,7 @@ updateStats();
 gdFileId = localStorage.getItem("vs5_gdfileid")||"";
 if(gdUrl){
   gdConnected=true; setSyncDot("busy","connecting...");
-  document.getElementById("btn-gd-disc").style.display="";
+  var _d3=document.getElementById("btn-gd-disc"); if(_d3)_d3.style.display="";
   var _sb3=document.getElementById("btn-save-drive"); if(_sb3)_sb3.style.display="inline-block";
   var _rb3=document.getElementById("btn-refresh-drive"); if(_rb3)_rb3.style.display="inline-block";
   if(autoRefreshEnabled){
@@ -4403,6 +4407,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
