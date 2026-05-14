@@ -854,778 +854,9 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   </div>
 </div>
 
-
-<div class="pg" id="pg-purchase">
-  <div class="tabs" id="ptabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
-    <div class="tab on" data-pt="upload" style="border-radius:6px">Upload Text</div>
-    <div class="tab" data-pt="manual" style="border-radius:6px">Manual Pick</div>
-  </div>
-
-  <!-- UPLOAD pane -->
-  <div id="pur-upload-pane">
-    <p class="stitle">Paste Purchase Text</p>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Paste any WhatsApp order, invoice or list. Each line should have a flavor name and optional quantity (e.g. "Miami Mint x10" or "Blue Razz 5").</p>
-    <textarea class="ota" id="pur-text" placeholder="Geek Bar 15K&#10;Miami Mint x10&#10;Blue Razz Ice x5&#10;Watermelon Ice 8&#10;&#10;Crown Bar&#10;Berry Ice x12&#10;Grape Mint 6"></textarea>
-    <div class="brow" style="margin-top:10px">
-      <button class="btn bpri" id="btn-pur-parse">Parse &amp; Preview</button>
-      <button class="btn bsec bsm" id="btn-pur-clr">Clear</button>
-    </div>
-    <div id="pur-preview" style="margin-top:14px"></div>
-    <div id="pur-confirm-wrap" style="display:none;margin-top:12px">
-      <div class="dv"></div>
-      <div class="legend">
-        <div class="leg"><div class="legdot" style="background:var(--grn)"></div> Exact match</div>
-        <div class="leg"><div class="legdot" style="background:var(--amb)"></div> Suggested match</div>
-        <div class="leg"><div class="legdot" style="background:var(--acc)"></div> Manual selected</div>
-        <div class="leg"><div class="legdot" style="background:var(--red)"></div> Skipped</div>
-      </div>
-      <button class="btn bsuc" id="btn-pur-confirm">&#10003; Confirm &amp; Add to Stock</button>
-      <div id="pur-unmatched-wrap" style="display:none;margin-top:14px">
-        <div class="dv"></div>
-        <div class="stitle" style="color:var(--red)">&#9888; Unmatched Items</div>
-        <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">These items could not be matched to any flavor in the catalog. Send this list on WhatsApp to verify or check spellings.</p>
-        <textarea class="ota" id="pur-unmatched-text" readonly style="min-height:120px;border-color:rgba(255,77,109,.4)"></textarea>
-        <div class="brow" style="margin-top:8px">
-          <button class="btn wabtn bsm" id="btn-pur-wa-unmatched">&#128172; Send via WhatsApp</button>
-          <button class="btn bsec bsm" id="btn-pur-copy-unmatched">Copy</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MANUAL pane -->
-  <div id="pur-manual-pane" style="display:none">
-    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="pur-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
-    <div class="igrp">
-      <div class="ilbl">Select Flavors</div>
-      <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="psearch" placeholder="Search flavor..."></div>
-      <div class="flist" id="pflist"></div>
-    </div>
-    <div id="pcart-wrap" style="display:none">
-      <div class="stitle" style="margin-top:12px">Cart</div>
-      <div id="pcart"></div>
-      <button class="btn bsuc" id="btn-confirm-pur">Confirm Purchase</button>
-    </div>
-  </div>
-</div>
-
-<div class="pg" id="pg-sell">
-  <div class="tabs" id="stabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
-    <div class="tab on" data-st="upload" style="border-radius:6px">Upload Text</div>
-    <div class="tab" data-st="manual" style="border-radius:6px">Manual Sale</div>
-    <div class="tab" data-st="estimates" style="border-radius:6px">Estimates</div>
-  </div>
-
-  <!-- UPLOAD pane -->
-  <div id="sell-upload-pane">
-    <p class="stitle">Paste Sale / Order Text</p>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Paste any WhatsApp order or sale list. The app matches flavors, checks stock, and removes quantities after confirmation.</p>
-    <textarea class="ota" id="sell-text" placeholder="Geek Bar 15K&#10;Miami Mint x3&#10;Blue Razz Ice x2&#10;&#10;Crown Bar&#10;Berry Ice x5"></textarea>
-    <div class="brow" style="margin-top:10px">
-      <button class="btn bdgr" id="btn-sell-parse">Preview Sale</button>
-      <button class="btn bsec bsm" id="btn-sell-clr">Clear</button>
-    </div>
-    <div id="sell-preview" style="margin-top:14px"></div>
-    <div id="sell-confirm-wrap" style="display:none;margin-top:12px">
-      <div class="dv"></div>
-      <div class="legend">
-        <div class="leg"><div class="legdot" style="background:var(--grn)"></div> Can fulfill</div>
-        <div class="leg"><div class="legdot" style="background:var(--amb)"></div> Suggested match</div>
-        <div class="leg"><div class="legdot" style="background:var(--red)"></div> Insufficient stock</div>
-        <div class="leg"><div class="legdot" style="background:var(--txt3)"></div> Skipped</div>
-      </div>
-      <button class="btn bdgr" id="btn-sell-confirm">&#8722; Confirm Sale &amp; Remove from Stock</button>
-    </div>
-  </div>
-
-  <!-- MANUAL pane -->
-  <div id="sell-manual-pane" style="display:none">
-    <div class="igrp">
-      <div class="ilbl">Customer (optional)</div>
-      <select class="ifield" id="sell-cust-select" style="margin-bottom:6px"><option value="">&#8212; Walk-in &#8212;</option></select>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt3);cursor:pointer;user-select:none">
-        <input type="checkbox" id="sell-show-price" checked style="width:16px;height:16px;accent-color:var(--acc)">
-        <span>Show prices on estimate</span>
-      </label>
-    </div>
-    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="sell-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="sell-brand-scroll"></div></div>
-    <div class="igrp">
-      <div class="ilbl">Select Flavors to Sell</div>
-      <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="sell-search" placeholder="Search flavor..."></div>
-      <div class="flist" id="sell-flavor-list"></div>
-    </div>
-    <div id="sell-cart-wrap" style="display:none">
-      <div class="stitle" style="margin-top:12px">Sale Cart</div>
-      <div id="sell-cart"></div>
-      <div style="display:flex;gap:8px;margin:10px 0">
-        <div style="flex:1"><div class="ilbl">Estimate #</div><input class="ifield" id="est-num-inp" placeholder="e.g. 001" style="margin-bottom:0"></div>
-        <div style="flex:1"><div class="ilbl">Date</div><input class="ifield" id="est-date-inp" type="date" style="margin-bottom:0"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn bdgr" id="btn-confirm-manual-sell" style="width:100%">&#10003; Commit Sale &amp; Save Estimate</button>
-        <button class="btn bpri" id="btn-save-edit" style="width:100%;display:none">&#10003; Save Changes</button>
-        <button class="btn bdgr" id="btn-finalise-est" style="width:100%;display:none">&#128274; Finalise &amp; Lock</button>
-      </div>
-    </div>
-  </div>
-  <div id="edit-mode-banner" style="display:none;background:rgba(91,79,232,.1);border:1px solid var(--acc);border-radius:8px;padding:8px 12px;margin-bottom:10px">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div><div id="edit-mode-title" style="font-size:13px;font-weight:700;color:var(--acc)">Editing</div>
-        <div style="font-size:11px;color:var(--txt3)">Stock temporarily restored. Add or remove items.</div></div>
-      <button class="btn bsec bsm" id="btn-cancel-edit">Cancel</button>
-    </div>
-  </div>
-  <div id="sell-estimates-pane" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <p class="stitle" style="margin:0">Estimates</p>
-      <span id="est-count-badge" style="font-size:11px;color:var(--txt3)"></span>
-    </div>
-    <div id="est-list"></div>
-  </div>
-</div>
-
-<div class="pg" id="pg-order">
-  <div class="tabs" id="otabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
-    <div class="tab on" data-ot="verify" style="border-radius:6px">Verify Order</div>
-    <div class="tab" data-ot="generate" style="border-radius:6px">Generate List</div>
-    <div class="tab" data-ot="printstock" style="border-radius:6px">Print Stock</div>
-  </div>
-  <div id="ov-pane">
-    <p class="stitle">Paste WhatsApp Order</p>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Check if you have enough stock to fill an order.</p>
-    <textarea class="ota" id="oinput" placeholder="Geek Bar 15K&#10;- Miami Mint x3&#10;- Blue Razz Ice x2&#10;&#10;Crown Bar&#10;- Berry Ice x5"></textarea>
-    <div class="brow" style="margin-top:10px">
-      <button class="btn bpri" id="btn-verify">Check Stock</button>
-      <button class="btn bsec bsm" id="btn-clro">Clear</button>
-    </div>
-    <div id="vresult" style="margin-top:12px"></div>
-  </div>
-  <div id="og-pane" style="display:none">
-    <p class="stitle">Generate Stock List</p>
-    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="gen-cat-chips"></div><div class="ilbl">Brand Filter</div><div class="bscroll" id="gb"></div></div>
-    <div class="frow" id="gf-row">
-      <div class="fc on" data-gf="in">In Stock</div>
-      <div class="fc" data-gf="low">Low Only</div>
-      <div class="fc" data-gf="all">All Flavors</div>
-    </div>
-    <button class="btn bpri" id="btn-gen" style="margin-bottom:10px">Generate List</button>
-    <textarea class="ota" id="gout" placeholder="WhatsApp list appears here..." readonly style="min-height:220px"></textarea>
-    <div class="brow" style="margin-top:10px">
-      <button class="btn wabtn" id="btn-wa">&#128172; WhatsApp</button>
-      <button class="btn bsec bsm" id="btn-copy">Copy</button>
-    </div>
-  </div>
-
-  <!-- PRINT STOCK PANE -->
-  <div id="ops-pane" style="display:none">
-    <p class="stitle">Print Stock List</p>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:12px">Prints available flavors grouped by Category → Brand. No quantities shown.</p>
-
-    <div class="igrp">
-      <div class="ilbl">Category</div>
-      <div class="bscroll" id="ps-cat-chips"></div>
-    </div>
-
-    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
-        <input type="checkbox" id="ps-in-stock-only" checked style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
-        <span style="font-size:13px;font-weight:600">Only show flavors with stock > 0</span>
-      </label>
-    </div>
-
-    <button class="btn bpri" id="btn-ps-print" style="margin-bottom:12px">&#128438; Print Stock List</button>
-
-    <div style="padding:10px 12px;background:rgba(196,125,0,.08);border:1px solid rgba(196,125,0,.35);border-radius:var(--rs)">
-      <div style="font-size:11px;font-weight:700;color:var(--amb);margin-bottom:5px">&#9432; Remove date &amp; file path from printout</div>
-      <div style="font-size:11px;color:var(--txt2);line-height:1.7">In the print dialog: click <strong style="color:var(--txt)">More settings</strong> → uncheck <strong style="color:var(--txt)">Headers and footers</strong>. Browser remembers this setting.</div>
-    </div>
-  </div>
-</div>
-
-<div class="pg" id="pg-history">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <p class="stitle" style="margin-bottom:0">Transaction Log</p>
-    <button class="btn bdgr bsm" id="btn-clrhist">Clear All</button>
-  </div>
-
-  <!-- Filter tabs -->
-  <div class="frow" id="log-filter-row" style="margin-bottom:10px">
-    <div class="fc on" data-lf="all">All</div>
-    <div class="fc" data-lf="purchase">Buy</div>
-    <div class="fc" data-lf="sale">Sell</div>
-    <div class="fc" data-lf="adj">Adjust</div>
-    <div class="fc" data-lf="sync">Sync</div>
-  </div>
-
-  <!-- Search -->
-  <div class="swrap" style="margin-bottom:10px">
-    <span class="sico">&#128269;</span>
-    <input class="ifield" id="log-search" placeholder="Search brand or flavor...">
-  </div>
-
-  <!-- Totals summary bar -->
-  <div id="log-summary" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap"></div>
-
-  <!-- Log list -->
-  <div id="hlist"></div>
-  <div id="log-load-more" style="display:none;text-align:center;margin-top:12px">
-    <button class="btn bsec bsm" id="btn-log-more">Load more</button>
-  </div>
-</div>
-
-<div class="pg" id="pg-catalog">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <p class="stitle" style="margin-bottom:0">Master Catalog</p>
-    <div style="display:flex;gap:8px">
-      <button class="btn bsec bsm" id="btn-cat-export">&#11015; Export</button>
-      <button class="btn bsec bsm" id="btn-cat-import-open">&#11014; Import</button>
-      <button class="btn bpri bsm" id="btn-cat-add-brand">+ Brand</button>
-    </div>
-  </div>
-  <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">All brands and flavors available in Stock, Buy and Sell. Add new brands or flavors here — they appear across the whole app instantly.</p>
-
-  <!-- Import panel (hidden by default) -->
-  <div id="cat-import-panel" style="display:none;background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:14px">
-    <div style="font-size:13px;font-weight:700;margin-bottom:6px">Import Catalog</div>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Upload a CSV file with columns: <strong style="color:var(--txt)">Category, Brand, Flavor</strong>. You can <strong style="color:var(--txt)">merge</strong> (add to existing) or <strong style="color:var(--txt)">replace</strong> (wipe and reload). Download the export first to see the exact format.</p>
-    <input type="file" id="cat-import-file" accept=".csv,.txt" style="display:none">
-    <div class="brow" style="margin-bottom:10px">
-      <button class="btn bsec" id="btn-cat-pick-file">&#128193; Choose JSON File</button>
-    </div>
-    <div id="cat-import-filename" style="font-size:12px;color:var(--txt3);margin-bottom:10px;display:none"></div>
-    <div id="cat-import-preview" style="display:none;background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;font-size:12px;color:var(--txt2);line-height:1.7"></div>
-    <div class="brow" id="cat-import-actions" style="display:none">
-      <button class="btn bpri" id="btn-cat-do-merge">Merge into existing</button>
-      <button class="btn bamb" id="btn-cat-do-replace">Replace all</button>
-      <button class="btn bsec bsm" id="btn-cat-import-cancel">Cancel</button>
-    </div>
-  </div>
-
-  <!-- Category section -->
-  <div style="margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="ilbl" style="margin-bottom:0">Categories</div>
-      <button class="btn bpri bsm" id="btn-cat-add-category" style="font-size:11px">+ Category</button>
-    </div>
-    <div id="cat-category-chips"></div>
-  </div>
-
-  <!-- Brand filter chips -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-    <div class="ilbl" style="margin-bottom:0">Brands in <span id="cat-active-cat-label" style="color:var(--acc)">Vape</span></div>
-  </div>
-  <div class="bscroll" id="cat-brand-scroll"></div>
-
-  <!-- Search -->
-  <div class="swrap" style="margin-bottom:12px">
-    <span class="sico">&#128269;</span>
-    <input class="ifield" id="cat-search" placeholder="Search flavor...">
-  </div>
-
-  <!-- Flavor list for selected brand -->
-  <div id="cat-flavor-list"></div>
-
-  <!-- Add Category Modal -->
-  <div class="modal-overlay" id="add-category-modal">
-    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
-      <span class="modal-close" id="add-cat-modal-close">&#10005;</span>
-      <div class="modal-title">Add New Category</div>
-      <div class="modal-sub">Create a category to group related brands (e.g. "Vape", "Nicotine Pouches", "E-Liquid").</div>
-      <div class="igrp">
-        <div class="ilbl">Category Name</div>
-        <input class="ifield" id="add-category-input" placeholder="e.g. E-Liquid" autocomplete="off">
-      </div>
-      <div class="brow">
-        <button class="btn bpri" id="btn-add-category-confirm">+ Create Category</button>
-        <button class="btn bsec" id="btn-add-category-cancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Brand Modal -->
-  <div class="modal-overlay" id="add-brand-modal">
-    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
-      <span class="modal-close" id="add-brand-close-btn">&#10005;</span>
-      <div class="modal-title">Add New Brand</div>
-      <div class="modal-sub">Adding brand to category: <span id="add-brand-cat-label" style="color:var(--acc);font-weight:700">Vape</span>. You can add flavors after.</div>
-      <div class="igrp">
-        <div class="ilbl">Brand Name</div>
-        <input class="ifield" id="add-brand-input" placeholder="e.g. Elf Bar Pro" autocomplete="off">
-      </div>
-      <div class="brow">
-        <button class="btn bpri" id="btn-add-brand-confirm">+ Create Brand</button>
-        <button class="btn bsec" id="btn-add-brand-cancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Flavor to Brand Modal -->
-  <div class="modal-overlay" id="add-cat-flavor-modal">
-    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
-      <span class="modal-close" id="add-cat-flavor-close-btn">&#10005;</span>
-      <div class="modal-title">Add Flavor</div>
-      <div id="cat-flavor-modal-hint" style="font-size:12px;font-weight:700;color:var(--acc);margin-bottom:12px"></div>
-      <div class="igrp">
-        <div class="ilbl">Flavor Name</div>
-        <input class="ifield" id="add-cat-flavor-input" placeholder="e.g. Mango Ice" autocomplete="off">
-      </div>
-      <div class="igrp">
-        <div class="ilbl">Initial Stock (optional)</div>
-        <input class="ifield" id="add-cat-flavor-qty" type="number" min="0" value="0">
-      </div>
-      <div class="brow">
-        <button class="btn bpri" id="btn-add-cat-flavor-confirm">+ Add Flavor</button>
-        <button class="btn bsec" id="btn-add-cat-flavor-cancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="pg" id="pg-customers">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <p class="stitle" style="margin-bottom:0">Customer Master</p>
-    <button class="btn bpri bsm" id="btn-add-customer">+ Add Customer</button>
-  </div>
-  <div class="swrap" style="margin-bottom:12px">
-    <span class="sico">&#128269;</span>
-    <input class="ifield" id="cust-search" placeholder="Search customer...">
-  </div>
-  <div id="cust-list"></div>
-
-  <!-- Add / Edit Customer Modal -->
-  <div class="modal-overlay" id="cust-modal">
-    <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
-      <span class="modal-close" id="cust-modal-close">&#10005;</span>
-      <div class="modal-title" id="cust-modal-title">Add Customer</div>
-      <input type="hidden" id="cust-edit-id" value="">
-      <div class="igrp">
-        <div class="ilbl">Customer Name</div>
-        <input class="ifield" id="cust-name-inp" placeholder="e.g. Ahmed Trading">
-      </div>
-      <div class="igrp">
-        <div class="ilbl">Phone (optional)</div>
-        <input class="ifield" id="cust-phone-inp" placeholder="+1 234 567 8900" type="tel">
-      </div>
-      <div class="igrp">
-        <div class="ilbl">Address Line 1 (optional)</div>
-        <input class="ifield" id="cust-addr1-inp" placeholder="123 Main Street">
-      </div>
-      <div class="igrp">
-        <div class="ilbl">Address Line 2 (optional)</div>
-        <input class="ifield" id="cust-addr2-inp" placeholder="Suite 400, Apt 2B...">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div class="igrp" style="margin-bottom:0">
-          <div class="ilbl">City</div>
-          <input class="ifield" id="cust-city-inp" placeholder="New York">
-        </div>
-        <div class="igrp" style="margin-bottom:0">
-          <div class="ilbl">State</div>
-          <select class="ifield" id="cust-state-inp">
-            <option value="">— State —</option>
-            <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option>
-            <option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option>
-            <option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option>
-            <option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option>
-            <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option>
-            <option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option>
-            <option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option>
-            <option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option>
-            <option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
-            <option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
-            <option>DC</option>
-          </select>
-        </div>
-      </div>
-      <div class="igrp">
-        <div class="ilbl">ZIP Code</div>
-        <input class="ifield" id="cust-zip-inp" placeholder="10001" maxlength="10" inputmode="numeric">
-      </div>
-      <div class="igrp">
-        <div class="ilbl">Notes (optional)</div>
-        <input class="ifield" id="cust-notes-inp" placeholder="Payment terms, special instructions...">
-      </div>ment terms...">
-      </div>
-      <div class="brow">
-        <button class="btn bpri" id="btn-cust-save">Save Customer</button>
-        <button class="btn bsec" id="btn-cust-cancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-<div class="pg" id="pg-pricing">
-  <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <p class="stitle" style="margin-bottom:0">Price List</p>
-    <div style="display:flex;gap:8px">
-      <button class="btn bsec bsm no-print" id="btn-pricing-excel">&#11015; Excel</button>
-      <button class="btn bpri bsm no-print" id="btn-pricing-print">&#128438; Print</button>
-    </div>
-  </div>
-
-  <!-- Print filter modal -->
-  <div class="modal-overlay" id="print-filter-modal">
-    <div class="modal-sheet" style="position:relative" onclick="event.stopPropagation()">
-      <span class="modal-close" id="print-filter-close">&#10005;</span>
-      <div class="modal-title">Print Options</div>
-      <div class="modal-sub">Choose which categories to include and what to print.</div>
-      <div class="igrp">
-        <div class="ilbl">Category Filter</div>
-        <div class="bscroll" id="print-cat-chips" style="flex-wrap:wrap;height:auto;padding-bottom:0"></div>
-      </div>
-      <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
-          <input type="checkbox" id="print-only-priced" checked style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
-          <span style="font-size:13px;font-weight:600">Only show brands with customer price set</span>
-        </label>
-        <p style="font-size:11px;color:var(--txt3);margin-top:6px;margin-left:28px">Hides brands where no negotiated price has been entered for this customer</p>
-      </div>
-      <div class="brow">
-        <button class="btn bpri" id="btn-print-go">&#128438; Generate &amp; Print</button>
-        <button class="btn bsec" id="btn-print-cancel">Cancel</button>
-      </div>
-      <div style="margin-top:14px;padding:10px 12px;background:rgba(196,125,0,.08);border:1px solid rgba(196,125,0,.35);border-radius:var(--rs)">
-        <div style="font-size:11px;font-weight:700;color:var(--amb);margin-bottom:6px">&#9432; Remove date &amp; file path from printout</div>
-        <div style="font-size:11px;color:var(--txt2);line-height:1.7">
-          In the print dialog that opens:<br>
-          &bull; Click <strong style="color:var(--txt)">More settings</strong><br>
-          &bull; Uncheck <strong style="color:var(--txt)">Headers and footers</strong><br>
-          The browser remembers this setting — you only need to do it once.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Default prices note -->
-  <div class="info-box no-print" style="margin-bottom:12px">
-    <p>Set a <strong style="color:var(--acc)">Default Price</strong> per brand (applies to all customers). Then set individual <strong style="color:var(--txt)">Customer Prices</strong> — the discount/saving vs default is calculated automatically.</p>
-  </div>
-
-  <!-- Customer selector -->
-  <div class="no-print" style="margin-bottom:12px">
-    <div class="ilbl" style="margin-bottom:6px">Customer</div>
-    <div class="bscroll" id="pricing-cust-scroll"></div>
-  </div>
-
-  <!-- Print header (hidden on screen, shown when printing) -->
-  <div id="pricing-print-header" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-      <div>
-        <div style="font-size:26px;font-weight:900;letter-spacing:-0.5px;color:#000">Krazy Wholesale</div>
-        <div style="font-size:13px;color:#444;margin-top:2px;font-weight:600">Price List</div>
-      </div>
-      <div style="text-align:right;font-size:12px;color:#333;line-height:2">
-        <div>Contact: ___________________________</div>
-        <div>Rep Name: _________________________</div>
-      </div>
-    </div>
-    <div id="pricing-print-cust" style="font-size:14px;margin-bottom:2px;border-top:2px solid #000;padding-top:8px"></div>
-  </div>
-
-  <!-- Price table area -->
-  <div id="pricing-print-area">
-    <div id="pricing-table-wrap"></div>
-  </div>
-</div>
-
-<div class="pg" id="pg-distributor">
-  <p class="stitle">Distributors</p>
-  <button class="btn bpri bsm" id="btn-add-distributor" style="margin-bottom:14px;width:auto;padding:10px 20px">+ Add Distributor</button>
-  <div id="dist-list"></div>
-</div>
-
-<div class="pg" id="pg-analysis">
-  <p class="stitle">Price Analysis</p>
-  <div id="analysis-tabs-row" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px">
-    <div class="fc on" data-at="brand">By Brand</div>
-    <div class="fc" data-at="distributor">By Distributor</div>
-    <div class="fc" data-at="margin">Customer Margin</div>
-  </div>
-  <div id="analysis-content"></div>
-</div>
-
-<div class="pg" id="pg-export">
-  <p class="stitle">Export to Excel</p>
-  <div class="scard">
-    <div class="scard-t">&#128196; Download Excel Report</div>
-    <div class="scard-s">Generates a .xlsx file with 3 sheets: Summary by brand, Full inventory, and Transaction log.</div>
-    <button class="btn bsuc" id="btn-export-xl" style="font-size:15px">&#11015; Download Excel File</button>
-    <div id="xl-status" style="margin-top:9px;font-size:12px;color:var(--txt3);text-align:center;display:none">Building file...</div>
-  </div>
-  <div class="scard">
-    <div class="scard-t">&#128337; Last Exported</div>
-    <div id="xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Never exported yet</div>
-  </div>
-</div>
-
-<div class="pg" id="pg-sync">
-  <p class="stitle">Google Drive Sync</p>
-
-  <!-- Status pill -->
-  <div style="text-align:center;margin:0 0 16px">
-    <div id="conn-status-pill" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;background:var(--sur2);border:1.5px solid var(--brd);font-size:13px;font-weight:700">
-      <span id="conn-status-dot" style="width:10px;height:10px;border-radius:50%;background:#aaa;display:inline-block"></span>
-      <span id="conn-status-text">Not connected</span>
-    </div>
-  </div>
-
-  <!-- SETUP + CONNECT in one card -->
-  <div class="scard">
-    <div class="scard-t">&#9729; Setup &amp; Connect Google Drive</div>
-    <div class="scard-s">One-time setup — do steps 1–3 once. Then paste the same URL on every device to connect.</div>
-
-    <div class="step"><div class="stepn">1</div><div class="stept">Go to <a href="https://script.google.com" target="_blank" style="color:var(--acc)">script.google.com</a> &rarr; New Project &rarr; delete all existing code</div></div>
-    <div class="step"><div class="stepn">2</div><div class="stept">Paste the Apps Script code below &rarr; click <strong>Save &#128190;</strong></div></div>
-
-    <!-- GAS code box inline in step 2 -->
-    <div style="position:relative;margin:8px 0 14px 0">
-      <button class="btn bsec bsm" id="btn-copy-gas" style="position:absolute;top:6px;right:6px;z-index:1">&#128203; Copy</button>
-      <pre id="gas-code-display" style="background:var(--sur2);border:1px solid var(--brd);border-radius:8px;padding:10px 80px 10px 12px;font-size:9px;font-family:'DM Mono',monospace;white-space:pre;color:var(--txt2);max-height:180px;overflow:auto;margin:0"></pre>
-    </div>
-
-    <div class="step"><div class="stepn">3</div><div class="stept">Click <strong>Deploy</strong> &rarr; <strong>New deployment</strong> &rarr; Type: <strong>Web app</strong> &rarr; Execute as: <strong>Me</strong> &rarr; Who has access: <strong>Anyone</strong> &rarr; <strong>Deploy</strong> &rarr; Authorise &rarr; <strong>copy the Web App URL</strong></div></div>
-    <div class="step"><div class="stepn">4</div><div class="stept">Paste the Web App URL below and tap <strong>Connect</strong></div></div>
-
-    <!-- URL field immediately after step 4 -->
-    <div class="igrp" style="margin-top:6px">
-      <div class="ilbl">Web App URL</div>
-      <input class="ifield" id="gd-url" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-    <div class="brow">
-      <button class="btn bpri" id="btn-gd-connect">&#9654; Connect</button>
-      <button class="btn bdgr bsm" id="btn-gd-disc" style="display:none">Disconnect</button>
-    </div>
-    <div class="status-box" id="gd-status"></div>
-  </div>
-
-  <!-- SYNC CONTROLS -->
-  <div class="scard">
-    <div class="scard-t">&#9881; Sync Settings</div>
-
-    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--brd)">
-      <div>
-        <div style="font-size:13px;font-weight:600">Auto-load on open</div>
-        <div style="font-size:11px;color:var(--txt3)">Load latest Drive data each time app opens. Turn OFF if your local data is newer than Drive.</div>
-      </div>
-      <div id="toggle-autorefresh" style="width:44px;height:24px;border-radius:50px;background:var(--acc);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s;margin-left:12px">
-        <div id="toggle-autorefresh-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:22px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>
-      </div>
-    </label>
-
-    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--brd)">
-      <div>
-        <div style="font-size:13px;font-weight:600">Auto-backup before save</div>
-        <div style="font-size:11px;color:var(--txt3)">Creates a timestamped backup in Drive before overwriting.</div>
-      </div>
-      <div id="toggle-backup" style="width:44px;height:24px;border-radius:50px;background:var(--acc);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s;margin-left:12px">
-        <div id="toggle-backup-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:22px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>
-      </div>
-    </label>
-
-    <div style="padding-top:12px">
-      <button class="btn bpri" id="btn-force-push" style="width:100%;margin-bottom:6px">&#8679; Force Push — send this device's data to Drive</button>
-      <div style="font-size:10px;color:var(--txt3);text-align:center">Overwrites Drive. Use when your local data is the most current version.</div>
-    </div>
-  </div>
-
-  <!-- BACKUPS -->
-  <div class="scard">
-    <div class="scard-t">&#128196; Drive Backups</div>
-    <div class="scard-s">When Auto-backup is ON, a timestamped backup is saved to Drive before each save. Restore any backup below.</div>
-    <button class="btn bsec bsm" id="btn-list-backups" style="margin-bottom:8px">Show Available Backups</button>
-    <div id="backup-list" style="font-size:12px;color:var(--txt3)"></div>
-  </div>
-
-  <!-- RESET -->
-  <div class="scard">
-    <div class="scard-t" style="color:var(--red)">&#9888; Reset All Local Data</div>
-    <div class="scard-s">Clears all stock and history from this device. Drive data is NOT affected.</div>
-    <button class="btn bdgr" id="btn-reset">Reset Everything</button>
-  </div>
-</div>
-  <div style="background:var(--sur2);border-radius:10px;padding:14px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Sync Controls</div>
-    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px">
-      <div><div style="font-size:13px;font-weight:600">Auto-load on open</div>
-        <div style="font-size:11px;color:var(--txt3)">Load latest Drive data when app starts</div></div>
-      <div id="toggle-autorefresh" style="width:44px;height:24px;border-radius:50px;background:var(--acc);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
-        <div id="toggle-autorefresh-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:22px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>
-      </div>
-    </label>
-    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:14px">
-      <div><div style="font-size:13px;font-weight:600">Auto-backup before save</div>
-        <div style="font-size:11px;color:var(--txt3)">Timestamped backup written to Drive before each save</div></div>
-      <div id="toggle-backup" style="width:44px;height:24px;border-radius:50px;background:var(--acc);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
-        <div id="toggle-backup-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:22px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>
-      </div>
-    </label>
-    <button class="btn bpri" id="btn-force-push" style="width:100%;margin-bottom:8px">&#8679; Force Push to Drive <span style="font-size:10px;opacity:.7">(overwrite Drive with this device)</span></button>
-    <div style="font-size:10px;color:var(--txt3);text-align:center">Use when this device has the latest data and you want to overwrite Drive.</div>
-  </div>
-
-  <div style="background:var(--sur2);border-radius:10px;padding:14px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Backups on Drive</div>
-    <button class="btn bsec bsm" id="btn-list-backups" style="margin-bottom:8px">&#128196; Show Backups</button>
-    <div id="backup-list" style="font-size:12px;color:var(--txt3)"></div>
-  </div>
-
-  <div class="info-box">
-    <p><strong style="color:var(--acc)">How sync works:</strong> All data is saved to your Google Drive as JSON files. Every device reads and writes the same files — stock, master data, estimates all sync.</p>
-
-    <p><strong style="color:var(--txt)">What gets synced:</strong> Stock &middot; Purchase/sale log &middot; Catalog &middot; Customers &middot; Prices &middot; Distributors &middot; Estimates</p>
-
-    <div style="background:rgba(200,124,0,.1);border:1px solid var(--amb);border-radius:8px;padding:10px 12px;margin:10px 0">
-      <div style="font-size:12px;font-weight:700;color:var(--amb);margin-bottom:6px">&#9888; GAS Update Required for Backups</div>
-      <div style="font-size:11px;color:var(--txt2);line-height:1.6">
-        The <strong>Auto-backup</strong> and <strong>Show Backups</strong> features require an updated Google Apps Script.
-        Your current GAS only handles stock and master files.<br><br>
-        <strong>To enable backups:</strong><br>
-        1. Open your GAS project at <a href="https://script.google.com" target="_blank" style="color:var(--acc)">script.google.com</a><br>
-        2. Replace all code with the updated version below<br>
-        3. Click <strong>Deploy → Manage deployments → New version</strong><br>
-        4. Copy the new URL and paste it here in the GAS URL field
-      </div>
-    </div>
-
-    <div style="margin-top:10px">
-      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Updated GAS Code</div>
-      <div style="position:relative">
-        <button class="btn bsec bsm" id="btn-copy-gas" style="position:absolute;top:6px;right:6px;z-index:1">Copy</button>
-        <pre id="gas-code-display" style="background:var(--sur2);border:1px solid var(--brd);border-radius:8px;padding:10px 10px 10px 12px;font-size:9px;font-family:'DM Mono',monospace;overflow-x:auto;white-space:pre;color:var(--txt2);max-height:200px;overflow-y:auto;margin:0"></pre>
-      </div>
-    </div>
-
-    <div style="margin-top:12px;font-size:11px;color:var(--txt3)">
-      <strong>Files created in Drive (inside KrazyStock_Data folder):</strong><br>
-      &bull; <code>vapestock_stock.json</code> — stock quantities + transaction log<br>
-      &bull; <code>vapestock_master.json</code> — catalog, customers, prices, distributors, estimates<br>
-      &bull; <code>backup_2026-05-12T14-30.json</code> — timestamped backup (one per save, if enabled)
-    </div>
-  </div>
-  <div class="scard">
-    <div class="scard-t">Step 1 &mdash; One-time Setup</div>
-    <div class="scard-s">Do this once. Creates the shared file in Google Drive.</div>
-    <div class="step"><div class="stepn">1</div><div class="stept">Go to <a href="https://script.google.com" target="_blank">script.google.com</a> &rarr; New Project</div></div>
-    <div class="step"><div class="stepn">2</div><div class="stept">Delete existing code, paste the code below, then click Save</div></div>
-    <div class="step"><div class="stepn">3</div><div class="stept">Deploy &rarr; New Deployment &rarr; Web App &rarr; Execute as: Me &rarr; Anyone &rarr; Deploy</div></div>
-    <div class="step"><div class="stepn">4</div><div class="stept">Authorize &rarr; copy the Web App URL &rarr; paste below</div></div>
-    <div class="stitle" style="margin-top:10px">Apps Script Code</div>
-    <div style="background:var(--sur2);border-radius:var(--rs);padding:10px;margin-bottom:10px;overflow-x:auto">
-      <pre id="gs-code" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;word-break:break-word">function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var file = getFile();
-  file.setContent(JSON.stringify(data));
-  return ContentService.createTextOutput(JSON.stringify({ok:true}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet(e) {
-  var file = getFile();
-  var content = file.getContent();
-  return ContentService.createTextOutput(content || &#x27;{}&#x27;)
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function getFile() {
-  var folder = DriveApp.getRootFolder();
-  var files = folder.getFilesByName(&#x27;vapestock_data.json&#x27;);
-  if (files.hasNext()) return files.next();
-  return folder.createFile(&#x27;vapestock_data.json&#x27;, &#x27;{}&#x27;, MimeType.PLAIN_TEXT);
-}</pre>
-    </div>
-    <button class="btn bsec" id="btn-copy-code">Copy Script Code</button>
-  </div>
-  <div class="scard">
-    <div class="scard-t">Step 2 &mdash; Connect Both Phones</div>
-    <div class="scard-s">Paste the Web App URL on each phone.</div>
-    <div class="igrp">
-      <div class="ilbl">Web App URL</div>
-      <input class="ifield" id="gd-url" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-    <div class="brow">
-      <button class="btn bpri" id="btn-gd-connect">Connect</button>
-      <button class="btn bdgr bsm" id="btn-gd-disc" style="display:none">Disconnect</button>
-    </div>
-    <div class="status-box" id="gd-status"></div>
-  </div>
-  <div class="scard">
-    <div class="scard-t" style="color:var(--red)">Reset All Data</div>
-    <div class="scard-s">Clears all stock and history from this device.</div>
-    <button class="btn bdgr" id="btn-reset">Reset Everything</button>
-  </div>
-</div>
-
-<!-- EXPORT PAGE -->
-
-<div class="toast" id="toast"></div>
-
-
-<!-- DISTRIBUTOR MODAL -->
-<div class="modal-overlay" id="dist-modal">
-  <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
-    <span class="modal-close" id="dist-modal-close">&#10005;</span>
-    <div class="modal-title" id="dist-modal-title">Add Distributor</div>
-    <input type="hidden" id="dist-edit-id" value="">
-    <div class="igrp">
-      <div class="ilbl">Company Name *</div>
-      <input class="ifield" id="dist-name-inp" placeholder="e.g. ABC Wholesale">
-    </div>
-    <div class="igrp">
-      <div class="ilbl">Contact Person</div>
-      <input class="ifield" id="dist-contact-inp" placeholder="John Smith">
-    </div>
-    <div class="igrp">
-      <div class="ilbl">Phone</div>
-      <input class="ifield" id="dist-phone-inp" type="text" inputmode="tel" placeholder="Any format: 555-1234 or +1-800-555-0000">
-    </div>
-    <div class="igrp">
-      <div class="ilbl">Address Line 1</div>
-      <input class="ifield" id="dist-addr1-inp" placeholder="123 Main St">
-    </div>
-    <div class="igrp">
-      <div class="ilbl">Address Line 2</div>
-      <input class="ifield" id="dist-addr2-inp" placeholder="Suite 100 (optional)">
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 72px 84px;gap:8px;margin-bottom:12px">
-      <div>
-        <div class="ilbl">City</div>
-        <input class="ifield" id="dist-city-inp" placeholder="Chicago">
-      </div>
-      <div>
-        <div class="ilbl">State</div>
-        <select class="ifield" id="dist-state-inp" style="padding:10px 6px">
-          <option value=""></option>
-          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
-          <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
-          <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
-          <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
-          <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
-          <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
-          <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
-          <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
-          <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
-          <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
-          <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
-          <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
-          <option>WI</option><option>WY</option>
-        </select>
-      </div>
-      <div>
-        <div class="ilbl">ZIP</div>
-        <input class="ifield" id="dist-zip-inp" placeholder="60601">
-      </div>
-    </div>
-    <div class="igrp">
-      <div class="ilbl">Notes</div>
-      <input class="ifield" id="dist-notes-inp" placeholder="Payment terms, lead time...">
-    </div>
-    <div class="brow" style="margin-top:12px">
-      <button class="btn bpri" id="btn-dist-save">Save Distributor</button>
-      <button class="btn bsec" id="btn-dist-cancel">Cancel</button>
-    </div>
-  </div>
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
 
 
 
@@ -3137,37 +2368,102 @@ function renderSellFlavors() {
   });
 }
 
+function getSellCustPrice(custId, br) {
+  if(!custId) return null;
+  var k = custId + "~~" + br;
+  if(customerPrices[k] !== undefined) return customerPrices[k];
+  if(defaultPrices[br] !== undefined) return defaultPrices[br];
+  return null;
+}
+
 function renderSellCart() {
   var keys = Object.keys(sellCart);
   var wrap = document.getElementById("sell-cart-wrap");
-  if (wrap) wrap.style.display = keys.length ? "block" : "none";
+  if(wrap) wrap.style.display = keys.length ? "block" : "none";
   var el = document.getElementById("sell-cart");
-  if (!el) return;
+  if(!el) return;
   el.innerHTML = "";
+  var custId = getSellCustId ? getSellCustId() : "";
+  var grandTotal = 0;
   keys.forEach(function(k) {
     var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
     var avail = qty(br, fl);
+
+    // Initialise cart entry as object with price if still a plain number
+    if(typeof sellCart[k] !== "object") {
+      var sugPrice = getSellCustPrice(custId, br);
+      sellCart[k] = { qty: parseInt(sellCart[k],10)||1, price: sugPrice !== null ? sugPrice : "" };
+    }
+
+    var entry = sellCart[k];
+    var lineTotal = (parseFloat(entry.price)||0) * (entry.qty||1);
+    grandTotal += lineTotal;
+
     var item = document.createElement("div"); item.className = "citem";
-    var info = document.createElement("div"); info.className = "cinfo";
+    item.style.cssText = "flex-direction:column;align-items:stretch;gap:6px";
+
+    // Top row: name + remove
+    var topRow = document.createElement("div");
+    topRow.style.cssText = "display:flex;align-items:center;justify-content:space-between";
+    var info = document.createElement("div"); info.className = "cinfo"; info.style.flex = "1";
     var ne = document.createElement("div"); ne.className = "cin"; ne.textContent = fl;
     var be = document.createElement("div"); be.className = "cbr";
-    be.textContent = br + " \u00b7 Have: " + avail;
-    be.style.color = avail < (sellCart[k] || 1) ? "var(--red)" : "var(--txt3)";
+    be.textContent = br + " \u00b7 Stock: " + avail;
+    be.style.color = avail < entry.qty ? "var(--red)" : "var(--txt3)";
     info.appendChild(ne); info.appendChild(be);
-    var right = document.createElement("div"); right.className = "cqwrap";
-    var inp = document.createElement("input"); inp.type = "number"; inp.min = "1";
-    inp.max = String(avail || 99); inp.value = String(sellCart[k]);
-    inp.className = "cqinp";
-    inp.addEventListener("change", function() {
-      sellCart[k] = Math.max(1, parseInt(this.value, 10) || 1);
-      renderSellCart();
-    });
     var rm = document.createElement("span"); rm.className = "crm"; rm.textContent = "\u00d7";
-    rm.addEventListener("click", function() { delete sellCart[k]; renderSellFlavors(); renderSellCart(); });
-    right.appendChild(inp); right.appendChild(rm);
-    item.appendChild(info); item.appendChild(right);
+    (function(key){ rm.addEventListener("click", function(){ delete sellCart[key]; renderSellFlavors(); renderSellCart(); }); })(k);
+    topRow.appendChild(info); topRow.appendChild(rm);
+
+    // Bottom row: qty + price
+    var botRow = document.createElement("div");
+    botRow.style.cssText = "display:flex;align-items:center;gap:8px;flex-wrap:wrap";
+
+    var qLbl = document.createElement("span"); qLbl.style.cssText = "font-size:11px;color:var(--txt3)"; qLbl.textContent = "Qty:";
+    var qInp = document.createElement("input"); qInp.type = "number"; qInp.min = "1";
+    qInp.value = String(entry.qty); qInp.className = "cqinp"; qInp.style.width = "60px";
+    (function(key){ qInp.addEventListener("change", function(){
+      if(typeof sellCart[key]==="object") sellCart[key].qty = Math.max(1, parseInt(this.value,10)||1);
+      renderSellCart();
+    }); })(k);
+
+    var pLbl = document.createElement("span"); pLbl.style.cssText = "font-size:11px;color:var(--txt3)"; pLbl.textContent = "Unit $:";
+    var pInp = document.createElement("input"); pInp.type = "number"; pInp.min = "0"; pInp.step = "0.01";
+    pInp.value = entry.price !== "" ? entry.price : "";
+    pInp.placeholder = "0.00"; pInp.className = "cqinp"; pInp.style.width = "75px";
+    (function(key){ pInp.addEventListener("change", function(){
+      var v = parseFloat(this.value);
+      if(typeof sellCart[key]==="object") sellCart[key].price = isNaN(v) ? "" : v;
+      renderSellCart();
+    }); })(k);
+
+    var totSpan = document.createElement("span");
+    totSpan.style.cssText = "font-size:12px;font-weight:700;color:var(--acc);font-family:'DM Mono',monospace;margin-left:auto";
+    totSpan.textContent = lineTotal > 0 ? "$" + lineTotal.toFixed(2) : "";
+
+    botRow.appendChild(qLbl); botRow.appendChild(qInp);
+    botRow.appendChild(pLbl); botRow.appendChild(pInp);
+    botRow.appendChild(totSpan);
+
+    item.appendChild(topRow); item.appendChild(botRow);
     el.appendChild(item);
   });
+
+  // Grand total row
+  var existingTotal = el.parentNode ? el.parentNode.querySelector(".cart-grand-total") : null;
+  if(existingTotal) existingTotal.remove();
+  if(keys.length && grandTotal > 0) {
+    var totalRow = document.createElement("div");
+    totalRow.className = "cart-grand-total";
+    totalRow.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:6px;border-top:2px solid var(--brd);font-weight:700";
+    var tLbl = document.createElement("span"); tLbl.textContent = "Estimate Total";
+    var tVal = document.createElement("span");
+    tVal.style.cssText = "font-family:'DM Mono',monospace;font-size:16px;color:var(--acc)";
+    tVal.textContent = "$" + grandTotal.toFixed(2);
+    totalRow.appendChild(tLbl); totalRow.appendChild(tVal);
+    var cartWrap = document.getElementById("sell-cart-wrap");
+    if(cartWrap) cartWrap.insertBefore(totalRow, cartWrap.querySelector("#sell-action-btns"));
+  }
 }
 
 (function(){
@@ -5107,6 +4403,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
