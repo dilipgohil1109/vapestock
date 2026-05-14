@@ -306,6 +306,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
   <!-- MANUAL pane -->
   <div id="pur-manual-pane" style="display:none">
+    <div class="igrp">
+      <div class="ilbl">Distributor (optional)</div>
+      <select class="ifield" id="pur-dist-select" style="margin-bottom:0"><option value="">&#8212; No distributor &#8212;</option></select>
+    </div>
     <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="pur-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
     <div class="igrp">
       <div class="ilbl">Select Flavors</div>
@@ -856,6 +860,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
 
 
 
@@ -1702,6 +1707,7 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
 
 // ── MANUAL PURCHASE ──
 function renderPurBrands(){
+  populatePurDistDropdown();
   renderCatChips("pur-cat-chips", purCategory, function(cat) {
     purCategory = cat;
     var brs = brandsForCat(cat);
@@ -1741,31 +1747,70 @@ function renderPurFlavors(){
 }
 function renderCart(){
   var keys=Object.keys(cart);
-  document.getElementById("pcart-wrap").style.display=keys.length?"block":"none";
-  var el=document.getElementById("pcart"); el.innerHTML="";
+  var pcw=document.getElementById("pcart-wrap"); if(pcw) pcw.style.display=keys.length?"block":"none";
+  var el=document.getElementById("pcart"); if(!el) return;
+  el.innerHTML="";
+  var distId=getPurDistId();
   keys.forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    // Init cart entry as object if still a number
+    if(typeof cart[k]!=="object"){
+      var sp=getDistPrice(distId,br);
+      cart[k]={qty:parseInt(cart[k],10)||1, price:sp!==null?sp:""};
+    }
+    var entry=cart[k];
+    var lineTotal=(parseFloat(entry.price)||0)*(entry.qty||1);
     var item=document.createElement("div"); item.className="citem";
-    var info=document.createElement("div"); info.className="cinfo";
+    item.style.cssText="flex-direction:column;align-items:stretch;gap:6px";
+    // Top row
+    var topRow=document.createElement("div"); topRow.style.cssText="display:flex;align-items:center;justify-content:space-between";
+    var info=document.createElement("div"); info.className="cinfo"; info.style.flex="1";
     var ne=document.createElement("div"); ne.className="cin"; ne.textContent=fl;
     var be=document.createElement("div"); be.className="cbr"; be.textContent=br;
     info.appendChild(ne); info.appendChild(be);
-    var right=document.createElement("div"); right.className="cqwrap";
-    var inp=document.createElement("input"); inp.type="number"; inp.min="1"; inp.value=String(cart[k]); inp.className="cqinp";
-    inp.addEventListener("change",function(){cart[k]=Math.max(1,parseInt(this.value,10)||1);});
-    var rm=document.createElement("span"); rm.className="crm"; rm.textContent="×";
-    rm.addEventListener("click",function(){delete cart[k];renderPurFlavors();renderCart();});
-    right.appendChild(inp); right.appendChild(rm);
-    item.appendChild(info); item.appendChild(right); el.appendChild(item);
+    var rm=document.createElement("span"); rm.className="crm"; rm.textContent="\u00d7";
+    (function(key){rm.addEventListener("click",function(){delete cart[key];renderPurFlavors();renderCart();});})(k);
+    topRow.appendChild(info); topRow.appendChild(rm);
+    // Bottom row: qty + price
+    var botRow=document.createElement("div"); botRow.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap";
+    var qLbl=document.createElement("span"); qLbl.style.cssText="font-size:11px;color:var(--txt3)"; qLbl.textContent="Qty:";
+    var qInp=document.createElement("input"); qInp.type="number"; qInp.min="1";
+    qInp.value=String(entry.qty); qInp.className="cqinp"; qInp.style.width="60px";
+    (function(key){qInp.addEventListener("change",function(){
+      if(typeof cart[key]==="object") cart[key].qty=Math.max(1,parseInt(this.value,10)||1);
+      renderCart();
+    });})(k);
+    var pLbl=document.createElement("span"); pLbl.style.cssText="font-size:11px;color:var(--txt3)"; pLbl.textContent="Unit $:";
+    var pInp=document.createElement("input"); pInp.type="number"; pInp.min="0"; pInp.step="0.01";
+    pInp.value=entry.price!==""?entry.price:""; pInp.placeholder="0.00";
+    pInp.className="cqinp"; pInp.style.width="75px";
+    (function(key){pInp.addEventListener("change",function(){
+      var v=parseFloat(this.value);
+      if(typeof cart[key]==="object") cart[key].price=isNaN(v)?"":v;
+      renderCart();
+    });})(k);
+    var totSpan=document.createElement("span");
+    totSpan.style.cssText="font-size:12px;font-weight:700;color:var(--acc);font-family:'DM Mono',monospace;margin-left:auto";
+    totSpan.textContent=lineTotal>0?"$"+lineTotal.toFixed(2):"";
+    botRow.appendChild(qLbl); botRow.appendChild(qInp);
+    botRow.appendChild(pLbl); botRow.appendChild(pInp);
+    botRow.appendChild(totSpan);
+    item.appendChild(topRow); item.appendChild(botRow);
+    el.appendChild(item);
   });
 }
 (function(){var __el=document.getElementById("btn-confirm-pur");if(!__el)return;__el.addEventListener("click",function(){
   var keys=Object.keys(cart);
   if(!keys.length){toast("No items selected","err");return;}
   keys.forEach(function(k){
-    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~"),q=parseInt(cart[k],10)||1;
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    var entry=cart[k];
+    var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
+    var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
     stock[k]=(stock[k]||0)+q;
-    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,date:new Date().toLocaleString()});
+    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,
+      distId:getPurDistId(),distName:(function(){var d=document.getElementById("pur-dist-select");return d&&d.selectedIndex>0?d.options[d.selectedIndex].text:"";}()),
+      unitPrice:up,total:up*q,date:new Date().toLocaleString()});
   });
   afterChange(); cart={}; renderCart(); renderPurFlavors();
   toast(keys.length+" item(s) added to stock","ok");
@@ -2302,11 +2347,30 @@ function populateSellCustDropdown() {
   customers.forEach(function(c){ var o=document.createElement("option"); o.value=c.id; o.textContent=c.name; if(c.id===cur) o.selected=true; sel.appendChild(o); });
 }
 function getSellCustId(){ var s=document.getElementById("sell-cust-select"); return s?s.value:""; }
+
+function populatePurDistDropdown() {
+  var sel=document.getElementById("pur-dist-select"); if(!sel) return;
+  var cur=sel.value;
+  sel.innerHTML='<option value="">\u2014 No distributor \u2014</option>';
+  (typeof distributors!=="undefined"?distributors:[]).forEach(function(d){
+    var o=document.createElement("option"); o.value=d.id; o.textContent=d.name;
+    if(d.id===cur) o.selected=true; sel.appendChild(o);
+  });
+}
+function getPurDistId(){ var s=document.getElementById("pur-dist-select"); return s?s.value:""; }
+function getDistPrice(distId, br) {
+  if(!distId) return null;
+  var k=distId+"~~"+br;
+  if(typeof distributorPrices!=="undefined" && distributorPrices[k]!==undefined) return distributorPrices[k];
+  return null;
+}
 function setEstimateDefaults(){
   var di=document.getElementById("est-date-inp");
   if(di&&!di.value){ var t=new Date(); di.value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); }
 }
 function renderSellBrands() {
+  populateSellCustDropdown();
+  setEstimateDefaults();
   renderCatChips("sell-cat-chips", sellCategory, function(cat) {
     sellCategory = cat;
     var brs = brandsForCat(cat);
@@ -4386,6 +4450,33 @@ function saveEstimateEdit(lock){
   });
 })();
 
+
+(function(){
+  var el=document.getElementById("pur-dist-select"); if(!el) return;
+  el.addEventListener("change",function(){
+    var distId=el.value;
+    Object.keys(cart).forEach(function(k){
+      var br=k.split("~~")[0];
+      var np=getDistPrice(distId,br);
+      if(typeof cart[k]==="object") cart[k].price=np!==null?np:"";
+      else cart[k]={qty:cart[k]||1,price:np!==null?np:""};
+    });
+    renderCart();
+  });
+})();
+(function(){
+  var el=document.getElementById("sell-cust-select"); if(!el) return;
+  el.addEventListener("change",function(){
+    var custId=el.value;
+    Object.keys(sellCart).forEach(function(k){
+      var br=k.split("~~")[0];
+      var np=getSellCustPrice(custId,br);
+      if(typeof sellCart[k]==="object") sellCart[k].price=np!==null?np:"";
+      else sellCart[k]={qty:sellCart[k]||1,price:np!==null?np:""};
+    });
+    renderSellCart();
+  });
+})();
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -4408,6 +4499,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
