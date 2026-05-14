@@ -1035,6 +1035,7 @@ function loadLocal() {
 var toastTmr;
 function toast(msg, t) {
   var el = document.getElementById("toast");
+  if(!el) return;
   el.textContent = msg;
   el.className = "toast " + (t==="err"?"te":t==="warn"?"tw":"ts") + " show";
   clearTimeout(toastTmr);
@@ -4454,5 +4455,6 @@ if(gdUrl){
 </div>
 
 <div id="invoice-print-area" style="display:none"><div id="invoice-print-content"></div></div>
+<div id="toast" class="toast"></div>
 </body>
 </html>
