@@ -798,6 +798,8 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   <div class="tabs" id="acc-tabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
     <div class="tab on" data-at="balances">Balances</div>
     <div class="tab" data-at="payments">Payments</div>
+    <div class="tab" data-at="statement">Statement</div>
+    <div class="tab" data-at="summary">Summary</div>
   </div>
 
   <!-- Balances pane -->
@@ -805,6 +807,20 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div id="acc-balance-list"></div>
   </div>
 
+  <div id="acc-statement-pane" style="display:none">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <select class="ifield bsm" id="stmt-cust-sel" style="flex:1;margin-bottom:0"><option value="">&#8212; Select Customer &#8212;</option></select>
+      <button class="btn bsec bsm" id="btn-stmt-print">&#128438; Print</button>
+    </div>
+    <div id="acc-statement-content"></div>
+  </div>
+  <div id="acc-summary-pane" style="display:none">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <select class="ifield bsm" id="sum-cust-sel" style="flex:1;margin-bottom:0"><option value="">All Customers</option></select>
+      <button class="btn bsec bsm" id="btn-sum-print">&#128438; Print</button>
+    </div>
+    <div id="acc-summary-content"></div>
+  </div>
   <!-- Payments pane -->
   <div id="acc-payments-pane" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -915,6 +931,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 // openDistModal handled by listener
 
 
@@ -959,7 +976,8 @@ var lastDriveTs = 0;
 var autoRefreshEnabled = true;
 var backupBeforeSave = true;
 var estimates = [];
-var payments  = [];      // [{id,estId,custId,custName,date,amount,method,chequeNo,note,received}]
+var payments  = [];
+var currentStmtCustId = "";      // [{id,estId,custId,custName,date,amount,method,chequeNo,note,received}]
 var nextEstimateNum = 1;
 var editingEstId = null;
 var gdPollTimer = null;
@@ -4687,6 +4705,7 @@ function getCustBalance(custId) {
 }
 
 function renderAccountsPage() {
+  initPayModalListeners();
   // Wire sub-tabs
   document.querySelectorAll("#acc-tabs .tab").forEach(function(t) {
     t.addEventListener("click", function() {
@@ -4697,8 +4716,12 @@ function renderAccountsPage() {
       var pp = document.getElementById("acc-payments-pane");
       if(bp) bp.style.display = at==="balances" ? "block" : "none";
       if(pp) pp.style.display = at==="payments" ? "block" : "none";
+      var sp2=document.getElementById("acc-statement-pane"); if(sp2)sp2.style.display=at==="statement"?"block":"none";
+      var sm2=document.getElementById("acc-summary-pane"); if(sm2)sm2.style.display=at==="summary"?"block":"none";
       if(at==="balances") renderBalances();
       if(at==="payments") renderPaymentsList();
+      if(at==="statement"){populateStmtCustSel();renderCustomerStatement(currentStmtCustId);}
+      if(at==="summary"){populateSumCustSel();renderPurchaseSummary();}
     });
   });
   populatePayFilterCust();
@@ -4898,33 +4921,29 @@ function toggleChequeRow() {
 function closePayModal() { var m=document.getElementById("pay-modal"); if(m) m.classList.remove("open"); }
 
 // Pay modal listeners
-(function(){
-  var el=document.getElementById("pay-modal-close"); if(!el)return;
-  el.addEventListener("click",closePayModal);
-})();
-(function(){
-  var el=document.getElementById("pay-modal"); if(!el)return;
-  el.addEventListener("click",function(e){if(e.target===el)closePayModal();});
-})();
-(function(){
-  var el=document.getElementById("btn-pay-cancel"); if(!el)return;
-  el.addEventListener("click",closePayModal);
-})();
-(function(){
-  var el=document.getElementById("pay-method"); if(!el)return;
-  el.addEventListener("change",toggleChequeRow);
-})();
-(function(){
-  var csel=document.getElementById("pay-cust-sel"); if(!csel)return;
-  csel.addEventListener("change",function(){ populatePayEstSel(csel.value,""); });
-})();
-(function(){
-  var el=document.getElementById("btn-new-payment"); if(!el)return;
-  el.addEventListener("click",function(){ openPayModal(null,""); });
-})();
-(function(){
-  var el=document.getElementById("btn-pay-save"); if(!el)return;
-  el.addEventListener("click",function(){
+// Pay modal listeners moved to initPayModalListeners()();
+
+// Add "Record Payment" button to each estimate card in renderEstimatesList
+// (done by patching renderEstimatesList to add the button)
+
+
+function initPayModalListeners() {
+  if(window._payModalWired) return;
+  window._payModalWired = true;
+  var closeBtn=document.getElementById("pay-modal-close");
+  if(closeBtn) closeBtn.addEventListener("click",closePayModal);
+  var overlay=document.getElementById("pay-modal");
+  if(overlay) overlay.addEventListener("click",function(e){if(e.target===overlay)closePayModal();});
+  var cancelBtn=document.getElementById("btn-pay-cancel");
+  if(cancelBtn) cancelBtn.addEventListener("click",closePayModal);
+  var methodSel=document.getElementById("pay-method");
+  if(methodSel) methodSel.addEventListener("change",toggleChequeRow);
+  var custSel=document.getElementById("pay-cust-sel");
+  if(custSel) custSel.addEventListener("change",function(){populatePayEstSel(custSel.value,"");});
+  var newPayBtn=document.getElementById("btn-new-payment");
+  if(newPayBtn) newPayBtn.addEventListener("click",function(){openPayModal(null,"");});
+  var saveBtn=document.getElementById("btn-pay-save"); if(!saveBtn) return;
+  saveBtn.addEventListener("click",function(){
     var custId=(document.getElementById("pay-cust-sel")||{}).value||"";
     var amtStr=(document.getElementById("pay-amount")||{}).value||"";
     var amount=parseFloat(amtStr);
@@ -4933,7 +4952,7 @@ function closePayModal() { var m=document.getElementById("pay-modal"); if(m) m.c
     var custObj=customers.find(function(c){return c.id===custId;})||{};
     var editId=(document.getElementById("pay-edit-id")||{}).value||"";
     var pay={
-      id: editId||getPayNextId(),
+      id:editId||getPayNextId(),
       estId:(document.getElementById("pay-est-sel")||{}).value||"",
       custId:custId, custName:custObj.name||"",
       date:(document.getElementById("pay-date")||{}).value||"",
@@ -4943,22 +4962,221 @@ function closePayModal() { var m=document.getElementById("pay-modal"); if(m) m.c
       note:(document.getElementById("pay-note")||{}).value||"",
       received:(document.getElementById("pay-received")||{}).checked!==false
     };
-    if(editId) {
-      var idx=payments.findIndex(function(p){return p.id===editId;});
-      if(idx>-1) payments[idx]=pay; else payments.unshift(pay);
-    } else {
-      payments.unshift(pay);
-    }
-    savePricing();
-    closePayModal();
+    if(editId){var idx=payments.findIndex(function(p){return p.id===editId;});if(idx>-1)payments[idx]=pay;else payments.unshift(pay);}
+    else{payments.unshift(pay);}
+    savePricing(); closePayModal();
     renderPaymentsList(); renderBalances();
+    if(currentStmtCustId) renderCustomerStatement(currentStmtCustId);
     toast((editId?"Payment updated":"Payment recorded")+" \u2713","ok");
   });
-})();
+}
 
-// Add "Record Payment" button to each estimate card in renderEstimatesList
-// (done by patching renderEstimatesList to add the button)
 
+var currentStmtCustId2 = ""; // used by stmt
+
+function populateStmtCustSel(){
+  var sel=document.getElementById("stmt-cust-sel"); if(!sel)return;
+  var cur=sel.value||currentStmtCustId;
+  sel.innerHTML='<option value="">\u2014 Select Customer \u2014</option>';
+  customers.forEach(function(c){var o=document.createElement("option");o.value=c.id;o.textContent=c.name;if(c.id===cur)o.selected=true;sel.appendChild(o);});
+  sel.onchange=function(){currentStmtCustId=sel.value;renderCustomerStatement(sel.value);};
+}
+
+function renderCustomerStatement(custId){
+  var el=document.getElementById("acc-statement-content"); if(!el)return;
+  if(!custId){el.innerHTML="<div class='empty'><div class='ei'>&#128203;</div><div class='et'>Select a customer to view their account statement.</div></div>";return;}
+  var cust=customers.find(function(c){return c.id===custId;}); if(!cust)return;
+  var bal=getCustBalance(custId);
+  var custEsts=estimates.filter(function(e){return e.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var custPays=payments.filter(function(p){return p.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var ledger=[];
+  custEsts.forEach(function(e){ledger.push({type:"est",date:e.date,estId:e.id,amount:e.total||0,obj:e});});
+  custPays.forEach(function(p){ledger.push({type:"pay",date:p.date,obj:p,amount:p.amount,received:p.received});});
+  ledger.sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var h="";
+  h+="<div class='scard' style='margin-bottom:10px'>";
+  h+="<div style='font-size:16px;font-weight:800'>"+cust.name+"</div>";
+  if(cust.contact)h+="<div style='font-size:12px;color:var(--txt3)'>Contact: "+cust.contact+"</div>";
+  if(cust.phone)h+="<div style='font-size:12px;color:var(--txt3)'>"+cust.phone+"</div>";
+  h+="<div class='bal-amounts' style='margin-top:10px'>";
+  h+="<div class='bal-amt'><div class='bal-amt-lbl'>Billed</div><div class='bal-amt-val'>$"+bal.billed.toFixed(2)+"</div></div>";
+  h+="<div class='bal-amt'><div class='bal-amt-lbl'>Received</div><div class='bal-amt-val' style='color:#00a870'>$"+bal.received.toFixed(2)+"</div></div>";
+  if(bal.pending>0)h+="<div class='bal-amt'><div class='bal-amt-lbl'>Promised</div><div class='bal-amt-val' style='color:#c87c00'>$"+bal.pending.toFixed(2)+"</div></div>";
+  h+="<div class='bal-amt'><div class='bal-amt-lbl'>Balance Due</div><div class='bal-amt-val' style='color:"+(bal.balance>0?"#c0392b":"#00a870")+"'>$"+bal.balance.toFixed(2)+"</div></div>";
+  h+="</div></div>";
+  h+="<div class='scard'>";
+  h+="<div style='font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px'>Ledger</div>";
+  if(!ledger.length){h+="<div style='color:var(--txt3);font-size:12px'>No transactions yet.</div>";}
+  else {
+    var running=0;
+    h+="<table style='width:100%;border-collapse:collapse;font-size:11px'>";
+    h+="<thead><tr style='border-bottom:2px solid var(--brd)'><th style='padding:4px 3px;font-size:10px;color:var(--txt3)'>Date</th><th style='padding:4px 3px;font-size:10px;color:var(--txt3)'>Description</th><th style='text-align:right;padding:4px 3px;font-size:10px;color:var(--txt3)'>Debit</th><th style='text-align:right;padding:4px 3px;font-size:10px;color:var(--txt3)'>Credit</th><th style='text-align:right;padding:4px 3px;font-size:10px;color:var(--txt3)'>Balance</th></tr></thead><tbody>";
+    ledger.forEach(function(row,idx){
+      var bg=idx%2?"background:var(--sur2)":"";
+      h+="<tr style='"+bg+";border-bottom:1px solid var(--brd)'>";
+      if(row.type==="est"){
+        running+=row.amount;
+        h+="<td style='padding:5px 3px;font-size:10px;color:var(--txt3)'>"+row.date+"</td>";
+        h+="<td style='padding:5px 3px'><span style='font-family:monospace;font-size:10px;color:var(--acc)'>"+row.estId+"</span> Estimate</td>";
+        h+="<td style='padding:5px 3px;text-align:right;font-family:monospace;color:#c0392b'>$"+row.amount.toFixed(2)+"</td><td></td>";
+      } else {
+        var credit=row.received?row.amount:0; running-=credit;
+        var md={cash:"Cash",cheque:"Cheque",bank:"Bank Transfer",other:"Other"}[row.obj.method]||"";
+        var desc="Payment"+(md?" ("+md+")":"")+(row.obj.chequeNo?" #"+row.obj.chequeNo:"")+(!row.received?" [Pending]":"")+(row.obj.note?" \u2013 "+row.obj.note:"");
+        h+="<td style='padding:5px 3px;font-size:10px;color:var(--txt3)'>"+row.date+"</td>";
+        h+="<td style='padding:5px 3px;font-size:11px'>"+desc+"</td><td></td>";
+        h+="<td style='padding:5px 3px;text-align:right;font-family:monospace;color:#00a870'>$"+row.amount.toFixed(2)+"</td>";
+      }
+      h+="<td style='padding:5px 3px;text-align:right;font-family:monospace;font-weight:700;color:"+(running>0.01?"#c0392b":running<-0.01?"var(--txt)":"#00a870")+"'>$"+Math.abs(running).toFixed(2)+(running<-0.01?" CR":"")+"</td></tr>";
+    });
+    h+="</tbody></table>";
+    if(custPays.some(function(p){return !p.received;}))h+="<div style='font-size:10px;color:var(--txt3);margin-top:4px'>* Pending payments shown but not credited to balance.</div>";
+  }
+  h+="</div>";
+  h+="<div class='scard'>";
+  h+="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'>";
+  h+="<div style='font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px'>Payments</div>";
+  h+="<button class='btn bpri bsm' onclick='openPayModal(null,\""+custId+"\")'>+ Add</button></div>";
+  if(!custPays.length){h+="<div style='color:var(--txt3);font-size:12px;padding:8px 0'>No payments recorded.</div>";}
+  else{
+    custPays.slice().reverse().forEach(function(p){
+      h+="<div style='display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--brd)'>";
+      h+="<div style='flex:1'>";
+      h+="<span class='pay-badge "+(p.received?"pay-received":"pay-pending")+"'>"+(p.received?"Received":"Pending")+"</span>";
+      if(p.estId)h+="<span style='font-size:10px;color:var(--acc);font-family:monospace'>"+p.estId+" </span>";
+      var md2={cash:"Cash",cheque:"Cheque",bank:"Bank",other:"Other"}[p.method]||p.method||"";
+      h+="<span style='font-size:11px;color:var(--txt3)'>"+md2+(p.chequeNo?" #"+p.chequeNo:"")+" \u00b7 "+p.date+"</span>";
+      if(p.note)h+="<div style='font-size:11px;color:var(--txt3)'>"+p.note+"</div>";
+      h+="</div><div style='font-family:monospace;font-weight:800;font-size:14px;color:"+(p.received?"#00a870":"#c87c00")+";margin-left:8px'>$"+p.amount.toFixed(2)+"</div></div>";
+    });
+  }
+  h+="</div>";
+  el.innerHTML=h;
+  var pb=document.getElementById("btn-stmt-print"); if(pb)pb.onclick=function(){printCustomerStatement(custId);};
+}
+
+function printCustomerStatement(custId){
+  var cust=customers.find(function(c){return c.id===custId;}); if(!cust)return;
+  var bal=getCustBalance(custId);
+  var custEsts=estimates.filter(function(e){return e.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var custPays=payments.filter(function(p){return p.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var ledger=[];
+  custEsts.forEach(function(e){ledger.push({type:"est",date:e.date,estId:e.id,amount:e.total||0,obj:e});});
+  custPays.forEach(function(p){ledger.push({type:"pay",date:p.date,obj:p,amount:p.amount,received:p.received});});
+  ledger.sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var css="*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#f0f0f0;padding:5px 6px;text-align:left;border:1px solid #ccc;font-size:10px}td{padding:5px 6px;border:1px solid #ddd}.srow{background:#f9f9f9}.tot{font-weight:800}";
+  var h="<h1 style='font-size:20px;margin:0'>Krazy Wholesale</h1><h2 style='color:#555;margin:4px 0 4px'>Account Statement</h2><hr style='border:none;border-top:2px solid #000;margin:8px 0'>";
+  h+="<div style='display:flex;justify-content:space-between;margin-bottom:12px'><div><strong style='font-size:15px'>"+cust.name+"</strong>";
+  if(cust.contact)h+="<br><span style='font-size:11px;color:#666'>Contact: "+cust.contact+"</span>";
+  if(cust.phone)h+="<br><span style='font-size:11px;color:#666'>"+cust.phone+"</span>";
+  h+="</div><div style='text-align:right;font-size:11px;color:#666'>Printed: "+new Date().toLocaleDateString("en-US",{weekday:"short",year:"numeric",month:"short",day:"numeric"})+"</div></div>";
+  h+="<div style='display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap'>";
+  h+="<div style='flex:1;border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center'><div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888'>Total Billed</div><div style='font-size:16px;font-weight:800'>$"+bal.billed.toFixed(2)+"</div></div>";
+  h+="<div style='flex:1;border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center'><div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888'>Received</div><div style='font-size:16px;font-weight:800;color:#1a6b3a'>$"+bal.received.toFixed(2)+"</div></div>";
+  if(bal.pending>0)h+="<div style='flex:1;border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center'><div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888'>Promised</div><div style='font-size:16px;font-weight:800;color:#c87c00'>$"+bal.pending.toFixed(2)+"</div></div>";
+  h+="<div style='flex:1;border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center'><div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888'>Balance Due</div><div style='font-size:16px;font-weight:800;color:"+(bal.balance>0?"#c0392b":"#1a6b3a")+"'>$"+bal.balance.toFixed(2)+"</div></div>";
+  h+="</div>";
+  h+="<table><thead><tr><th>Date</th><th>Description</th><th style='text-align:right'>Debit</th><th style='text-align:right'>Credit</th><th style='text-align:right'>Balance</th></tr></thead><tbody>";
+  var running2=0;
+  ledger.forEach(function(row,idx){
+    var bg=idx%2?"class='srow'":"";
+    h+="<tr "+bg+">";
+    if(row.type==="est"){
+      running2+=row.amount;
+      h+="<td>"+row.date+"</td><td>"+row.estId+" Estimate ("+(row.obj.items||[]).length+" items)</td>";
+      h+="<td style='text-align:right;color:#c0392b'>$"+row.amount.toFixed(2)+"</td><td></td>";
+    }else{
+      var credit2=row.received?row.amount:0; running2-=credit2;
+      var md3={cash:"Cash",cheque:"Cheque",bank:"Bank Transfer",other:"Other"}[row.obj.method]||"";
+      var desc2="Payment"+(md3?" ("+md3+")":"")+(row.obj.chequeNo?" #"+row.obj.chequeNo:"")+(!row.received?" [PENDING]":"")+(row.obj.note?" - "+row.obj.note:"");
+      h+="<td>"+row.date+"</td><td>"+desc2+"</td><td></td>";
+      h+="<td style='text-align:right;color:#1a6b3a'>$"+row.amount.toFixed(2)+"</td>";
+    }
+    h+="<td style='text-align:right;font-weight:700;color:"+(running2>0.01?"#c0392b":running2<-0.01?"#000":"#1a6b3a")+"'>$"+Math.abs(running2).toFixed(2)+(running2<-0.01?" CR":"")+"</td></tr>";
+  });
+  h+="</tbody></table>";
+  h+="<div style='margin-top:16px;padding-top:10px;border-top:1px solid #ccc;font-size:10px;color:#888;text-align:center'>This is an account statement. Not a legal document.</div>";
+  var w=window.open("","_blank","width=800,height=600");
+  if(!w){alert("Pop-up blocked.");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Statement - "+cust.name+"</title><style>"+css+"</style></head><body>"+h+"</body></html>");
+  w.document.close(); w.focus(); setTimeout(function(){w.print();},400);
+}
+
+function populateSumCustSel(){
+  var sel=document.getElementById("sum-cust-sel"); if(!sel)return;
+  var cur=sel.value;
+  sel.innerHTML='<option value="">All Customers</option>';
+  customers.forEach(function(c){var o=document.createElement("option");o.value=c.id;o.textContent=c.name;if(c.id===cur)o.selected=true;sel.appendChild(o);});
+  sel.onchange=function(){renderPurchaseSummary();};
+  var pb=document.getElementById("btn-sum-print"); if(pb)pb.onclick=function(){printPurchaseSummary();};
+}
+
+function renderPurchaseSummary(){
+  var el=document.getElementById("acc-summary-content"); if(!el)return;
+  var filterCust=(document.getElementById("sum-cust-sel")||{}).value||"";
+  var list=estimates.filter(function(e){return !filterCust||e.custId===filterCust;}).slice().sort(function(a,b){return (b.date||"").localeCompare(a.date||"");});
+  if(!list.length){el.innerHTML="<div class='empty'><div class='ei'>&#128202;</div><div class='et'>No estimates to summarise.</div></div>";return;}
+  var totalBilled=list.reduce(function(s,e){return s+(e.total||0);},0);
+  var totalUnits=list.reduce(function(s,e){return s+(e.items||[]).reduce(function(s2,it){return s2+it.qty;},0);},0);
+  var totalReceived=list.reduce(function(s,e){return s+payments.filter(function(p){return p.estId===e.id&&p.received;}).reduce(function(s2,p){return s2+p.amount;},0);},0);
+  var h="";
+  h+="<div class='bal-amounts' style='margin-bottom:12px'>";
+  h+="<div class='bal-amt'><div class='bal-amt-lbl'>Estimates</div><div class='bal-amt-val'>"+list.length+"</div></div>";
+  h+="<div class='bal-amt'><div class='bal-amt-lbl'>Units Sold</div><div class='bal-amt-val'>"+totalUnits+"</div></div>";
+  h+="<div class='bal-amt'><div class='bal-amt-lbl'>Total Billed</div><div class='bal-amt-val'>$"+totalBilled.toFixed(2)+"</div></div>";
+  h+="<div class='bal-amt'><div class='bal-amt-lbl'>Collected</div><div class='bal-amt-val' style='color:#00a870'>$"+totalReceived.toFixed(2)+"</div></div>";
+  h+="</div>";
+  if(!filterCust){
+    var byC={};
+    list.forEach(function(e){
+      var key=e.custId||"_wi"; var name=e.custName||"Walk-in";
+      if(!byC[key]){byC[key]={name:name,count:0,billed:0,received:0,units:0};}
+      var paid=payments.filter(function(p){return p.estId===e.id&&p.received;}).reduce(function(s,p){return s+p.amount;},0);
+      byC[key].count++; byC[key].billed+=(e.total||0); byC[key].received+=paid;
+      byC[key].units+=(e.items||[]).reduce(function(s,it){return s+it.qty;},0);
+    });
+    h+="<div class='scard'><div style='font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px'>By Customer</div>";
+    h+="<table style='width:100%;border-collapse:collapse;font-size:12px'><thead><tr style='border-bottom:2px solid var(--brd)'>";
+    h+="<th style='text-align:left;padding:5px 4px;font-size:10px;color:var(--txt3)'>Customer</th><th style='text-align:center;padding:5px 4px;font-size:10px;color:var(--txt3)'>Est.</th><th style='text-align:center;padding:5px 4px;font-size:10px;color:var(--txt3)'>Units</th><th style='text-align:right;padding:5px 4px;font-size:10px;color:var(--txt3)'>Billed</th><th style='text-align:right;padding:5px 4px;font-size:10px;color:var(--txt3)'>Balance</th></tr></thead><tbody>";
+    Object.keys(byC).sort(function(a,b){return byC[b].billed-byC[a].billed;}).forEach(function(k,idx){
+      var c=byC[k]; var bal2=c.billed-c.received;
+      h+="<tr style='"+(idx%2?"background:var(--sur2)":"")+"border-bottom:1px solid var(--brd)'>";
+      h+="<td style='padding:6px 4px;font-weight:600'>"+c.name+"</td><td style='text-align:center;padding:6px 4px'>"+c.count+"</td><td style='text-align:center;padding:6px 4px'>"+c.units+"</td>";
+      h+="<td style='text-align:right;padding:6px 4px;font-family:monospace'>$"+c.billed.toFixed(2)+"</td>";
+      h+="<td style='text-align:right;padding:6px 4px;font-family:monospace;font-weight:700;color:"+(bal2>0.01?"#c0392b":"#00a870")+"'>$"+bal2.toFixed(2)+"</td></tr>";
+    });
+    h+="</tbody></table></div>";
+  }
+  h+="<div class='scard'><div style='font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px'>All Estimates</div>";
+  h+="<table style='width:100%;border-collapse:collapse;font-size:12px'><thead><tr style='border-bottom:2px solid var(--brd)'>";
+  h+="<th style='text-align:left;padding:5px 4px;font-size:10px;color:var(--txt3)'>Est #</th>";
+  if(!filterCust)h+="<th style='text-align:left;padding:5px 4px;font-size:10px;color:var(--txt3)'>Customer</th>";
+  h+="<th style='text-align:left;padding:5px 4px;font-size:10px;color:var(--txt3)'>Date</th><th style='text-align:center;padding:5px 4px;font-size:10px;color:var(--txt3)'>Units</th><th style='text-align:right;padding:5px 4px;font-size:10px;color:var(--txt3)'>Total</th><th style='text-align:right;padding:5px 4px;font-size:10px;color:var(--txt3)'>Balance</th></tr></thead><tbody>";
+  list.forEach(function(e,idx){
+    var paid2=payments.filter(function(p){return p.estId===e.id&&p.received;}).reduce(function(s,p){return s+p.amount;},0);
+    var bal3=(e.total||0)-paid2;
+    var units2=(e.items||[]).reduce(function(s,it){return s+it.qty;},0);
+    h+="<tr style='"+(idx%2?"background:var(--sur2)":"")+"border-bottom:1px solid var(--brd)'>";
+    h+="<td style='padding:5px 4px;font-family:monospace;font-size:11px;color:var(--acc)'>"+e.id+"</td>";
+    if(!filterCust)h+="<td style='padding:5px 4px;font-weight:600'>"+(e.custName||"Walk-in")+"</td>";
+    h+="<td style='padding:5px 4px;font-size:11px;color:var(--txt3)'>"+e.date+"</td><td style='text-align:center;padding:5px 4px'>"+units2+"</td>";
+    h+="<td style='text-align:right;padding:5px 4px;font-family:monospace'>$"+(e.total||0).toFixed(2)+"</td>";
+    h+="<td style='text-align:right;padding:5px 4px;font-family:monospace;font-weight:700;color:"+(bal3>0.01?"#c0392b":"#00a870")+"'>$"+bal3.toFixed(2)+"</td></tr>";
+  });
+  h+="</tbody></table></div>";
+  el.innerHTML=h;
+}
+
+function printPurchaseSummary(){
+  var el=document.getElementById("acc-summary-content"); if(!el||!el.innerHTML){toast("Generate summary first","err");return;}
+  var filterCust=(document.getElementById("sum-cust-sel")||{}).value||"";
+  var cust=filterCust?customers.find(function(c){return c.id===filterCust;}):null;
+  var css="*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}table{width:100%;border-collapse:collapse;font-size:11px;margin:10px 0}th{background:#f0f0f0;padding:5px 6px;text-align:left;border:1px solid #ccc;font-size:10px}td{padding:5px 6px;border:1px solid #ddd}";
+  var title="Purchase Summary"+(cust?" - "+cust.name:"");
+  var w=window.open("","_blank","width=800,height=600"); if(!w){alert("Pop-up blocked.");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>"+title+"</title><style>"+css+"</style></head><body><h1 style='font-size:20px;margin:0'>Krazy Wholesale</h1><h2 style='color:#555;margin:4px 0 12px'>"+title+"</h2><p style='color:#888;font-size:10px;margin-bottom:12px'>Printed: "+new Date().toLocaleDateString()+"</p>"+el.innerHTML+"</body></html>");
+  w.document.close(); w.focus(); setTimeout(function(){w.print();},400);
+}
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -4981,6 +5199,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
