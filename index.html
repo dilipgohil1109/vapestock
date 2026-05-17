@@ -412,7 +412,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   <div id="sell-estimates-pane" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <p class="stitle" style="margin:0">Estimates</p>
-      <span id="est-count-badge" style="font-size:11px;color:var(--txt3)"></span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="est-count-badge" style="font-size:11px;color:var(--txt3)"></span>
+        <button class="btn bsec bsm" id="btn-add-manual-est">+ Manual</button>
+      </div>
     </div>
     <div id="est-list"></div>
   </div>
@@ -919,6 +922,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
+
+
+
 
 
 
@@ -4347,16 +4354,17 @@ function printEstimate(est){
   var cust=est.custId?customers.find(function(c){return c.id===est.custId;}):null;
   var showPrice=est.showPrice!==false;
   var items=est.items||[];
+  var isManual=est.manual===true;
   var h="";
 
-  // ── Header ──
+  // Header
   h+="<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #000'>";
   h+="<div><div style='font-size:26px;font-weight:900'>Krazy Wholesale</div>";
-  h+="<div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px'>Estimate</div></div>";
+  h+="<div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px'>"+(isManual?"Manual Estimate":"Estimate")+"</div></div>";
   h+="<div style='text-align:right'><div style='font-size:18px;font-weight:800'>"+(est.id||"")+"</div>";
   h+="<div style='font-size:12px;color:#666'>"+(est.date||"")+"</div></div></div>";
 
-  // ── Customer ──
+  // Customer
   if(cust){
     h+="<div style='margin-bottom:14px;padding:10px 14px;background:#f8f8f8;border-radius:6px;border:1px solid #e0e0e0'>";
     h+="<div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px'>Prepared for</div>";
@@ -4368,103 +4376,76 @@ function printEstimate(est){
     h+="<div style='margin-bottom:14px;padding:8px 14px;background:#f8f8f8;border-radius:6px;font-size:13px'><strong>"+(est.custName||"Walk-in")+"</strong></div>";
   }
 
-  // ── Group items by Category → Brand ──
-  // Build structure: { catName: { brandName: [items] } }
-  var catOrder=[], catMap={};
-  items.forEach(function(it){
-    var cat=it.category||"Other";
-    var br=it.brand||"";
-    if(!catMap[cat]){ catMap[cat]={}; catOrder.push(cat); }
-    if(!catMap[cat][br]) catMap[cat][br]=[];
-    catMap[cat][br].push(it);
-  });
-
-  var grandTotal=0, grandQty=0, sectionNum=0;
-
-  catOrder.forEach(function(cat){
-    sectionNum++;
-    var catTotal=0, catQty=0;
-    var brands=Object.keys(catMap[cat]);
-
-    // Category header
-    h+="<div style='margin-top:14px;margin-bottom:4px;font-size:13px;font-weight:800;color:#222;border-bottom:2px solid #222;padding-bottom:3px'>";
-    h+=sectionNum+". "+cat+"</div>";
-
-    // Table for this category
-    h+="<table class='inv-table' style='margin:0 0 4px 0'><thead><tr>";
-    h+="<th style='width:35%'>Brand &amp; Flavor</th>";
-    h+="<th style='text-align:center;width:10%'>Qty</th>";
-    if(showPrice){
-      h+="<th style='text-align:right;width:15%'>Unit $</th>";
-      h+="<th style='text-align:right;width:15%'>Total</th>";
+  if(isManual) {
+    // Manual estimate — show free-text description
+    h+="<div style='margin:12px 0;padding:14px;background:#f8f8f8;border:1px solid #ddd;border-radius:6px'>";
+    h+="<div style='font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:8px'>Items / Description</div>";
+    var descLines=(est.description||"No description provided.").split("\n");
+    descLines.forEach(function(line){ if(line.trim())h+="<div style='font-size:13px;color:#222;padding:3px 0;border-bottom:1px dotted #ddd'>"+line+"</div>"; });
+    h+="</div>";
+    if(est.note)h+="<div style='font-size:11px;color:#666;margin-bottom:8px'>Note: "+est.note+"</div>";
+    if(showPrice&&est.total){
+      h+="<div style='margin-top:14px;padding:10px 14px;background:#222;color:#fff;border-radius:6px;display:flex;justify-content:space-between;align-items:center'>";
+      h+="<span style='font-size:13px;font-weight:700'>Total Amount</span>";
+      h+="<span style='font-size:18px;font-weight:900;font-family:monospace'>$"+est.total.toFixed(2)+"</span></div>";
     }
-    h+="</tr></thead><tbody>";
-
-    brands.forEach(function(br){
-      var brandItems=catMap[cat][br];
-      var brandTotal=0, brandQty=0;
-
-      brandItems.forEach(function(it){
-        var lineTotal=it.total||(it.unitPrice||0)*(it.qty||0);
-        brandTotal+=lineTotal; brandQty+=it.qty||0;
-        catTotal+=lineTotal; catQty+=it.qty||0;
-        grandTotal+=lineTotal; grandQty+=it.qty||0;
-        h+="<tr>";
-        h+="<td style='padding-left:16px;color:#444;font-size:11px'>"+it.flavor+"</td>";
-        h+="<td style='text-align:center'>"+it.qty+"</td>";
-        if(showPrice){
-          h+="<td style='text-align:right;font-family:monospace'>$"+(it.unitPrice||0).toFixed(2)+"</td>";
-          h+="<td style='text-align:right;font-family:monospace'>$"+lineTotal.toFixed(2)+"</td>";
-        }
+  } else {
+    // Regular estimate — grouped by category
+    var catOrder=[], catMap={};
+    items.forEach(function(it){
+      var cat=it.category||"Other"; var br=it.brand||"";
+      if(!catMap[cat]){catMap[cat]={};catOrder.push(cat);}
+      if(!catMap[cat][br])catMap[cat][br]=[];
+      catMap[cat][br].push(it);
+    });
+    var grandTotal=0,grandQty=0,sectionNum=0;
+    catOrder.forEach(function(cat){
+      sectionNum++;
+      var catTotal=0,catQty=0;
+      var brands=Object.keys(catMap[cat]);
+      h+="<div style='margin-top:14px;margin-bottom:4px;font-size:13px;font-weight:800;color:#222;border-bottom:2px solid #222;padding-bottom:3px'>"+sectionNum+". "+cat+"</div>";
+      h+="<table class='inv-table' style='margin:0 0 4px 0'><thead><tr>";
+      h+="<th style='width:35%'>Brand &amp; Flavor</th><th style='text-align:center;width:10%'>Qty</th>";
+      if(showPrice)h+="<th style='text-align:right;width:15%'>Unit $</th><th style='text-align:right;width:15%'>Total</th>";
+      h+="</tr></thead><tbody>";
+      brands.forEach(function(br){
+        var brandItems=catMap[cat][br];
+        var brandTotal=0,brandQty=0;
+        brandItems.forEach(function(it){
+          var lineTotal=it.total||(it.unitPrice||0)*(it.qty||0);
+          brandTotal+=lineTotal; brandQty+=it.qty||0;
+          catTotal+=lineTotal; catQty+=it.qty||0;
+          grandTotal+=lineTotal; grandQty+=it.qty||0;
+          h+="<tr><td style='padding-left:16px;color:#444;font-size:11px'>"+it.flavor+"</td><td style='text-align:center'>"+it.qty+"</td>";
+          if(showPrice)h+="<td style='text-align:right;font-family:monospace'>$"+(it.unitPrice||0).toFixed(2)+"</td><td style='text-align:right;font-family:monospace'>$"+lineTotal.toFixed(2)+"</td>";
+          h+="</tr>";
+        });
+        h+="<tr style='background:#f5f5f5;font-weight:700;font-size:12px'><td>"+br+"</td><td style='text-align:center'>"+brandQty+"</td>";
+        if(showPrice)h+="<td></td><td style='text-align:right;font-family:monospace;color:#333'>$"+brandTotal.toFixed(2)+"</td>";
         h+="</tr>";
       });
-
-      // Brand subtotal row
-      h+="<tr style='background:#f5f5f5;font-weight:700;font-size:12px'>";
-      h+="<td>"+br+"</td>";
-      h+="<td style='text-align:center'>"+brandQty+"</td>";
-      if(showPrice){
-        h+="<td></td>";
-        h+="<td style='text-align:right;font-family:monospace;color:#333'>$"+brandTotal.toFixed(2)+"</td>";
-      }
-      h+="</tr>";
+      h+="</tbody></table>";
+      if(showPrice){h+="<div style='text-align:right;font-size:12px;font-weight:700;color:#555;padding:3px 6px;background:#efefef;border-radius:4px;margin-bottom:2px'>"+cat+" subtotal: "+catQty+" units &nbsp; $"+catTotal.toFixed(2)+"</div>";}
+      else{h+="<div style='text-align:right;font-size:11px;color:#777;padding:2px 6px'>"+cat+" subtotal: "+catQty+" units</div>";}
     });
+    h+="<div style='margin-top:14px;padding:10px 14px;background:#222;color:#fff;border-radius:6px;display:flex;justify-content:space-between;align-items:center'>";
+    h+="<span style='font-size:13px;font-weight:700'>Grand Total &mdash; "+grandQty+" units</span>";
+    if(showPrice)h+="<span style='font-size:18px;font-weight:900;font-family:monospace'>$"+grandTotal.toFixed(2)+"</span>";
+    h+="</div>";
+  }
 
-    h+="</tbody></table>";
-
-    // Category subtotal
-    if(showPrice){
-      h+="<div style='text-align:right;font-size:12px;font-weight:700;color:#555;padding:3px 6px;background:#efefef;border-radius:4px;margin-bottom:2px'>";
-      h+=cat+" subtotal: "+catQty+" units";
-      h+=" &nbsp; $"+catTotal.toFixed(2)+"</div>";
-    } else {
-      h+="<div style='text-align:right;font-size:11px;color:#777;padding:2px 6px'>";
-      h+=cat+" subtotal: "+catQty+" units</div>";
-    }
-  });
-
-  // ── Grand Total ──
-  h+="<div style='margin-top:14px;padding:10px 14px;background:#222;color:#fff;border-radius:6px;display:flex;justify-content:space-between;align-items:center'>";
-  h+="<span style='font-size:13px;font-weight:700'>Grand Total &mdash; "+grandQty+" units</span>";
-  if(showPrice) h+="<span style='font-size:18px;font-weight:900;font-family:monospace'>$"+grandTotal.toFixed(2)+"</span>";
-  h+="</div>";
-
-  // ── Footer ──
   h+="<div style='margin-top:12px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#aaa;display:flex;justify-content:space-between'>";
-  h+="<span>"+items.length+" lines &middot; "+grandQty+" total units</span>";
+  h+="<span>"+(isManual?"Manual estimate":""+items.length+" lines &middot; "+(items.reduce(function(s,it){return s+it.qty;},0))+" total units")+"</span>";
   h+="<span>This is an estimate, not a final bill.</span></div>";
 
+  var printCSS="*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}.inv-table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px}.inv-table th{background:#f0f0f0;padding:5px 7px;text-align:left;border:1px solid #ccc;font-size:10px;font-weight:700}.inv-table td{padding:5px 7px;border:1px solid #ddd;vertical-align:top}.inv-table tr{page-break-inside:avoid}.inv-total{text-align:right;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}";
+  var w=window.open("","_blank","width=800,height=600");
+  if(!w){alert("Pop-up blocked. Please allow pop-ups for this page and try again.");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Estimate "+(est.id||"")+"</title><style>"+printCSS+"</style></head><body>"+h+"</body></html>");
+  w.document.close(); w.focus(); setTimeout(function(){w.print();},400);
+
   // Open in new window for clean multi-page printing
-  var printCSS = `
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}
-    @page{margin:15mm 12mm;size:A4}
-    .inv-table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px}
-    .inv-table th{background:#f0f0f0;padding:5px 7px;text-align:left;border:1px solid #ccc;font-size:10px;font-weight:700}
-    .inv-table td{padding:5px 7px;border:1px solid #ddd;vertical-align:top}
-    .inv-table tr{page-break-inside:avoid}
-    .inv-total{text-align:right;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}
-  `;
+  var printCSS = "*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}.inv-table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px}.inv-table th{background:#f0f0f0;padding:5px 7px;text-align:left;border:1px solid #ccc;font-size:10px;font-weight:700}.inv-table td{padding:5px 7px;border:1px solid #ddd;vertical-align:top}.inv-table tr{page-break-inside:avoid}.inv-total{text-align:right;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}";
   var w = window.open("","_blank","width=800,height=600");
   if(!w){ alert("Pop-up blocked. Please allow pop-ups for this page and try again."); return; }
   w.document.write(
@@ -4499,7 +4480,11 @@ function renderEstimatesList(){
     idLine.appendChild(idBadge); idLine.appendChild(cSpan);
     var meta=document.createElement("div"); meta.style.cssText="font-size:11px;color:var(--txt3)";
     var units=(est.items||[]).reduce(function(s,it){return s+it.qty;},0);
-    meta.textContent=est.date+"  \u00b7  "+(est.items||[]).length+" lines  \u00b7  "+units+" units";
+    if(est.manual) {
+      meta.textContent=est.date+"  \u00b7  Manual  \u00b7  No stock adjustment";
+    } else {
+      meta.textContent=est.date+"  \u00b7  "+(est.items||[]).length+" lines  \u00b7  "+units+" units";
+    }
     if(est.total){var tot=document.createElement("span");tot.style.cssText="font-family:'DM Mono',monospace;font-weight:700;color:var(--grn);margin-left:8px";tot.textContent="$"+est.total.toFixed(2);meta.appendChild(tot);}
     left.appendChild(idLine); left.appendChild(meta);
     var btns=document.createElement("div"); btns.style.cssText="display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end";
@@ -4520,9 +4505,13 @@ function renderEstimatesList(){
     }
     topRow.appendChild(left); topRow.appendChild(btns); card.appendChild(topRow);
     var preview=document.createElement("div"); preview.style.cssText="font-size:11px;color:var(--txt3);margin-top:6px;padding-top:6px;border-top:1px solid var(--brd)";
-    var shown=(est.items||[]).slice(0,4).map(function(it){return it.brand+" \u2013 "+it.flavor+" \u00d7"+it.qty;});
-    if((est.items||[]).length>4)shown.push("+"+(est.items.length-4)+" more...");
-    preview.textContent=shown.join("  \u00b7  ");
+    if(est.manual && est.description) {
+      preview.textContent = est.description.split("\n").slice(0,3).join("  \u00b7  ");
+    } else {
+      var shown=(est.items||[]).slice(0,4).map(function(it){return it.brand+" \u2013 "+it.flavor+" \u00d7"+it.qty;});
+      if((est.items||[]).length>4)shown.push("+"+(est.items.length-4)+" more...");
+      preview.textContent=shown.join("  \u00b7  ");
+    }
     // Show balance due for this estimate
     if(est.custId && est.total) {
       var estPaid=payments.filter(function(p){return p.estId===est.id&&p.received;}).reduce(function(s,p){return s+p.amount;},0);
@@ -5177,6 +5166,94 @@ function printPurchaseSummary(){
   w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>"+title+"</title><style>"+css+"</style></head><body><h1 style='font-size:20px;margin:0'>Krazy Wholesale</h1><h2 style='color:#555;margin:4px 0 12px'>"+title+"</h2><p style='color:#888;font-size:10px;margin-bottom:12px'>Printed: "+new Date().toLocaleDateString()+"</p>"+el.innerHTML+"</body></html>");
   w.document.close(); w.focus(); setTimeout(function(){w.print();},400);
 }
+
+// ── MANUAL ESTIMATE ──
+function openManualEstModal() {
+  // Populate customer dropdown
+  var csel = document.getElementById("me-cust"); if(!csel) return;
+  csel.innerHTML = '<option value="">\u2014 Walk-in / No customer \u2014</option>';
+  customers.forEach(function(c){
+    var o=document.createElement("option"); o.value=c.id; o.textContent=c.name; csel.appendChild(o);
+  });
+  // Set default date to today
+  var di = document.getElementById("me-date");
+  if(di) { var t=new Date(); di.value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); }
+  // Clear fields
+  var fields = ["me-num","me-total","me-desc","me-note"];
+  fields.forEach(function(id){ var el=document.getElementById(id); if(el)el.value=""; });
+  var m=document.getElementById("manual-est-modal"); if(m)m.classList.add("open");
+}
+
+function closeManualEstModal() {
+  var m=document.getElementById("manual-est-modal"); if(m)m.classList.remove("open");
+}
+
+(function(){
+  // Wire manual estimate modal listeners on first call (DOM ready guard)
+  if(window._meWired) return;
+  window._meWired = true;
+  function wireMe() {
+    var closeBtn=document.getElementById("manual-est-close");
+    if(closeBtn) closeBtn.addEventListener("click",closeManualEstModal);
+    var overlay=document.getElementById("manual-est-modal");
+    if(overlay) overlay.addEventListener("click",function(e){if(e.target===overlay)closeManualEstModal();});
+    var cancelBtn=document.getElementById("btn-me-cancel");
+    if(cancelBtn) cancelBtn.addEventListener("click",closeManualEstModal);
+    var addBtn=document.getElementById("btn-add-manual-est");
+    if(addBtn) addBtn.addEventListener("click",openManualEstModal);
+    var saveBtn=document.getElementById("btn-me-save"); if(!saveBtn) return;
+    saveBtn.addEventListener("click", function(){
+      var numVal   = (document.getElementById("me-num")||{}).value||"";
+      var dateVal  = (document.getElementById("me-date")||{}).value||"";
+      var custId   = (document.getElementById("me-cust")||{}).value||"";
+      var totalVal = parseFloat((document.getElementById("me-total")||{}).value||"0")||0;
+      var descVal  = (document.getElementById("me-desc")||{}).value||"";
+      var noteVal  = (document.getElementById("me-note")||{}).value||"";
+      if(!numVal.trim()){ toast("Enter an estimate number","err"); return; }
+      if(totalVal <= 0){ toast("Enter a total amount","err"); return; }
+      // Check duplicate
+      if(estimates.some(function(e){return e.id===numVal.trim();})){
+        if(!confirm("Estimate \""+numVal.trim()+"\" already exists.\n\nContinue anyway?")) return;
+      }
+      var custObj = custId ? customers.find(function(c){return c.id===custId;}) : null;
+      var custName = custObj ? custObj.name : "Walk-in";
+      var dateStr = dateVal
+        ? new Date(dateVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
+        : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+      var manualEst = {
+        id:       numVal.trim(),
+        num:      nextEstimateNum++,
+        date:     dateStr,
+        custId:   custId,
+        custName: custName,
+        items:    [],           // no items — free-text only
+        description: descVal,  // free-text description
+        note:     noteVal,
+        total:    totalVal,
+        showPrice: true,
+        locked:   false,
+        manual:   true         // KEY FLAG — no stock involved
+      };
+      estimates.unshift(manualEst);
+      savePricing();
+      closeManualEstModal();
+      // Switch to Estimates tab
+      document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
+      var et=document.querySelector("#stabs [data-st='estimates']"); if(et)et.classList.add("on");
+      document.getElementById("sell-upload-pane").style.display="none";
+      document.getElementById("sell-manual-pane").style.display="none";
+      var ep=document.getElementById("sell-estimates-pane"); if(ep)ep.style.display="block";
+      renderEstimatesList();
+      toast(numVal.trim()+" saved \u2713","ok");
+    });
+  }
+  // Wire immediately and also on Sell tab open
+  wireMe();
+  document.querySelectorAll(".tab[data-pg='sell']").forEach(function(t){
+    t.addEventListener("click",function(){ setTimeout(wireMe,50); });
+  });
+})();
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -5199,6 +5276,10 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
+
+
 
 
 
@@ -5306,6 +5387,47 @@ if(gdUrl){
   </div>
 </div>
 
+
+<!-- MANUAL ESTIMATE MODAL -->
+<div class="modal-overlay" id="manual-est-modal">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <span class="modal-close" id="manual-est-close">&#10005;</span>
+    <div class="modal-title">Manual Estimate</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Records a financial obligation without adjusting stock. Use for historical sales or off-app deals.</div>
+
+    <div class="igrp">
+      <div class="ilbl">Estimate #</div>
+      <input class="ifield" id="me-num" placeholder="e.g. M-001 or HIST-2025">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Date</div>
+      <input class="ifield" id="me-date" type="date">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Customer (optional)</div>
+      <select class="ifield" id="me-cust"><option value="">&#8212; Walk-in / No customer &#8212;</option></select>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Total Amount ($)</div>
+      <input class="ifield" id="me-total" type="number" min="0" step="0.01" placeholder="0.00">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Description / Items (free text)</div>
+      <textarea class="ifield" id="me-desc" rows="4" placeholder="e.g. 20x Geek Bar 15K @ $43.50&#10;10x Crown Bar @ $44.00&#10;Delivery charges" style="resize:vertical;font-size:13px;line-height:1.5"></textarea>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Note (optional)</div>
+      <input class="ifield" id="me-note" placeholder="e.g. Pending from last month">
+    </div>
+    <div style="background:rgba(200,124,0,.1);border:1px solid var(--amb);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--txt2)">
+      &#9888; This estimate will <strong>not</strong> deduct from stock.
+    </div>
+    <div class="brow">
+      <button class="btn bpri" id="btn-me-save">Save Estimate</button>
+      <button class="btn bsec" id="btn-me-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
 <div id="toast" class="toast"></div>
 </body>
 </html>
