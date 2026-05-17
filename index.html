@@ -223,6 +223,19 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 .inv-table td{padding:6px 8px;border:1px solid #ddd}
 .inv-table tr:nth-child(even) td{background:#fafafa}
 .inv-total{text-align:right;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}
+
+.bal-card{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:10px}
+.bal-name{font-size:15px;font-weight:700;color:var(--txt)}
+.bal-meta{font-size:11px;color:var(--txt3);margin-top:2px}
+.bal-amounts{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.bal-amt{flex:1;min-width:80px;background:var(--sur2);border-radius:8px;padding:8px 10px;text-align:center}
+.bal-amt-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:3px}
+.bal-amt-val{font-size:16px;font-weight:800;font-family:'DM Mono',monospace}
+.bal-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pay-card{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:10px 12px;margin-bottom:8px}
+.pay-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-right:6px}
+.pay-received{background:rgba(0,168,112,.15);color:#00a870}
+.pay-pending{background:rgba(200,124,0,.15);color:#c87c00}
 </style>
 </head>
 <body>
@@ -253,6 +266,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div class="tab" data-pg="distributor">Distrib</div>
     <div class="tab" data-pg="analysis">Analysis</div>
     <div class="tab" data-pg="export">Excel</div>
+    <div class="tab" data-pg="accounts">Accounts</div>
     <div class="tab" data-pg="sync">Sync</div>
   </div>
 </div>
@@ -777,6 +791,30 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   </div>
 </div>
 
+<div class="pg" id="pg-accounts">
+  <p class="stitle">Accounts</p>
+
+  <!-- Sub-tabs -->
+  <div class="tabs" id="acc-tabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
+    <div class="tab on" data-at="balances">Balances</div>
+    <div class="tab" data-at="payments">Payments</div>
+  </div>
+
+  <!-- Balances pane -->
+  <div id="acc-balances-pane">
+    <div id="acc-balance-list"></div>
+  </div>
+
+  <!-- Payments pane -->
+  <div id="acc-payments-pane" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <select class="ifield bsm" id="pay-filter-cust" style="flex:1;margin-right:8px;margin-bottom:0"><option value="">All Customers</option></select>
+      <button class="btn bpri bsm" id="btn-new-payment">+ Payment</button>
+    </div>
+    <div id="acc-payment-list"></div>
+  </div>
+</div>
+
 <div class="pg" id="pg-sync">
   <p class="stitle">Google Drive Sync</p>
 
@@ -876,6 +914,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 // openDistModal handled by listener
 
 
@@ -920,6 +959,7 @@ var lastDriveTs = 0;
 var autoRefreshEnabled = true;
 var backupBeforeSave = true;
 var estimates = [];
+var payments  = [];      // [{id,estId,custId,custName,date,amount,method,chequeNo,note,received}]
 var nextEstimateNum = 1;
 var editingEstId = null;
 var gdPollTimer = null;
@@ -1146,6 +1186,7 @@ function saveMasterToDrive() {
       distributorPrices: distributorPrices,
       estimates: estimates,
       nextEstimateNum: nextEstimateNum,
+      payments: payments,
       ts: Date.now()
     });
     gasPost(gdUrl + "?file=master", payload)
@@ -1186,6 +1227,7 @@ function gdSave(onDone) {
     distributorPrices: distributorPrices,
     estimates: estimates,
     nextEstimateNum: nextEstimateNum,
+    payments: payments,
     ts: saveTs
   });
 
@@ -1263,6 +1305,7 @@ function gdRefresh() {
       if(masterData.distributorPrices) distributorPrices = masterData.distributorPrices;
       if(masterData.estimates)       estimates = masterData.estimates;
       if(masterData.nextEstimateNum) nextEstimateNum = masterData.nextEstimateNum;
+      if(masterData.payments)        payments = masterData.payments;
       changed = true;
     }
 
@@ -1363,6 +1406,7 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   if(pg==="distributor") renderDistributors();
   if(pg==="analysis") renderAnalysisPage();
   if(pg==="export") renderExportPage();
+  if(pg==="accounts") renderAccountsPage();
   if(pg==="sync") {
     renderSyncToggles();
     var _pre=document.getElementById("gas-code-display");
@@ -3250,6 +3294,7 @@ function savePricing() {
     localStorage.setItem("vs5_distprices", JSON.stringify(distributorPrices));
     localStorage.setItem("vs5_estimates", JSON.stringify(estimates));
     localStorage.setItem("vs5_estnum", String(nextEstimateNum));
+    localStorage.setItem("vs5_payments", JSON.stringify(payments));
   } catch(e) {}
   saveMasterToDrive(); // Auto-save master on pricing/customer change
 }
@@ -3262,6 +3307,7 @@ function loadPricing() {
     var dp = localStorage.getItem("vs5_distprices"); if(dp) distributorPrices = JSON.parse(dp);
     var es = localStorage.getItem("vs5_estimates"); if(es) estimates = JSON.parse(es);
     var en = localStorage.getItem("vs5_estnum"); if(en) nextEstimateNum = parseInt(en)||1;
+    var py = localStorage.getItem("vs5_payments"); if(py) payments = JSON.parse(py);
   } catch(e) {}
 }
 
@@ -4448,11 +4494,34 @@ function renderEstimatesList(){
     }
     var dBtn=document.createElement("button"); dBtn.className="btn bdgr bsm"; dBtn.textContent="\u00D7"; dBtn.title="Delete";
     (function(id){dBtn.addEventListener("click",function(){if(!confirm("Delete estimate "+id+"?"))return;estimates=estimates.filter(function(e){return e.id!==id;});savePricing();renderEstimatesList();toast("Deleted","warn");});})(est.id); btns.appendChild(dBtn);
+    // Pay button
+    if(est.custId) {
+      var payBtn2=document.createElement("button"); payBtn2.className="btn bsec bsm"; payBtn2.textContent="\uD83D\uDCB0 Pay";
+      (function(e2){payBtn2.addEventListener("click",function(){openPayModal(null,e2.custId);var s=document.getElementById("pay-est-sel");if(s){populatePayEstSel(e2.custId,e2.id);s.value=e2.id;}});})(est);
+      btns.insertBefore(payBtn2,dBtn);
+    }
     topRow.appendChild(left); topRow.appendChild(btns); card.appendChild(topRow);
     var preview=document.createElement("div"); preview.style.cssText="font-size:11px;color:var(--txt3);margin-top:6px;padding-top:6px;border-top:1px solid var(--brd)";
     var shown=(est.items||[]).slice(0,4).map(function(it){return it.brand+" \u2013 "+it.flavor+" \u00d7"+it.qty;});
     if((est.items||[]).length>4)shown.push("+"+(est.items.length-4)+" more...");
-    preview.textContent=shown.join("  \u00b7  "); card.appendChild(preview);
+    preview.textContent=shown.join("  \u00b7  ");
+    // Show balance due for this estimate
+    if(est.custId && est.total) {
+      var estPaid=payments.filter(function(p){return p.estId===est.id&&p.received;}).reduce(function(s,p){return s+p.amount;},0);
+      var estBal=est.total-estPaid;
+      if(estBal>0.01){
+        var balLine=document.createElement("div");
+        balLine.style.cssText="font-size:11px;color:#c0392b;font-weight:700;margin-top:4px";
+        balLine.textContent="Balance due: $"+estBal.toFixed(2);
+        card.appendChild(balLine);
+      } else if(estPaid>0){
+        var paidLine=document.createElement("div");
+        paidLine.style.cssText="font-size:11px;color:#00a870;font-weight:700;margin-top:4px";
+        paidLine.textContent="\u2713 Fully paid";
+        card.appendChild(paidLine);
+      }
+    }
+    card.appendChild(preview);
     el.appendChild(card);
   });
 }
@@ -4584,6 +4653,312 @@ function saveEstimateEdit(lock){
     renderSellCart();
   });
 })();
+
+// ════════════════════════════════════════════════════
+// ── ACCOUNTS / PAYMENTS ──
+// ════════════════════════════════════════════════════
+
+function getPayNextId() {
+  var max = 0;
+  payments.forEach(function(p) {
+    var n = parseInt((p.id||"").replace("PAY-",""),10)||0;
+    if(n>max) max=n;
+  });
+  return "PAY-" + String(max+1).padStart(3,"0");
+}
+
+function getCustBalance(custId) {
+  // Total billed = sum of all estimates for this customer
+  var billed = 0;
+  estimates.forEach(function(e) {
+    if(e.custId === custId) billed += (e.total||0);
+  });
+  // Total received = sum of received payments
+  var received = 0;
+  payments.forEach(function(p) {
+    if(p.custId === custId && p.received) received += (p.amount||0);
+  });
+  // Total pending = promised but not yet received
+  var pending = 0;
+  payments.forEach(function(p) {
+    if(p.custId === custId && !p.received) pending += (p.amount||0);
+  });
+  return { billed: billed, received: received, pending: pending, balance: billed - received };
+}
+
+function renderAccountsPage() {
+  // Wire sub-tabs
+  document.querySelectorAll("#acc-tabs .tab").forEach(function(t) {
+    t.addEventListener("click", function() {
+      document.querySelectorAll("#acc-tabs .tab").forEach(function(x){x.classList.remove("on");});
+      t.classList.add("on");
+      var at = t.getAttribute("data-at");
+      var bp = document.getElementById("acc-balances-pane");
+      var pp = document.getElementById("acc-payments-pane");
+      if(bp) bp.style.display = at==="balances" ? "block" : "none";
+      if(pp) pp.style.display = at==="payments" ? "block" : "none";
+      if(at==="balances") renderBalances();
+      if(at==="payments") renderPaymentsList();
+    });
+  });
+  populatePayFilterCust();
+  renderBalances();
+}
+
+function populatePayFilterCust() {
+  var sel = document.getElementById("pay-filter-cust"); if(!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">All Customers</option>';
+  customers.forEach(function(c) {
+    var o = document.createElement("option"); o.value = c.id; o.textContent = c.name;
+    if(c.id===cur) o.selected=true; sel.appendChild(o);
+  });
+  sel.addEventListener("change", renderPaymentsList);
+}
+
+function renderBalances() {
+  var el = document.getElementById("acc-balance-list"); if(!el) return;
+  el.innerHTML = "";
+
+  // Only customers who have at least one estimate
+  var custWithEst = {};
+  estimates.forEach(function(e) { if(e.custId) custWithEst[e.custId] = true; });
+
+  var custList = customers.filter(function(c) { return custWithEst[c.id]; });
+  if(!custList.length) {
+    el.innerHTML = "<div class='empty'><div class='ei'>&#128200;</div><div class='et'>No customer estimates yet.<br>Create estimates in the Sell tab.</div></div>";
+    return;
+  }
+
+  // Sort by outstanding balance descending
+  custList.sort(function(a,b) {
+    return getCustBalance(b.id).balance - getCustBalance(a.id).balance;
+  });
+
+  custList.forEach(function(cust) {
+    var bal = getCustBalance(cust.id);
+    var card = document.createElement("div"); card.className = "bal-card";
+
+    // Name + meta
+    var nameDiv = document.createElement("div");
+    nameDiv.className = "bal-name"; nameDiv.textContent = cust.name;
+    var metaDiv = document.createElement("div"); metaDiv.className = "bal-meta";
+    var estCount = estimates.filter(function(e){return e.custId===cust.id;}).length;
+    var payCount = payments.filter(function(p){return p.custId===cust.id&&p.received;}).length;
+    metaDiv.textContent = estCount + " estimate" + (estCount!==1?"s":"") + "  ·  " + payCount + " payment" + (payCount!==1?"s":"");
+    if(cust.phone) metaDiv.textContent += "  ·  " + cust.phone;
+
+    // Amounts row
+    var amtsDiv = document.createElement("div"); amtsDiv.className = "bal-amounts";
+
+    function makeAmt(lbl, val, color) {
+      var box = document.createElement("div"); box.className = "bal-amt";
+      var l = document.createElement("div"); l.className = "bal-amt-lbl"; l.textContent = lbl;
+      var v = document.createElement("div"); v.className = "bal-amt-val"; v.style.color = color||"var(--txt)";
+      v.textContent = "$" + val.toFixed(2);
+      box.appendChild(l); box.appendChild(v); return box;
+    }
+    amtsDiv.appendChild(makeAmt("Billed", bal.billed, "var(--txt)"));
+    amtsDiv.appendChild(makeAmt("Received", bal.received, "#00a870"));
+    if(bal.pending > 0) amtsDiv.appendChild(makeAmt("Promised", bal.pending, "#c87c00"));
+    amtsDiv.appendChild(makeAmt("Balance Due", bal.balance, bal.balance>0?"#c0392b":bal.balance===0?"#00a870":"var(--txt)"));
+
+    // Action buttons
+    var actDiv = document.createElement("div"); actDiv.className = "bal-actions";
+    var payBtn = document.createElement("button"); payBtn.className = "btn bpri bsm";
+    payBtn.textContent = "+ Record Payment";
+    (function(c){ payBtn.addEventListener("click", function(){ openPayModal(null, c.id); }); })(cust);
+
+    var viewBtn = document.createElement("button"); viewBtn.className = "btn bsec bsm";
+    viewBtn.textContent = "View Estimates";
+    (function(cid){viewBtn.addEventListener("click",function(){
+      // Switch to Sell → Estimates tab and filter (just switch for now)
+      document.querySelectorAll(".tab[data-pg]").forEach(function(t){t.classList.remove("on");});
+      var st=document.querySelector(".tab[data-pg='sell']"); if(st)st.classList.add("on");
+      document.querySelectorAll(".pg").forEach(function(p){p.classList.remove("on");});
+      var sp=document.getElementById("pg-sell"); if(sp)sp.classList.add("on");
+      document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
+      var et=document.querySelector("#stabs [data-st='estimates']"); if(et)et.classList.add("on");
+      ["sell-upload-pane","sell-manual-pane"].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display="none";});
+      var ep=document.getElementById("sell-estimates-pane"); if(ep)ep.style.display="block";
+      renderEstimatesList();
+    });})(cust.id);
+
+    actDiv.appendChild(payBtn); actDiv.appendChild(viewBtn);
+    card.appendChild(nameDiv); card.appendChild(metaDiv);
+    card.appendChild(amtsDiv); card.appendChild(actDiv);
+    el.appendChild(card);
+  });
+}
+
+function renderPaymentsList() {
+  var el = document.getElementById("acc-payment-list"); if(!el) return;
+  var filterCust = (document.getElementById("pay-filter-cust")||{}).value||"";
+  el.innerHTML = "";
+  var list = payments.filter(function(p){ return !filterCust || p.custId===filterCust; });
+  list.sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+  if(!list.length) {
+    el.innerHTML = "<div class='empty'><div class='ei'>&#128179;</div><div class='et'>No payments recorded yet.</div></div>";
+    return;
+  }
+  list.forEach(function(pay) {
+    var card = document.createElement("div"); card.className = "pay-card";
+    var topRow = document.createElement("div"); topRow.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;gap:8px";
+    var left = document.createElement("div"); left.style.flex="1";
+
+    var idLine = document.createElement("div"); idLine.style.cssText="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px";
+    var badge = document.createElement("span");
+    badge.className = "pay-badge " + (pay.received?"pay-received":"pay-pending");
+    badge.textContent = pay.received ? "Received" : "Pending";
+    var amtSpan = document.createElement("span");
+    amtSpan.style.cssText="font-family:'DM Mono',monospace;font-size:15px;font-weight:800;color:"+(pay.received?"#00a870":"#c87c00");
+    amtSpan.textContent = "$" + (pay.amount||0).toFixed(2);
+    idLine.appendChild(badge); idLine.appendChild(amtSpan);
+
+    var meta = document.createElement("div"); meta.style.cssText="font-size:11px;color:var(--txt3)";
+    var metaParts = [pay.custName||"", pay.date||"", pay.method|""];
+    if(pay.chequeNo) metaParts.push("Ref: "+pay.chequeNo);
+    if(pay.estId) metaParts.push(pay.estId);
+    if(pay.note) metaParts.push(pay.note);
+    meta.textContent = metaParts.filter(Boolean).join("  ·  ");
+
+    left.appendChild(idLine); left.appendChild(meta);
+
+    var btns = document.createElement("div"); btns.style.cssText="display:flex;gap:4px;flex-shrink:0";
+    var editBtn = document.createElement("button"); editBtn.className="btn bsec bsm"; editBtn.textContent="Edit";
+    (function(p){ editBtn.addEventListener("click",function(){ openPayModal(p); }); })(pay);
+    var delBtn = document.createElement("button"); delBtn.className="btn bdgr bsm"; delBtn.textContent="×";
+    (function(id){ delBtn.addEventListener("click",function(){
+      if(!confirm("Delete this payment?")) return;
+      payments = payments.filter(function(p){return p.id!==id;});
+      savePricing(); renderPaymentsList(); renderBalances();
+      toast("Payment deleted","warn");
+    }); })(pay.id);
+    btns.appendChild(editBtn); btns.appendChild(delBtn);
+    topRow.appendChild(left); topRow.appendChild(btns);
+    card.appendChild(topRow); el.appendChild(card);
+  });
+}
+
+function openPayModal(pay, prefillCustId) {
+  var today = new Date(); var td = today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
+  // Populate customer dropdown
+  var csel = document.getElementById("pay-cust-sel"); if(!csel) return;
+  csel.innerHTML = '<option value="">&#8212; Select Customer &#8212;</option>';
+  customers.forEach(function(c){ var o=document.createElement("option");o.value=c.id;o.textContent=c.name;csel.appendChild(o); });
+
+  if(pay) {
+    document.getElementById("pay-modal-title").textContent = "Edit Payment";
+    document.getElementById("pay-edit-id").value = pay.id;
+    csel.value = pay.custId||"";
+    document.getElementById("pay-amount").value = pay.amount||"";
+    document.getElementById("pay-method").value = pay.method||"cash";
+    document.getElementById("pay-cheque").value = pay.chequeNo||"";
+    document.getElementById("pay-date").value = pay.date||td;
+    document.getElementById("pay-note").value = pay.note||"";
+    document.getElementById("pay-received").checked = pay.received!==false;
+    populatePayEstSel(pay.custId, pay.estId);
+  } else {
+    document.getElementById("pay-modal-title").textContent = "Record Payment";
+    document.getElementById("pay-edit-id").value = "";
+    csel.value = prefillCustId||"";
+    document.getElementById("pay-amount").value = "";
+    document.getElementById("pay-method").value = "cash";
+    document.getElementById("pay-cheque").value = "";
+    document.getElementById("pay-date").value = td;
+    document.getElementById("pay-note").value = "";
+    document.getElementById("pay-received").checked = true;
+    populatePayEstSel(prefillCustId||"", "");
+  }
+  toggleChequeRow();
+  var m = document.getElementById("pay-modal"); if(m) m.classList.add("open");
+}
+
+function populatePayEstSel(custId, selectedEstId) {
+  var sel = document.getElementById("pay-est-sel"); if(!sel) return;
+  sel.innerHTML = '<option value="">&#8212; Ad-hoc / General Payment &#8212;</option>';
+  if(!custId) return;
+  estimates.filter(function(e){return e.custId===custId;})
+    .sort(function(a,b){return (b.date||"").localeCompare(a.date||"");})
+    .forEach(function(e){
+      var bal = (e.total||0) - payments.filter(function(p){return p.estId===e.id&&p.received;}).reduce(function(s,p){return s+p.amount;},0);
+      var o=document.createElement("option"); o.value=e.id;
+      o.textContent=e.id+" — $"+(e.total||0).toFixed(2)+" (bal $"+Math.max(0,bal).toFixed(2)+")";
+      if(e.id===selectedEstId) o.selected=true;
+      sel.appendChild(o);
+    });
+}
+
+function toggleChequeRow() {
+  var method = (document.getElementById("pay-method")||{}).value||"";
+  var row = document.getElementById("pay-cheque-row");
+  if(row) row.style.display = (method==="cheque"||method==="bank") ? "block" : "none";
+}
+
+function closePayModal() { var m=document.getElementById("pay-modal"); if(m) m.classList.remove("open"); }
+
+// Pay modal listeners
+(function(){
+  var el=document.getElementById("pay-modal-close"); if(!el)return;
+  el.addEventListener("click",closePayModal);
+})();
+(function(){
+  var el=document.getElementById("pay-modal"); if(!el)return;
+  el.addEventListener("click",function(e){if(e.target===el)closePayModal();});
+})();
+(function(){
+  var el=document.getElementById("btn-pay-cancel"); if(!el)return;
+  el.addEventListener("click",closePayModal);
+})();
+(function(){
+  var el=document.getElementById("pay-method"); if(!el)return;
+  el.addEventListener("change",toggleChequeRow);
+})();
+(function(){
+  var csel=document.getElementById("pay-cust-sel"); if(!csel)return;
+  csel.addEventListener("change",function(){ populatePayEstSel(csel.value,""); });
+})();
+(function(){
+  var el=document.getElementById("btn-new-payment"); if(!el)return;
+  el.addEventListener("click",function(){ openPayModal(null,""); });
+})();
+(function(){
+  var el=document.getElementById("btn-pay-save"); if(!el)return;
+  el.addEventListener("click",function(){
+    var custId=(document.getElementById("pay-cust-sel")||{}).value||"";
+    var amtStr=(document.getElementById("pay-amount")||{}).value||"";
+    var amount=parseFloat(amtStr);
+    if(!custId){toast("Select a customer","err");return;}
+    if(!amtStr||isNaN(amount)||amount<=0){toast("Enter a valid amount","err");return;}
+    var custObj=customers.find(function(c){return c.id===custId;})||{};
+    var editId=(document.getElementById("pay-edit-id")||{}).value||"";
+    var pay={
+      id: editId||getPayNextId(),
+      estId:(document.getElementById("pay-est-sel")||{}).value||"",
+      custId:custId, custName:custObj.name||"",
+      date:(document.getElementById("pay-date")||{}).value||"",
+      amount:amount,
+      method:(document.getElementById("pay-method")||{}).value||"cash",
+      chequeNo:(document.getElementById("pay-cheque")||{}).value||"",
+      note:(document.getElementById("pay-note")||{}).value||"",
+      received:(document.getElementById("pay-received")||{}).checked!==false
+    };
+    if(editId) {
+      var idx=payments.findIndex(function(p){return p.id===editId;});
+      if(idx>-1) payments[idx]=pay; else payments.unshift(pay);
+    } else {
+      payments.unshift(pay);
+    }
+    savePricing();
+    closePayModal();
+    renderPaymentsList(); renderBalances();
+    toast((editId?"Payment updated":"Payment recorded")+" \u2713","ok");
+  });
+})();
+
+// Add "Record Payment" button to each estimate card in renderEstimatesList
+// (done by patching renderEstimatesList to add the button)
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -4606,6 +4981,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
@@ -4656,6 +5032,61 @@ if(gdUrl){
 </div>
 
 <div id="invoice-print-area" style="display:none"><div id="invoice-print-content"></div></div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="pay-modal">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <span class="modal-close" id="pay-modal-close">&#10005;</span>
+    <div class="modal-title" id="pay-modal-title">Record Payment</div>
+    <input type="hidden" id="pay-edit-id">
+
+    <div class="igrp">
+      <div class="ilbl">Customer</div>
+      <select class="ifield" id="pay-cust-sel"><option value="">— Select Customer —</option></select>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Against Estimate (optional)</div>
+      <select class="ifield" id="pay-est-sel"><option value="">— Ad-hoc / General Payment —</option></select>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Amount ($)</div>
+      <input class="ifield" id="pay-amount" type="number" min="0" step="0.01" placeholder="0.00">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Payment Method</div>
+      <select class="ifield" id="pay-method">
+        <option value="cash">Cash</option>
+        <option value="cheque">Cheque</option>
+        <option value="bank">Bank Transfer</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="igrp" id="pay-cheque-row">
+      <div class="ilbl">Cheque / Reference #</div>
+      <input class="ifield" id="pay-cheque" placeholder="e.g. CHQ-4521">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Date</div>
+      <input class="ifield" id="pay-date" type="date">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Note (optional)</div>
+      <input class="ifield" id="pay-note" placeholder="e.g. Partial payment">
+    </div>
+    <div style="background:var(--sur2);border-radius:8px;padding:10px 12px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="pay-received" checked style="width:18px;height:18px;accent-color:var(--acc)">
+        <span style="font-size:13px;font-weight:600">Mark as Received</span>
+      </label>
+      <div style="font-size:11px;color:var(--txt3);margin-top:4px">Uncheck if payment is promised but not yet received.</div>
+    </div>
+    <div class="brow">
+      <button class="btn bpri" id="btn-pay-save">Save Payment</button>
+      <button class="btn bsec" id="btn-pay-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 </body>
 </html>
