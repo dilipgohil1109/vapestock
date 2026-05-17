@@ -184,12 +184,17 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Syne",s
 .cust-chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
 @media print{
   @page{margin:15mm 12mm;size:auto}
-  html,body{background:#fff!important;color:#000!important}
+  html,body{background:#fff!important;color:#000!important;overflow:visible!important;height:auto!important}
   .hdr,.tabs,.pg,.tab,.stitle{display:none!important}
   #pg-pricing,#stock-print-area{display:none!important}
   body[data-print-mode="pricing"] #pg-pricing{display:block!important;padding:0!important}
   body[data-print-mode="pricing"] #pricing-print-area{display:block!important}
   body[data-print-mode="stock"] #stock-print-area{display:block!important}
+  body[data-print-mode="invoice"] #invoice-print-area{display:block!important;overflow:visible!important;height:auto!important}
+  body[data-print-mode="invoice"] #invoice-print-content{overflow:visible!important;height:auto!important;max-height:none!important}
+  #invoice-print-area,#invoice-print-content{overflow:visible!important;height:auto!important;max-height:none!important}
+  .inv-table{page-break-inside:auto;width:100%}
+  .inv-table tr{page-break-inside:avoid}
   .no-print{display:none!important}
   body{background:#fff!important;color:#000!important}
   #pg-pricing,#pricing-table-wrap,.pcard{background:#fff!important;color:#000!important}
