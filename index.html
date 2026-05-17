@@ -875,6 +875,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 // openDistModal handled by listener
 
 
@@ -4389,10 +4390,27 @@ function printEstimate(est){
   h+="<span>"+items.length+" lines &middot; "+grandQty+" total units</span>";
   h+="<span>This is an estimate, not a final bill.</span></div>";
 
-  content.innerHTML=h;
-  var area=document.getElementById("invoice-print-area"); if(area)area.style.display="block";
-  document.body.setAttribute("data-print-mode","invoice");
-  setTimeout(function(){window.print();setTimeout(function(){if(area)area.style.display="none";document.body.removeAttribute("data-print-mode");},800);},150);
+  // Open in new window for clean multi-page printing
+  var printCSS = `
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}
+    @page{margin:15mm 12mm;size:A4}
+    .inv-table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px}
+    .inv-table th{background:#f0f0f0;padding:5px 7px;text-align:left;border:1px solid #ccc;font-size:10px;font-weight:700}
+    .inv-table td{padding:5px 7px;border:1px solid #ddd;vertical-align:top}
+    .inv-table tr{page-break-inside:avoid}
+    .inv-total{text-align:right;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}
+  `;
+  var w = window.open("","_blank","width=800,height=600");
+  if(!w){ alert("Pop-up blocked. Please allow pop-ups for this page and try again."); return; }
+  w.document.write(
+    "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Estimate " + (est.id||"") + "</title>" +
+    "<style>" + printCSS + "</style>" +
+    "</head><body>" + h + "</body></html>"
+  );
+  w.document.close();
+  w.focus();
+  setTimeout(function(){ w.print(); }, 400);
 }
 
 function renderEstimatesList(){
@@ -4588,6 +4606,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
