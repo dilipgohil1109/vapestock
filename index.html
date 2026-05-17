@@ -869,6 +869,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 // openDistModal handled by listener
 
 
@@ -2559,7 +2560,7 @@ function renderSellCart() {
       var lt=up*q; grandTotal+=lt;
       var cur=stock[k]||0; if(q>cur) warn++; stock[k]=Math.max(0,cur-q);
       txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:q,custId:custId,custName:custName,unitPrice:up,total:lt,date:saleDate,estId:estId});
-      estItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt}); count++;
+      estItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt,category:catOfBrand(br)||""}); count++;
     });
     var rec={id:estId,num:nextEstimateNum++,date:saleDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false};
     estimates.unshift(rec); afterChange(); savePricing(); printEstimate(rec);
@@ -4275,10 +4276,17 @@ function printEstimate(est){
   var content=document.getElementById("invoice-print-content"); if(!content)return;
   var cust=est.custId?customers.find(function(c){return c.id===est.custId;}):null;
   var showPrice=est.showPrice!==false;
+  var items=est.items||[];
   var h="";
+
+  // ── Header ──
   h+="<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #000'>";
-  h+="<div><div style='font-size:26px;font-weight:900'>Krazy Wholesale</div><div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px'>Estimate</div></div>";
-  h+="<div style='text-align:right'><div style='font-size:18px;font-weight:800'>"+(est.id||"")+"</div><div style='font-size:12px;color:#666'>"+(est.date||"")+"</div></div></div>";
+  h+="<div><div style='font-size:26px;font-weight:900'>Krazy Wholesale</div>";
+  h+="<div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px'>Estimate</div></div>";
+  h+="<div style='text-align:right'><div style='font-size:18px;font-weight:800'>"+(est.id||"")+"</div>";
+  h+="<div style='font-size:12px;color:#666'>"+(est.date||"")+"</div></div></div>";
+
+  // ── Customer ──
   if(cust){
     h+="<div style='margin-bottom:14px;padding:10px 14px;background:#f8f8f8;border-radius:6px;border:1px solid #e0e0e0'>";
     h+="<div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px'>Prepared for</div>";
@@ -4289,17 +4297,93 @@ function printEstimate(est){
   } else {
     h+="<div style='margin-bottom:14px;padding:8px 14px;background:#f8f8f8;border-radius:6px;font-size:13px'><strong>"+(est.custName||"Walk-in")+"</strong></div>";
   }
-  h+="<table class='inv-table'><thead><tr><th>Brand</th><th>Flavor</th><th style='text-align:center'>Qty</th>";
-  if(showPrice)h+="<th style='text-align:right'>Unit $</th><th style='text-align:right'>Total</th>";
-  h+="</tr></thead><tbody>";
-  (est.items||[]).forEach(function(it){
-    h+="<tr><td>"+it.brand+"</td><td>"+it.flavor+"</td><td style='text-align:center'>"+it.qty+"</td>";
-    if(showPrice){h+="<td style='text-align:right;font-family:monospace'>$"+(it.unitPrice||0).toFixed(2)+"</td><td style='text-align:right;font-family:monospace;font-weight:700'>$"+(it.total||0).toFixed(2)+"</td>";}
-    h+="</tr>";
+
+  // ── Group items by Category → Brand ──
+  // Build structure: { catName: { brandName: [items] } }
+  var catOrder=[], catMap={};
+  items.forEach(function(it){
+    var cat=it.category||"Other";
+    var br=it.brand||"";
+    if(!catMap[cat]){ catMap[cat]={}; catOrder.push(cat); }
+    if(!catMap[cat][br]) catMap[cat][br]=[];
+    catMap[cat][br].push(it);
   });
-  h+="</tbody></table>";
-  if(showPrice&&est.total)h+="<div class='inv-total'>Total: $"+est.total.toFixed(2)+"</div>";
-  h+="<div style='margin-top:16px;padding-top:10px;border-top:1px solid #ccc;font-size:10px;color:#aaa;display:flex;justify-content:space-between'><span>"+(est.items||[]).reduce(function(s,it){return s+it.qty;},0)+" units</span><span>This is an estimate, not a final bill.</span></div>";
+
+  var grandTotal=0, grandQty=0, sectionNum=0;
+
+  catOrder.forEach(function(cat){
+    sectionNum++;
+    var catTotal=0, catQty=0;
+    var brands=Object.keys(catMap[cat]);
+
+    // Category header
+    h+="<div style='margin-top:14px;margin-bottom:4px;font-size:13px;font-weight:800;color:#222;border-bottom:2px solid #222;padding-bottom:3px'>";
+    h+=sectionNum+". "+cat+"</div>";
+
+    // Table for this category
+    h+="<table class='inv-table' style='margin:0 0 4px 0'><thead><tr>";
+    h+="<th style='width:35%'>Brand &amp; Flavor</th>";
+    h+="<th style='text-align:center;width:10%'>Qty</th>";
+    if(showPrice){
+      h+="<th style='text-align:right;width:15%'>Unit $</th>";
+      h+="<th style='text-align:right;width:15%'>Total</th>";
+    }
+    h+="</tr></thead><tbody>";
+
+    brands.forEach(function(br){
+      var brandItems=catMap[cat][br];
+      var brandTotal=0, brandQty=0;
+
+      brandItems.forEach(function(it){
+        var lineTotal=it.total||(it.unitPrice||0)*(it.qty||0);
+        brandTotal+=lineTotal; brandQty+=it.qty||0;
+        catTotal+=lineTotal; catQty+=it.qty||0;
+        grandTotal+=lineTotal; grandQty+=it.qty||0;
+        h+="<tr>";
+        h+="<td style='padding-left:16px;color:#444;font-size:11px'>"+it.flavor+"</td>";
+        h+="<td style='text-align:center'>"+it.qty+"</td>";
+        if(showPrice){
+          h+="<td style='text-align:right;font-family:monospace'>$"+(it.unitPrice||0).toFixed(2)+"</td>";
+          h+="<td style='text-align:right;font-family:monospace'>$"+lineTotal.toFixed(2)+"</td>";
+        }
+        h+="</tr>";
+      });
+
+      // Brand subtotal row
+      h+="<tr style='background:#f5f5f5;font-weight:700;font-size:12px'>";
+      h+="<td>"+br+"</td>";
+      h+="<td style='text-align:center'>"+brandQty+"</td>";
+      if(showPrice){
+        h+="<td></td>";
+        h+="<td style='text-align:right;font-family:monospace;color:#333'>$"+brandTotal.toFixed(2)+"</td>";
+      }
+      h+="</tr>";
+    });
+
+    h+="</tbody></table>";
+
+    // Category subtotal
+    if(showPrice){
+      h+="<div style='text-align:right;font-size:12px;font-weight:700;color:#555;padding:3px 6px;background:#efefef;border-radius:4px;margin-bottom:2px'>";
+      h+=cat+" subtotal: "+catQty+" units";
+      h+=" &nbsp; $"+catTotal.toFixed(2)+"</div>";
+    } else {
+      h+="<div style='text-align:right;font-size:11px;color:#777;padding:2px 6px'>";
+      h+=cat+" subtotal: "+catQty+" units</div>";
+    }
+  });
+
+  // ── Grand Total ──
+  h+="<div style='margin-top:14px;padding:10px 14px;background:#222;color:#fff;border-radius:6px;display:flex;justify-content:space-between;align-items:center'>";
+  h+="<span style='font-size:13px;font-weight:700'>Grand Total &mdash; "+grandQty+" units</span>";
+  if(showPrice) h+="<span style='font-size:18px;font-weight:900;font-family:monospace'>$"+grandTotal.toFixed(2)+"</span>";
+  h+="</div>";
+
+  // ── Footer ──
+  h+="<div style='margin-top:12px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#aaa;display:flex;justify-content:space-between'>";
+  h+="<span>"+items.length+" lines &middot; "+grandQty+" total units</span>";
+  h+="<span>This is an estimate, not a final bill.</span></div>";
+
   content.innerHTML=h;
   var area=document.getElementById("invoice-print-area"); if(area)area.style.display="block";
   document.body.setAttribute("data-print-mode","invoice");
@@ -4499,6 +4583,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
