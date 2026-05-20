@@ -236,6 +236,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 .pay-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-right:6px}
 .pay-received{background:rgba(0,168,112,.15);color:#00a870}
 .pay-pending{background:rgba(200,124,0,.15);color:#c87c00}
+.ss-active{background:var(--acc)!important;color:#fff!important}
 </style>
 </head>
 <body>
@@ -275,6 +276,19 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 <div class="pg on" id="pg-stock">
   <div class="cat-chips" id="s-cat-chips"></div>
   <div class="bscroll" id="sb"></div>
+  <!-- Search + Sort bar -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <div class="swrap" style="flex:1;margin-bottom:0">
+      <span class="sico">&#128269;</span>
+      <input class="ifield" id="stock-search" placeholder="Search flavor..." style="padding-left:32px;margin-bottom:0">
+    </div>
+    <div style="display:flex;border:1px solid var(--brd);border-radius:8px;overflow:hidden;flex-shrink:0">
+      <button id="ss-az" class="btn bsec bsm" title="Sort A→Z" style="border-radius:0;border:none;padding:6px 9px;font-size:11px;font-weight:700">A→Z</button>
+      <button id="ss-za" class="btn bsec bsm" title="Sort Z→A" style="border-radius:0;border:none;border-left:1px solid var(--brd);padding:6px 9px;font-size:11px;font-weight:700">Z→A</button>
+      <button id="ss-hi" class="btn bsec bsm" title="Sort High→Low qty" style="border-radius:0;border:none;border-left:1px solid var(--brd);padding:6px 9px;font-size:11px;font-weight:700">↑Qty</button>
+      <button id="ss-lo" class="btn bsec bsm" title="Sort Low→High qty" style="border-radius:0;border:none;border-left:1px solid var(--brd);padding:6px 9px;font-size:11px;font-weight:700">↓Qty</button>
+    </div>
+  </div>
   <div class="frow" id="sf-row">
     <div class="fc on" data-sf="all">All <span class="fc-count" id="fc-all">0</span></div>
     <div class="fc" data-sf="in">In Stock <span class="fc-count" id="fc-in">0</span></div>
@@ -943,6 +957,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
+
 // openDistModal handled by listener
 
 
@@ -991,6 +1009,9 @@ var payments  = [];
 var currentStmtCustId = "";      // [{id,estId,custId,custName,date,amount,method,chequeNo,note,received}]
 var nextEstimateNum = 1;
 var editingEstId = null;
+var stockSort   = "az";
+var stockSearch = "";
+var editingOriginalItems = {}; // stock snapshot when edit opens
 var gdPollTimer = null;
 var gdPushTimer = null;
 var gdLastTs = 0;
@@ -1467,6 +1488,10 @@ document.getElementById("mtabs").addEventListener("click",function(e){
 })})();
 
 // ── STOCK PAGE ──
+function clearStockSearch() {
+  stockSearch="";
+  var inp=document.getElementById("stock-search"); if(inp)inp.value="";
+}
 function renderStockBrands() {
   renderCatChips("s-cat-chips", activeCategory, function(cat) {
     activeCategory = cat;
@@ -1518,33 +1543,53 @@ function renderStock() { renderStockBrands(); renderStockGrid(); updateFilterCou
 
 function renderStockGrid() {
   var grid=document.getElementById("sgrid");
+  if(!grid) return;
   grid.innerHTML="";
-  // No brand in this category
   if(!activeBrand) {
     var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
-    empty.innerHTML="<div class='ei'>📂</div><div class='et'>No brands in this category yet.<br>Add brands in the Catalog tab.</div>";
+    empty.innerHTML="<div class='ei'>\uD83D\uDCC2</div><div class='et'>No brands in this category yet.<br>Add brands in the Catalog tab.</div>";
     grid.appendChild(empty); return;
   }
+  var search=(stockSearch||"").toLowerCase().trim();
   var flavors=(CATALOG[activeBrand]||[]).filter(function(fl){
     var q=qty(activeBrand,fl);
-    if(stockFlt==="in") return q>3;
+    if(stockFlt==="in")  return q>3;
     if(stockFlt==="low") return q>0&&q<=3;
     if(stockFlt==="out") return q===0;
     return true;
+  }).filter(function(fl){
+    return !search || fl.toLowerCase().includes(search);
   });
+  // Sort
+  if(stockSort==="az") flavors=flavors.slice().sort(function(a,b){return a<b?-1:a>b?1:0;});
+  else if(stockSort==="za") flavors=flavors.slice().sort(function(a,b){return a>b?-1:a<b?1:0;});
+  else if(stockSort==="hi") flavors=flavors.slice().sort(function(a,b){return qty(activeBrand,b)-qty(activeBrand,a);});
+  else if(stockSort==="lo") flavors=flavors.slice().sort(function(a,b){return qty(activeBrand,a)-qty(activeBrand,b);});
+
+  // Update active sort button style
+  ["az","za","hi","lo"].forEach(function(s){
+    var btn=document.getElementById("ss-"+s);
+    if(btn) btn.classList.toggle("ss-active", s===stockSort);
+  });
+
   if(!flavors.length){
-    var empty=document.createElement("div"); empty.className="empty"; empty.style.gridColumn="1/-1";
-    empty.innerHTML="<div class='ei'>&#128235;</div><div class='et'>No items match</div>";
-    grid.appendChild(empty); return;
+    var empty2=document.createElement("div"); empty2.className="empty"; empty2.style.gridColumn="1/-1";
+    empty2.innerHTML="<div class='ei'>&#128269;</div><div class='et'>No items match\u000a\""+search+"\"</div>";
+    grid.appendChild(empty2); return;
   }
   flavors.forEach(function(fl){
     var q=qty(activeBrand,fl);
     var card=document.createElement("div");
     card.className="fcard"+(q===0?" out":q<=3?" low":"");
     var dot=document.createElement("div"); dot.className="cdot "+(q===0?"out":q<=3?"lw":"in");
-    var name=document.createElement("div"); name.className="fname"; name.textContent=fl;
+    var name=document.createElement("div"); name.className="fname";
+    // Highlight search match in name
+    if(search && fl.toLowerCase().includes(search)){
+      var idx=fl.toLowerCase().indexOf(search);
+      name.innerHTML=fl.substring(0,idx)+"<mark style='background:rgba(255,200,0,.4);border-radius:2px'>"+fl.substring(idx,idx+search.length)+"</mark>"+fl.substring(idx+search.length);
+    } else { name.textContent=fl; }
     var qrow=document.createElement("div"); qrow.className="qrow";
-    var btnM=document.createElement("button"); btnM.className="qbtn m"; btnM.textContent="−";
+    var btnM=document.createElement("button"); btnM.className="qbtn m"; btnM.textContent="\u2212";
     btnM.setAttribute("data-br",activeBrand); btnM.setAttribute("data-fl",fl); btnM.setAttribute("data-d","-1");
     var qvalEl=document.createElement("div"); qvalEl.className="qval"+(q===0?" z":q<=3?" lw":""); qvalEl.textContent=q;
     qvalEl.addEventListener("click",function(){
@@ -2561,7 +2606,16 @@ function renderSellCart() {
     be.style.color = avail < entry.qty ? "var(--red)" : "var(--txt3)";
     info.appendChild(ne); info.appendChild(be);
     var rm = document.createElement("span"); rm.className = "crm"; rm.textContent = "\u00d7";
-    (function(key){ rm.addEventListener("click", function(){ delete sellCart[key]; renderSellFlavors(); renderSellCart(); }); })(k);
+    (function(key){ rm.addEventListener("click", function(){
+    // If in edit mode, re-deduct the removed item's original qty back from stock
+    // (it was restored when edit opened — now it's being permanently removed)
+    if(editingEstId && editingOriginalItems[key]) {
+      stock[key] = Math.max(0, (stock[key]||0) - editingOriginalItems[key]);
+      delete editingOriginalItems[key]; // no longer tracking — it's been re-settled
+    }
+    delete sellCart[key];
+    renderSellFlavors(); renderSellCart();
+  }); })(k);
     topRow.appendChild(info); topRow.appendChild(rm);
 
     // Bottom row: qty + price
@@ -2572,7 +2626,14 @@ function renderSellCart() {
     var qInp = document.createElement("input"); qInp.type = "number"; qInp.min = "1";
     qInp.value = String(entry.qty); qInp.className = "cqinp"; qInp.style.width = "60px";
     (function(key){ qInp.addEventListener("change", function(){
-      if(typeof sellCart[key]==="object") sellCart[key].qty = Math.max(1, parseInt(this.value,10)||1);
+      var newQty = Math.max(1, parseInt(this.value,10)||1);
+      if(editingEstId && editingOriginalItems[key] !== undefined) {
+        // Adjust stock: give back old qty, take new qty
+        var oldQty = editingOriginalItems[key];
+        stock[key] = Math.max(0, (stock[key]||0) + oldQty - newQty);
+        editingOriginalItems[key] = newQty; // update snapshot to new qty
+      }
+      if(typeof sellCart[key]==="object") sellCart[key].qty = newQty;
       renderSellCart();
     }); })(k);
 
@@ -2630,6 +2691,7 @@ function renderSellCart() {
     var diVal = (document.getElementById("est-date-inp")||{}).value||"";
     var estId = niVal.trim() || ("EST-"+Date.now().toString().slice(-5));
     var saleDate = diVal ? new Date(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}) : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    // ── STEP 1: Build items list WITHOUT touching stock yet ──
     var grandTotal=0, estItems=[], count=0, warn=0;
     keys.forEach(function(k){
       var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
@@ -2637,12 +2699,22 @@ function renderSellCart() {
       var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
       var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
       var lt=up*q; grandTotal+=lt;
-      var cur=stock[k]||0; if(q>cur) warn++; stock[k]=Math.max(0,cur-q);
-      txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:q,custId:custId,custName:custName,unitPrice:up,total:lt,date:saleDate,estId:estId});
-      estItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt,category:catOfBrand(br)||""}); count++;
+      if((stock[k]||0)<q) warn++;
+      estItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt,category:catOfBrand(br)||""});
+      count++;
     });
-    var rawDate = estDateInp || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
+    // ── STEP 2: Build the estimate record ──
+    var rawDate = diVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
     var rec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false};
+    // ── STEP 3: Now deduct stock (all validation passed) ──
+    estItems.forEach(function(it){
+      var k=it.brand+"~~"+it.flavor;
+      stock[k]=Math.max(0,(stock[k]||0)-it.qty);
+      txLog.unshift({type:"sale",category:it.category,brand:it.brand,flavor:it.flavor,
+        qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice,
+        total:it.total,date:saleDate,estId:estId});
+    });
+    // ── STEP 4: Save estimate ──
     estimates.unshift(rec); afterChange(); savePricing(); printEstimate(rec);
     sellCart={};
     var ni=document.getElementById("est-num-inp"); if(ni) ni.value="";
@@ -4541,7 +4613,13 @@ function renderEstimatesList(){
 function openEstimateEdit(estId){
   var est=estimates.find(function(e){return e.id===estId;}); if(!est||est.locked)return;
   editingEstId=estId;
-  (est.items||[]).forEach(function(it){var k=it.brand+"~~"+it.flavor;stock[k]=(stock[k]||0)+it.qty;});
+  // Snapshot original items BEFORE restoring to stock
+  editingOriginalItems={};
+  (est.items||[]).forEach(function(it){
+    var k=it.brand+"~~"+it.flavor;
+    editingOriginalItems[k]=it.qty;   // remember original qty
+    stock[k]=(stock[k]||0)+it.qty;   // restore to stock
+  });
   sellCart={};
   (est.items||[]).forEach(function(it){sellCart[it.brand+"~~"+it.flavor]={qty:it.qty,price:it.unitPrice||""};});
   populateSellCustDropdown();
@@ -4571,6 +4649,7 @@ function cancelEstimateEdit(){
 }
 function exitEditMode(){
   editingEstId=null;
+  editingOriginalItems={};
   var ni=document.getElementById("est-num-inp"); if(ni)ni.value="";
   var di=document.getElementById("est-date-inp"); if(di)di.value="";
   var banner=document.getElementById("edit-mode-banner"); if(banner)banner.style.display="none";
@@ -4590,13 +4669,19 @@ function saveEstimateEdit(lock){
   var di=(document.getElementById("est-date-inp")||{}).value||"";
   var newId=ni.trim()||est.id;
   var newDate=di?new Date(di).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):est.date;
+  // Build items WITHOUT touching stock yet
   var newItems=[],grandTotal=0; var saleDate=new Date().toLocaleString();
   keys.forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
     var entry=sellCart[k]; var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
     var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
-    var lt=up*q; grandTotal+=lt; stock[k]=Math.max(0,(stock[k]||0)-q);
-    newItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt});
+    var lt=up*q; grandTotal+=lt;
+    newItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt,category:catOfBrand(br)||""});
+  });
+  // Deduct stock NOW (after items built successfully)
+  newItems.forEach(function(it){
+    var k=it.brand+"~~"+it.flavor;
+    stock[k]=Math.max(0,(stock[k]||0)-it.qty);
   });
   txLog=txLog.filter(function(e){return e.estId!==editingEstId;});
   newItems.forEach(function(it){txLog.unshift({type:"sale",category:catOfBrand(it.brand),brand:it.brand,flavor:it.flavor,qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice,total:it.total,date:saleDate,estId:newId});});
@@ -5393,6 +5478,27 @@ function closeManualEstModal() {
   });
 })();
 
+
+// ── STOCK SEARCH + SORT LISTENERS ──
+(function(){
+  var inp=document.getElementById("stock-search"); if(!inp)return;
+  inp.addEventListener("input",function(){
+    stockSearch=inp.value;
+    renderStockGrid();
+  });
+  inp.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){stockSearch="";inp.value="";renderStockGrid();}
+  });
+})();
+(function(){
+  ["az","za","hi","lo"].forEach(function(s){
+    var btn=document.getElementById("ss-"+s); if(!btn)return;
+    btn.addEventListener("click",function(){
+      stockSort=s; renderStockGrid();
+    });
+  });
+})();
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -5415,6 +5521,10 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
+
+
 
 
 
