@@ -961,6 +961,8 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
 // openDistModal handled by listener
 
 
@@ -1009,6 +1011,7 @@ var payments  = [];
 var currentStmtCustId = "";      // [{id,estId,custId,custName,date,amount,method,chequeNo,note,received}]
 var nextEstimateNum = 1;
 var editingEstId = null;
+var editingManualEstId  = null;
 var stockSort   = "az";
 var stockSearch = "";
 var editingOriginalItems = {}; // stock snapshot when edit opens
@@ -4612,6 +4615,8 @@ function renderEstimatesList(){
 
 function openEstimateEdit(estId){
   var est=estimates.find(function(e){return e.id===estId;}); if(!est||est.locked)return;
+  // Manual estimates use a different edit modal
+  if(est.manual) { openManualEstEdit(est); return; }
   editingEstId=estId;
   // Snapshot original items BEFORE restoring to stock
   editingOriginalItems={};
@@ -5407,6 +5412,9 @@ function openManualEstModal() {
 }
 
 function closeManualEstModal() {
+  editingManualEstId = null;
+  var heading = document.querySelector("#manual-est-modal .modal-title");
+  if(heading) heading.textContent = "Manual Estimate";
   var m=document.getElementById("manual-est-modal"); if(m)m.classList.remove("open");
 }
 
@@ -5433,8 +5441,11 @@ function closeManualEstModal() {
       var noteVal  = (document.getElementById("me-note")||{}).value||"";
       if(!numVal.trim()){ toast("Enter an estimate number","err"); return; }
       if(totalVal <= 0){ toast("Enter a total amount","err"); return; }
-      // Check duplicate
-      if(estimates.some(function(e){return e.id===numVal.trim();})){
+      // Check duplicate (skip if editing same estimate)
+      var isDuplicate = estimates.some(function(e){
+        return e.id===numVal.trim() && e.id!==editingManualEstId;
+      });
+      if(isDuplicate){
         if(!confirm("Estimate \""+numVal.trim()+"\" already exists.\n\nContinue anyway?")) return;
       }
       var custObj = custId ? customers.find(function(c){return c.id===custId;}) : null;
@@ -5458,8 +5469,22 @@ function closeManualEstModal() {
         locked:   false,
         manual:   true         // KEY FLAG — no stock involved
       };
-      estimates.unshift(manualEst);
+      if(editingManualEstId) {
+        // UPDATE existing manual estimate
+        var existingIdx = estimates.findIndex(function(e){ return e.id===editingManualEstId; });
+        if(existingIdx > -1) {
+          estimates[existingIdx] = manualEst;
+        } else {
+          estimates.unshift(manualEst);
+        }
+        editingManualEstId = null;
+      } else {
+        estimates.unshift(manualEst);
+      }
       savePricing();
+      // Reset modal title back to default
+      var heading2 = document.querySelector("#manual-est-modal .modal-title");
+      if(heading2) heading2.textContent = "Manual Estimate";
       closeManualEstModal();
       // Switch to Estimates tab
       document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
@@ -5471,11 +5496,8 @@ function closeManualEstModal() {
       toast(numVal.trim()+" saved \u2713","ok");
     });
   }
-  // Wire immediately and also on Sell tab open
+  // Wire immediately (DOM is ready at this point)
   wireMe();
-  document.querySelectorAll(".tab[data-pg='sell']").forEach(function(t){
-    t.addEventListener("click",function(){ setTimeout(wireMe,50); });
-  });
 })();
 
 
@@ -5499,6 +5521,39 @@ function closeManualEstModal() {
   });
 })();
 
+
+function openManualEstEdit(est) {
+  editingManualEstId = est.id;
+  // Populate customer dropdown
+  var csel = document.getElementById("me-cust"); if(!csel) return;
+  csel.innerHTML = '<option value="">\u2014 Walk-in / No customer \u2014</option>';
+  customers.forEach(function(c){
+    var o=document.createElement("option"); o.value=c.id; o.textContent=c.name; csel.appendChild(o);
+  });
+  // Pre-fill all fields from existing estimate
+  var numInp = document.getElementById("me-num"); if(numInp) numInp.value = est.id||"";
+  var di = document.getElementById("me-date");
+  if(di) {
+    var rawD = est.rawDate || "";
+    if(!rawD && est.date) {
+      // Try parsing display date back to YYYY-MM-DD
+      try { var pd=new Date(est.date); if(!isNaN(pd.getTime())) rawD=pd.getFullYear()+"-"+String(pd.getMonth()+1).padStart(2,"0")+"-"+String(pd.getDate()).padStart(2,"0"); } catch(x){}
+    }
+    di.value = rawD;
+  }
+  csel.value = est.custId||"";
+  var totalInp = document.getElementById("me-total"); if(totalInp) totalInp.value = est.total||"";
+  var descInp = document.getElementById("me-desc"); if(descInp) descInp.value = est.description||"";
+  var noteInp = document.getElementById("me-note"); if(noteInp) noteInp.value = est.note||"";
+  // Update modal title and save button
+  var title = document.getElementById("manual-est-modal");
+  var saveBtn = document.getElementById("btn-me-save");
+  // Change modal heading
+  var heading = document.querySelector("#manual-est-modal .modal-title");
+  if(heading) heading.textContent = "Edit Manual Estimate";
+  var m=document.getElementById("manual-est-modal"); if(m)m.classList.add("open");
+}
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -5521,6 +5576,8 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
 
 
 
