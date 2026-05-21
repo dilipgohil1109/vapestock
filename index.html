@@ -5419,10 +5419,12 @@ function closeManualEstModal() {
 }
 
 (function(){
-  // Wire manual estimate modal listeners on first call (DOM ready guard)
-  if(window._meWired) return;
-  window._meWired = true;
-  function wireMe() {
+  function wireManualEst() {
+    if(window._meWired) return;
+    var saveBtn=document.getElementById("btn-me-save");
+    if(!saveBtn) return; // DOM not ready yet — will retry
+    window._meWired = true;
+
     var closeBtn=document.getElementById("manual-est-close");
     if(closeBtn) closeBtn.addEventListener("click",closeManualEstModal);
     var overlay=document.getElementById("manual-est-modal");
@@ -5431,7 +5433,7 @@ function closeManualEstModal() {
     if(cancelBtn) cancelBtn.addEventListener("click",closeManualEstModal);
     var addBtn=document.getElementById("btn-add-manual-est");
     if(addBtn) addBtn.addEventListener("click",openManualEstModal);
-    var saveBtn=document.getElementById("btn-me-save"); if(!saveBtn) return;
+
     saveBtn.addEventListener("click", function(){
       var numVal   = (document.getElementById("me-num")||{}).value||"";
       var dateVal  = (document.getElementById("me-date")||{}).value||"";
@@ -5441,7 +5443,6 @@ function closeManualEstModal() {
       var noteVal  = (document.getElementById("me-note")||{}).value||"";
       if(!numVal.trim()){ toast("Enter an estimate number","err"); return; }
       if(totalVal <= 0){ toast("Enter a total amount","err"); return; }
-      // Check duplicate (skip if editing same estimate)
       var isDuplicate = estimates.some(function(e){
         return e.id===numVal.trim() && e.id!==editingManualEstId;
       });
@@ -5455,38 +5456,32 @@ function closeManualEstModal() {
         : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
       var rawDateMe = dateVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
       var manualEst = {
-        id:       numVal.trim(),
-        num:      nextEstimateNum++,
-        date:     dateStr,
-        rawDate:  rawDateMe,
-        custId:   custId,
-        custName: custName,
-        items:    [],           // no items — free-text only
-        description: descVal,  // free-text description
-        note:     noteVal,
-        total:    totalVal,
-        showPrice: true,
-        locked:   false,
-        manual:   true         // KEY FLAG — no stock involved
+        id:          numVal.trim(),
+        num:         nextEstimateNum++,
+        date:        dateStr,
+        rawDate:     rawDateMe,
+        custId:      custId,
+        custName:    custName,
+        items:       [],
+        description: descVal,
+        note:        noteVal,
+        total:       totalVal,
+        showPrice:   true,
+        locked:      false,
+        manual:      true
       };
       if(editingManualEstId) {
-        // UPDATE existing manual estimate
         var existingIdx = estimates.findIndex(function(e){ return e.id===editingManualEstId; });
-        if(existingIdx > -1) {
-          estimates[existingIdx] = manualEst;
-        } else {
-          estimates.unshift(manualEst);
-        }
+        if(existingIdx > -1) estimates[existingIdx] = manualEst;
+        else estimates.unshift(manualEst);
         editingManualEstId = null;
       } else {
         estimates.unshift(manualEst);
       }
       savePricing();
-      // Reset modal title back to default
       var heading2 = document.querySelector("#manual-est-modal .modal-title");
       if(heading2) heading2.textContent = "Manual Estimate";
       closeManualEstModal();
-      // Switch to Estimates tab
       document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
       var et=document.querySelector("#stabs [data-st='estimates']"); if(et)et.classList.add("on");
       document.getElementById("sell-upload-pane").style.display="none";
@@ -5496,8 +5491,10 @@ function closeManualEstModal() {
       toast(numVal.trim()+" saved \u2713","ok");
     });
   }
-  // Wire immediately (DOM is ready at this point)
-  wireMe();
+  // Try immediately, then after DOM is fully painted
+  wireManualEst();
+  setTimeout(wireManualEst, 0);
+  document.addEventListener("DOMContentLoaded", wireManualEst);
 })();
 
 
