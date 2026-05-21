@@ -963,6 +963,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 // openDistModal handled by listener
 
 
@@ -5395,7 +5396,75 @@ function printPurchaseSummary(){
 }
 
 // ── MANUAL ESTIMATE ──
+
+function handleManualEstSave() {
+  var numVal   = (document.getElementById("me-num")||{}).value||"";
+  var dateVal  = (document.getElementById("me-date")||{}).value||"";
+  var custId   = (document.getElementById("me-cust")||{}).value||"";
+  var totalVal = parseFloat((document.getElementById("me-total")||{}).value||"0")||0;
+  var descVal  = (document.getElementById("me-desc")||{}).value||"";
+  var noteVal  = (document.getElementById("me-note")||{}).value||"";
+  if(!numVal.trim()){ toast("Enter an estimate number","err"); return; }
+  if(totalVal <= 0){ toast("Enter a total amount","err"); return; }
+  var isDuplicate = estimates.some(function(e){
+    return e.id===numVal.trim() && e.id!==editingManualEstId;
+  });
+  if(isDuplicate){
+    if(!confirm("Estimate \""+numVal.trim()+"\" already exists.\n\nContinue anyway?")) return;
+  }
+  var custObj = custId ? customers.find(function(c){return c.id===custId;}) : null;
+  var custName = custObj ? custObj.name : "Walk-in";
+  var dateStr = dateVal
+    ? new Date(dateVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
+    : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+  var rawDateMe = dateVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
+  var manualEst = {
+    id:          numVal.trim(),
+    num:         nextEstimateNum++,
+    date:        dateStr,
+    rawDate:     rawDateMe,
+    custId:      custId,
+    custName:    custName,
+    items:       [],
+    description: descVal,
+    note:        noteVal,
+    total:       totalVal,
+    showPrice:   true,
+    locked:      false,
+    manual:      true
+  };
+  if(editingManualEstId) {
+    var idx = estimates.findIndex(function(e){ return e.id===editingManualEstId; });
+    if(idx > -1) estimates[idx] = manualEst; else estimates.unshift(manualEst);
+  } else {
+    estimates.unshift(manualEst);
+  }
+  savePricing();
+  closeManualEstModal();
+  document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
+  var et=document.querySelector("#stabs [data-st='estimates']"); if(et)et.classList.add("on");
+  document.getElementById("sell-upload-pane").style.display="none";
+  document.getElementById("sell-manual-pane").style.display="none";
+  var ep=document.getElementById("sell-estimates-pane"); if(ep)ep.style.display="block";
+  renderEstimatesList();
+  toast(numVal.trim()+" saved \u2713","ok");
+}
+
 function openManualEstModal() {
+  // Wire buttons once (DOM guaranteed ready since user clicked to open)
+  if(!window._meWired) {
+    window._meWired = true;
+    var _close = document.getElementById("manual-est-close");
+    if(_close) _close.addEventListener("click", closeManualEstModal);
+    var _overlay = document.getElementById("manual-est-modal");
+    if(_overlay) _overlay.addEventListener("click", function(e){ if(e.target===_overlay) closeManualEstModal(); });
+    var _cancel = document.getElementById("btn-me-cancel");
+    if(_cancel) _cancel.addEventListener("click", closeManualEstModal);
+    var _addBtn = document.getElementById("btn-add-manual-est");
+    if(_addBtn) _addBtn.addEventListener("click", openManualEstModal);
+    var _save = document.getElementById("btn-me-save");
+    if(_save) _save.addEventListener("click", handleManualEstSave);
+  }
   // Populate customer dropdown
   var csel = document.getElementById("me-cust"); if(!csel) return;
   csel.innerHTML = '<option value="">\u2014 Walk-in / No customer \u2014</option>';
@@ -5406,8 +5475,10 @@ function openManualEstModal() {
   var di = document.getElementById("me-date");
   if(di) { var t=new Date(); di.value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); }
   // Clear fields
-  var fields = ["me-num","me-total","me-desc","me-note"];
-  fields.forEach(function(id){ var el=document.getElementById(id); if(el)el.value=""; });
+  ["me-num","me-total","me-desc","me-note"].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=""; });
+  var heading = document.querySelector("#manual-est-modal .modal-title");
+  if(heading) heading.textContent = "Manual Estimate";
+  editingManualEstId = null;
   var m=document.getElementById("manual-est-modal"); if(m)m.classList.add("open");
 }
 
@@ -5418,84 +5489,7 @@ function closeManualEstModal() {
   var m=document.getElementById("manual-est-modal"); if(m)m.classList.remove("open");
 }
 
-(function(){
-  function wireManualEst() {
-    if(window._meWired) return;
-    var saveBtn=document.getElementById("btn-me-save");
-    if(!saveBtn) return; // DOM not ready yet — will retry
-    window._meWired = true;
 
-    var closeBtn=document.getElementById("manual-est-close");
-    if(closeBtn) closeBtn.addEventListener("click",closeManualEstModal);
-    var overlay=document.getElementById("manual-est-modal");
-    if(overlay) overlay.addEventListener("click",function(e){if(e.target===overlay)closeManualEstModal();});
-    var cancelBtn=document.getElementById("btn-me-cancel");
-    if(cancelBtn) cancelBtn.addEventListener("click",closeManualEstModal);
-    var addBtn=document.getElementById("btn-add-manual-est");
-    if(addBtn) addBtn.addEventListener("click",openManualEstModal);
-
-    saveBtn.addEventListener("click", function(){
-      var numVal   = (document.getElementById("me-num")||{}).value||"";
-      var dateVal  = (document.getElementById("me-date")||{}).value||"";
-      var custId   = (document.getElementById("me-cust")||{}).value||"";
-      var totalVal = parseFloat((document.getElementById("me-total")||{}).value||"0")||0;
-      var descVal  = (document.getElementById("me-desc")||{}).value||"";
-      var noteVal  = (document.getElementById("me-note")||{}).value||"";
-      if(!numVal.trim()){ toast("Enter an estimate number","err"); return; }
-      if(totalVal <= 0){ toast("Enter a total amount","err"); return; }
-      var isDuplicate = estimates.some(function(e){
-        return e.id===numVal.trim() && e.id!==editingManualEstId;
-      });
-      if(isDuplicate){
-        if(!confirm("Estimate \""+numVal.trim()+"\" already exists.\n\nContinue anyway?")) return;
-      }
-      var custObj = custId ? customers.find(function(c){return c.id===custId;}) : null;
-      var custName = custObj ? custObj.name : "Walk-in";
-      var dateStr = dateVal
-        ? new Date(dateVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
-        : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
-      var rawDateMe = dateVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
-      var manualEst = {
-        id:          numVal.trim(),
-        num:         nextEstimateNum++,
-        date:        dateStr,
-        rawDate:     rawDateMe,
-        custId:      custId,
-        custName:    custName,
-        items:       [],
-        description: descVal,
-        note:        noteVal,
-        total:       totalVal,
-        showPrice:   true,
-        locked:      false,
-        manual:      true
-      };
-      if(editingManualEstId) {
-        var existingIdx = estimates.findIndex(function(e){ return e.id===editingManualEstId; });
-        if(existingIdx > -1) estimates[existingIdx] = manualEst;
-        else estimates.unshift(manualEst);
-        editingManualEstId = null;
-      } else {
-        estimates.unshift(manualEst);
-      }
-      savePricing();
-      var heading2 = document.querySelector("#manual-est-modal .modal-title");
-      if(heading2) heading2.textContent = "Manual Estimate";
-      closeManualEstModal();
-      document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
-      var et=document.querySelector("#stabs [data-st='estimates']"); if(et)et.classList.add("on");
-      document.getElementById("sell-upload-pane").style.display="none";
-      document.getElementById("sell-manual-pane").style.display="none";
-      var ep=document.getElementById("sell-estimates-pane"); if(ep)ep.style.display="block";
-      renderEstimatesList();
-      toast(numVal.trim()+" saved \u2713","ok");
-    });
-  }
-  // Try immediately, then after DOM is fully painted
-  wireManualEst();
-  setTimeout(wireManualEst, 0);
-  document.addEventListener("DOMContentLoaded", wireManualEst);
-})();
 
 
 // ── STOCK SEARCH + SORT LISTENERS ──
@@ -5551,6 +5545,12 @@ function openManualEstEdit(est) {
   var m=document.getElementById("manual-est-modal"); if(m)m.classList.add("open");
 }
 
+
+// Wire the + Manual button (it's in pg-sell which is in the HTML)
+(function(){
+  var el = document.getElementById("btn-add-manual-est");
+  if(el) el.addEventListener("click", openManualEstModal);
+})();
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -5573,6 +5573,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
