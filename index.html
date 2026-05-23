@@ -461,6 +461,12 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
       <div class="fc" data-gf="low">Low Only</div>
       <div class="fc" data-gf="all">All Flavors</div>
     </div>
+    <div style="background:var(--sur2);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="gen-show-qty" checked style="width:18px;height:18px;accent-color:var(--acc);cursor:pointer">
+        <span style="font-size:13px;font-weight:600">Show quantity in list</span>
+      </label>
+    </div>
     <button class="btn bpri" id="btn-gen" style="margin-bottom:10px">Generate List</button>
     <textarea class="ota" id="gout" placeholder="WhatsApp list appears here..." readonly style="min-height:220px"></textarea>
     <div class="brow" style="margin-top:10px">
@@ -972,6 +978,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
 
 
 
@@ -2092,6 +2099,8 @@ function renderGenBrands(){
 (function(){var __el=document.getElementById("btn-gen");if(!__el)return;__el.addEventListener("click",function(){
   var allBrsInCat = genCategory === "all" ? BRANDS : brandsForCat(genCategory);
   var brs=genBrand==="all"?allBrsInCat:[genBrand];
+  var showQtyEl = document.getElementById("gen-show-qty");
+  var showQty = showQtyEl ? showQtyEl.checked : true;
   var lines=["*VAPE STOCK LIST*","Date: "+new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),""];
   var hasAny=false;
   brs.forEach(function(br){
@@ -2107,7 +2116,9 @@ function renderGenBrands(){
     lines.push("*"+br+"*");
     fls.forEach(function(fl){
       var q=qty(br,fl);
-      lines.push("  "+(q===0?"[OUT]":q<=3?"[LOW]":"[OK] ")+" "+fl+" - "+q+" units");
+      var line = "  - " + fl;
+      if(showQty) line += " (" + q + ")";
+      lines.push(line);
     });
     lines.push("");
   });
@@ -5879,6 +5890,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
