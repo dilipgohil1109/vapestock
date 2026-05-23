@@ -269,6 +269,8 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div class="tab" data-pg="export">Excel</div>
     <div class="tab" data-pg="accounts">Accounts</div>
     <div class="tab" data-pg="sync">Sync</div>
+    <div id="export-badge" onclick="switchPage('export')" style="display:none;cursor:pointer;margin-left:6px;background:#c87c00;color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;white-space:nowrap">&#9888; Backup</div>
+  </div>
   </div>
 </div>
 
@@ -795,16 +797,50 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 </div>
 
 <div class="pg" id="pg-export">
-  <p class="stitle">Export to Excel</p>
-  <div class="scard">
-    <div class="scard-t">&#128196; Download Excel Report</div>
-    <div class="scard-s">Generates a .xlsx file with 3 sheets: Summary by brand, Full inventory, and Transaction log.</div>
-    <button class="btn bsuc" id="btn-export-xl" style="font-size:15px">&#11015; Download Excel File</button>
-    <div id="xl-status" style="margin-top:9px;font-size:12px;color:var(--txt3);text-align:center;display:none">Building file...</div>
+  <p class="stitle">Export &amp; Reports</p>
+
+  <!-- Export reminder banner -->
+  <div id="export-reminder" style="display:none;background:rgba(200,124,0,.12);border:1px solid var(--amb);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--txt2)">
+    <span style="font-size:15px">&#9888;</span>
+    <span id="export-reminder-text">You haven't exported in 7+ days. Download your master backup now.</span>
   </div>
+
+  <!-- Master Excel -->
   <div class="scard">
-    <div class="scard-t">&#128337; Last Exported</div>
-    <div id="xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Never exported yet</div>
+    <div class="scard-t">&#128196; Master Data Backup (Excel)</div>
+    <div class="scard-s">All data in one Excel file: Stock, Estimates, Payments, Customers, Distributors, Prices, Catalog. Use this as your full backup if everything else fails.</div>
+    <button class="btn bsuc" id="btn-master-xl" style="font-size:15px;width:100%;margin-bottom:8px">&#11015; Download Master Backup</button>
+    <div id="master-xl-status" style="font-size:12px;color:var(--txt3);text-align:center;display:none">Building...</div>
+  </div>
+
+  <!-- Bulk Estimates PDF -->
+  <div class="scard">
+    <div class="scard-t">&#128203; Bulk Estimates PDF</div>
+    <div class="scard-s">Print all estimates in one document. Filter by customer or date range.</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <select class="ifield bsm" id="bulk-est-cust" style="flex:1;margin-bottom:0"><option value="">All Customers</option></select>
+      <div style="display:flex;gap:4px;flex:1;min-width:180px">
+        <input class="ifield bsm" id="bulk-est-from" type="date" style="flex:1;margin-bottom:0" placeholder="From">
+        <input class="ifield bsm" id="bulk-est-to" type="date" style="flex:1;margin-bottom:0" placeholder="To">
+      </div>
+    </div>
+    <button class="btn bpri" id="btn-bulk-est-pdf" style="width:100%">&#128438; Print / Export Estimates</button>
+    <div id="bulk-est-count" style="font-size:11px;color:var(--txt3);text-align:center;margin-top:6px"></div>
+  </div>
+
+  <!-- Stock Excel (existing) -->
+  <div class="scard">
+    <div class="scard-t">&#128200; Stock Report (Excel)</div>
+    <div class="scard-s">Summary by brand, full inventory, and transaction log.</div>
+    <button class="btn bsec" id="btn-export-xl" style="width:100%">&#11015; Download Stock Report</button>
+    <div id="xl-status" style="margin-top:9px;font-size:12px;color:var(--txt3);text-align:center;display:none">Building...</div>
+  </div>
+
+  <!-- Last exported -->
+  <div class="scard">
+    <div class="scard-t">&#128337; Export History</div>
+    <div id="xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Never exported</div>
+    <div id="master-xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Master backup: Never</div>
   </div>
 </div>
 
@@ -936,6 +972,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
 
 
 
@@ -1931,6 +1968,25 @@ function renderCart(){
 (function(){var __el=document.getElementById("btn-confirm-pur");if(!__el)return;__el.addEventListener("click",function(){
   var keys=Object.keys(cart);
   if(!keys.length){toast("No items selected","err");return;}
+  // Build summary for confirmation dialog
+  var totalUnits=0, grandTotal=0;
+  var distEl=document.getElementById("pur-dist-select");
+  var distName=distEl&&distEl.selectedIndex>0?distEl.options[distEl.selectedIndex].text:"No distributor";
+  var lines=[];
+  keys.forEach(function(k){
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    var entry=cart[k];
+    var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
+    var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
+    totalUnits+=q; grandTotal+=up*q;
+    lines.push(br+" \u2013 "+fl+": "+q+(up>0?" @ $"+up.toFixed(2):""));
+  });
+  var msg="PURCHASE CONFIRMATION\n\nDistributor: "+distName+"\nItems: "+keys.length+"\nTotal Units: "+totalUnits+(grandTotal>0?"\nTotal Cost: $"+grandTotal.toFixed(2):"")+"\n\n"+lines.slice(0,8).join("\n")+(lines.length>8?"\n...and "+(lines.length-8)+" more":"")+"\n\nConfirm purchase and add to stock?";
+  if(!confirm(msg)) return;
+  // Commit
+  var now=new Date().toLocaleString();
+  var distId=getPurDistId();
+  var dName=distEl&&distEl.selectedIndex>0?distEl.options[distEl.selectedIndex].text:"";
   keys.forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
     var entry=cart[k];
@@ -1938,11 +1994,10 @@ function renderCart(){
     var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
     stock[k]=(stock[k]||0)+q;
     txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,
-      distId:getPurDistId(),distName:(function(){var d=document.getElementById("pur-dist-select");return d&&d.selectedIndex>0?d.options[d.selectedIndex].text:"";}()),
-      unitPrice:up,total:up*q,date:new Date().toLocaleString()});
+      distId:distId,distName:dName,unitPrice:up,total:up*q,date:now});
   });
   afterChange(); cart={}; renderCart(); renderPurFlavors();
-  toast(keys.length+" item(s) added to stock","ok");
+  toast(totalUnits+" units added to stock \u2713","ok");
 })})();
 
 // ── SELL PAGE ──
@@ -2220,7 +2275,11 @@ function renderSyncPage(){
 // ── EXPORT ──
 function renderExportPage(){
   var last=localStorage.getItem("vs5_lastexport");
-  document.getElementById("xl-last").textContent=last?"Last exported: "+last:"Never exported yet";
+  var lastEl=document.getElementById("xl-last"); if(lastEl)lastEl.textContent=last?"Stock report: "+last:"Stock report: Never";
+  var mLast=localStorage.getItem("vs5_lastmasterexport");
+  var mEl=document.getElementById("master-xl-last"); if(mEl)mEl.textContent=mLast?"Master backup: "+mLast:"Master backup: Never";
+  populateBulkEstCust();
+  updateExportReminder();
 }
 function exportToExcel(){
   if(typeof XLSX==="undefined"){toast("Excel library not loaded","err");return;}
@@ -5551,6 +5610,253 @@ function openManualEstEdit(est) {
   var el = document.getElementById("btn-add-manual-est");
   if(el) el.addEventListener("click", openManualEstModal);
 })();
+
+function exportMasterExcel() {
+  try {
+    var wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: Stock ──
+    var stockRows = [["Category","Brand","Flavor","Qty"]];
+    Object.keys(CATALOG).forEach(function(br){
+      var cat = catOfBrand(br)||"";
+      (CATALOG[br]||[]).forEach(function(fl){
+        stockRows.push([cat, br, fl, stock[skey(br,fl)]||0]);
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(stockRows), "Stock");
+
+    // ── Sheet 2: Estimates ──
+    var estRows = [["Est #","Date","Customer","Type","Items/Description","Total","Paid","Balance","Status"]];
+    estimates.forEach(function(e){
+      var paid = payments.filter(function(p){return p.estId===e.id&&p.received;}).reduce(function(s,p){return s+p.amount;},0);
+      var bal = (e.total||0)-paid;
+      var desc = e.manual ? (e.description||"") : (e.items||[]).map(function(it){return it.brand+" - "+it.flavor+" x"+it.qty;}).join("; ");
+      estRows.push([e.id, e.date, e.custName||"Walk-in", e.manual?"Manual":"Regular",
+        desc, e.total||0, paid, bal, e.locked?"Locked":bal<=0?"Paid":"Outstanding"]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(estRows), "Estimates");
+
+    // ── Sheet 3: Payments ──
+    var payRows = [["Payment ID","Est #","Customer","Date","Amount","Method","Cheque/Ref #","Note","Status"]];
+    payments.forEach(function(p){
+      payRows.push([p.id, p.estId||"", p.custName||"", p.date, p.amount||0,
+        p.method||"", p.chequeNo||"", p.note||"", p.received?"Received":"Pending"]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(payRows), "Payments");
+
+    // ── Sheet 4: Customers ──
+    var custRows = [["ID","Name","Contact","Phone","Address"]];
+    customers.forEach(function(c){
+      custRows.push([c.id, c.name||"", c.contact||"", c.phone||"", (c.addr1||"")+" "+(c.addr2||"")]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(custRows), "Customers");
+
+    // ── Sheet 5: Distributors ──
+    var distRows = [["ID","Name","Contact","Phone"]];
+    (distributors||[]).forEach(function(d){
+      distRows.push([d.id, d.name||"", d.contact||"", d.phone||""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(distRows), "Distributors");
+
+    // ── Sheet 6: Customer Prices ──
+    var cpRows = [["Customer ID","Customer","Brand","Price"]];
+    Object.keys(customerPrices||{}).forEach(function(k){
+      var parts=k.split("~~"); var cid=parts[0]; var br=parts.slice(1).join("~~");
+      var cust=customers.find(function(c){return c.id===cid;})||{};
+      cpRows.push([cid, cust.name||"", br, customerPrices[k]]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cpRows), "Customer Prices");
+
+    // ── Sheet 7: Distributor Prices ──
+    var dpRows = [["Distributor ID","Distributor","Brand","Price"]];
+    Object.keys(distributorPrices||{}).forEach(function(k){
+      var parts=k.split("~~"); var did=parts[0]; var br=parts.slice(1).join("~~");
+      var dist=(distributors||[]).find(function(d){return d.id===did;})||{};
+      dpRows.push([did, dist.name||"", br, distributorPrices[k]]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dpRows), "Distributor Prices");
+
+    // ── Sheet 8: Catalog ──
+    var catRows = [["Category","Brand","Flavor"]];
+    Object.keys(CATALOG).forEach(function(br){
+      var cat=catOfBrand(br)||"";
+      (CATALOG[br]||[]).forEach(function(fl){ catRows.push([cat,br,fl]); });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(catRows), "Catalog");
+
+    // ── Sheet 9: Account Summary ──
+    var accRows = [["Customer","Total Billed","Total Received","Pending","Balance Due"]];
+    customers.forEach(function(c){
+      var bal=getCustBalance(c.id);
+      if(bal.billed>0) accRows.push([c.name, bal.billed, bal.received, bal.pending, bal.balance]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(accRows), "Account Summary");
+
+    // Save
+    var ts = new Date().toISOString().replace(/[:.]/g,"-").substring(0,16);
+    XLSX.writeFile(wb, "KrazyStock_Master_"+ts+".xlsx");
+    var now = new Date().toLocaleString();
+    localStorage.setItem("vs5_lastmasterexport", now);
+    document.getElementById("master-xl-last").textContent = "Master backup: " + now;
+    updateExportReminder();
+    toast("Master backup downloaded \u2713","ok");
+  } catch(ex) {
+    toast("Export failed: "+ex.message,"err");
+  }
+}
+
+// ── PRIORITY 4: Export reminder ──
+function updateExportReminder() {
+  var banner = document.getElementById("export-reminder");
+  var txt = document.getElementById("export-reminder-text");
+  if(!banner||!txt) return;
+  var last = localStorage.getItem("vs5_lastmasterexport");
+  if(!last) {
+    banner.style.display = "flex"; banner.style.gap = "8px"; banner.style.alignItems = "center";
+    txt.textContent = "No master backup yet. Download your backup now to protect your data.";
+    _showExportBadge(true); return;
+  }
+  var lastDate = new Date(last);
+  if(isNaN(lastDate.getTime())) { banner.style.display="none"; return; }
+  var daysSince = Math.floor((Date.now()-lastDate.getTime())/(1000*60*60*24));
+  if(daysSince >= 7) {
+    banner.style.display = "flex"; banner.style.gap = "8px"; banner.style.alignItems = "center";
+    txt.textContent = "Last backup was "+daysSince+" days ago. Download a fresh backup now.";
+    _showExportBadge(true);
+  } else if(daysSince >= 3) {
+    banner.style.display = "flex"; banner.style.gap = "8px"; banner.style.alignItems = "center";
+    banner.style.background = "rgba(91,79,232,.08)";
+    banner.style.borderColor = "var(--acc)";
+    txt.textContent = "Last backup "+daysSince+" day"+(daysSince!==1?"s":"")+" ago.";
+  } else {
+    banner.style.display = "none";
+    var hbadge=document.getElementById("export-badge"); if(hbadge)hbadge.style.display="none";
+  }
+}
+function _showExportBadge(show){
+  var hbadge=document.getElementById("export-badge"); if(!hbadge)return;
+  hbadge.style.display=show?"inline-block":"none";
+}
+
+// ── PRIORITY 2: Bulk Estimates PDF ──
+function populateBulkEstCust() {
+  var sel = document.getElementById("bulk-est-cust"); if(!sel) return;
+  sel.innerHTML = '<option value="">All Customers</option>';
+  customers.forEach(function(c){
+    var o=document.createElement("option"); o.value=c.id; o.textContent=c.name; sel.appendChild(o);
+  });
+  sel.onchange = updateBulkEstCount;
+  var fromEl = document.getElementById("bulk-est-from");
+  var toEl   = document.getElementById("bulk-est-to");
+  if(fromEl) fromEl.onchange = updateBulkEstCount;
+  if(toEl)   toEl.onchange   = updateBulkEstCount;
+  updateBulkEstCount();
+}
+
+function getBulkEstList() {
+  var custId = (document.getElementById("bulk-est-cust")||{}).value||"";
+  var from   = (document.getElementById("bulk-est-from")||{}).value||"";
+  var to     = (document.getElementById("bulk-est-to")||{}).value||"";
+  return estimates.filter(function(e){
+    if(custId && e.custId !== custId) return false;
+    if(from && (e.rawDate||"") < from) return false;
+    if(to   && (e.rawDate||"") > to)   return false;
+    return true;
+  }).slice().sort(function(a,b){ return (a.rawDate||a.date||"").localeCompare(b.rawDate||b.date||""); });
+}
+
+function updateBulkEstCount() {
+  var el = document.getElementById("bulk-est-count"); if(!el) return;
+  var list = getBulkEstList();
+  el.textContent = list.length+" estimate"+(list.length!==1?"s":"")+" selected";
+  el.style.color = list.length===0?"var(--red)":"var(--txt3)";
+}
+
+function printBulkEstimates() {
+  var list = getBulkEstList();
+  if(!list.length){ toast("No estimates match the filter","err"); return; }
+  var printCSS = "*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:12mm;background:#fff}@page{margin:12mm;size:A4}.est-block{page-break-inside:avoid;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #000}.est-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}.est-id{font-size:18px;font-weight:900}.est-meta{font-size:11px;color:#666;margin-bottom:8px}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th{background:#f0f0f0;padding:4px 6px;text-align:left;border:1px solid #ccc}td{padding:4px 6px;border:1px solid #ddd}.brand-row{background:#f5f5f5;font-weight:700}.total-bar{background:#222;color:#fff;padding:6px 10px;display:flex;justify-content:space-between;border-radius:4px;margin-top:6px}.cust-box{background:#f8f8f8;border:1px solid #ddd;border-radius:4px;padding:6px 10px;margin-bottom:8px;font-size:11px}";
+  var h = "<h1 style='font-size:22px;margin:0 0 4px'>Krazy Wholesale</h1><h2 style='font-size:14px;color:#555;margin:0 0 12px'>Estimates Report &mdash; "+list.length+" estimate"+(list.length!==1?"s":"")+" &mdash; Printed: "+new Date().toLocaleDateString()+"</h2><hr style='border:none;border-top:2px solid #000;margin-bottom:16px'>";
+
+  list.forEach(function(est){
+    var cust = est.custId ? customers.find(function(c){return c.id===est.custId;}) : null;
+    var paid = payments.filter(function(p){return p.estId===est.id&&p.received;}).reduce(function(s,p){return s+p.amount;},0);
+    var bal  = (est.total||0)-paid;
+    h += "<div class='est-block'>";
+    h += "<div class='est-header'><div><div class='est-id'>"+(est.manual?"MANUAL ":"")+(est.id||"")+"</div><div class='est-meta'>"+(est.date||"")+"</div></div>";
+    h += "<div style='text-align:right'><div style='font-size:14px;font-weight:700'>$"+(est.total||0).toFixed(2)+"</div>";
+    if(bal>0.01) h += "<div style='color:#c0392b;font-size:11px;font-weight:700'>Bal: $"+bal.toFixed(2)+"</div>";
+    else h += "<div style='color:#1a6b3a;font-size:11px;font-weight:700'>&#10003; Paid</div>";
+    h += "</div></div>";
+    if(cust||est.custName){
+      h += "<div class='cust-box'><strong>"+(cust?cust.name:est.custName||"Walk-in")+"</strong>";
+      if(cust&&cust.phone) h += " &nbsp; "+cust.phone;
+      h += "</div>";
+    }
+    if(est.manual){
+      h += "<div style='padding:8px;background:#f8f8f8;border:1px solid #ddd;border-radius:4px;font-size:11px'>";
+      (est.description||"").split("\n").forEach(function(l){ if(l.trim()) h += "<div style='padding:2px 0;border-bottom:1px dotted #ddd'>"+l+"</div>"; });
+      h += "</div>";
+    } else {
+      var catOrder=[],catMap={};
+      (est.items||[]).forEach(function(it){
+        var cat=it.category||"Other",br=it.brand||"";
+        if(!catMap[cat]){catMap[cat]={};catOrder.push(cat);}
+        if(!catMap[cat][br])catMap[cat][br]=[];
+        catMap[cat][br].push(it);
+      });
+      catOrder.forEach(function(cat){
+        h += "<div style='font-size:11px;font-weight:800;margin:6px 0 2px;border-bottom:1px solid #000'>"+cat+"</div>";
+        h += "<table><thead><tr><th>Brand &amp; Flavor</th><th style='text-align:center'>Qty</th>";
+        if(est.showPrice!==false) h += "<th style='text-align:right'>Unit $</th><th style='text-align:right'>Total</th>";
+        h += "</tr></thead><tbody>";
+        Object.keys(catMap[cat]).forEach(function(br){
+          var bTotal=0,bQty=0;
+          catMap[cat][br].forEach(function(it){
+            var lt=it.total||(it.unitPrice||0)*(it.qty||0); bTotal+=lt; bQty+=it.qty||0;
+            h += "<tr><td style='padding-left:12px;color:#444'>"+it.flavor+"</td><td style='text-align:center'>"+it.qty+"</td>";
+            if(est.showPrice!==false) h += "<td style='text-align:right'>$"+(it.unitPrice||0).toFixed(2)+"</td><td style='text-align:right;font-weight:700'>$"+lt.toFixed(2)+"</td>";
+            h += "</tr>";
+          });
+          h += "<tr class='brand-row'><td>"+br+"</td><td style='text-align:center'>"+bQty+"</td>";
+          if(est.showPrice!==false) h += "<td></td><td style='text-align:right'>$"+bTotal.toFixed(2)+"</td>";
+          h += "</tr>";
+        });
+        h += "</tbody></table>";
+      });
+    }
+    var units = (est.items||[]).reduce(function(s,it){return s+it.qty;},0);
+    h += "<div class='total-bar'><span>"+(est.manual?"Manual estimate":(est.items||[]).length+" lines &middot; "+units+" units")+"</span>";
+    if(est.showPrice!==false) h += "<span style='font-size:15px;font-weight:900'>$"+(est.total||0).toFixed(2)+"</span>";
+    h += "</div></div>";
+  });
+
+  var w=window.open("","_blank","width=900,height=700");
+  if(!w){toast("Pop-up blocked","err");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Estimates Report</title><style>"+printCSS+"</style></head><body>"+h+"</body></html>");
+  w.document.close(); w.focus(); setTimeout(function(){w.print();},400);
+  toast("Opening "+list.length+" estimates","ok");
+}
+
+// P1: Master Excel button
+(function(){var el=document.getElementById("btn-master-xl");if(!el)return;
+  el.addEventListener("click",function(){
+    var s=document.getElementById("master-xl-status"); if(s)s.style.display="block";
+    setTimeout(function(){ exportMasterExcel(); if(s)s.style.display="none"; },80);
+  });
+})();
+// P2: Bulk estimates button
+(function(){var el=document.getElementById("btn-bulk-est-pdf");if(!el)return;
+  el.addEventListener("click",printBulkEstimates);
+})();
+// P4: Show reminder on load
+updateExportReminder();
+// Also show master last export
+(function(){
+  var el=document.getElementById("master-xl-last"); if(!el)return;
+  var last=localStorage.getItem("vs5_lastmasterexport");
+  if(last) el.textContent="Master backup: "+last;
+})();
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -5573,6 +5879,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
