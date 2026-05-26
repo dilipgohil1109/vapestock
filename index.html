@@ -857,6 +857,31 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div id="xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Never exported</div>
     <div id="master-xl-last" style="font-size:13px;color:var(--txt3);margin-top:4px">Master backup: Never</div>
   </div>
+
+  <!-- B2B Catalog -->
+  <div class="scard">
+    <div class="scard-t">&#128220; B2B Product Catalog</div>
+    <div class="scard-s">Generate a clean wholesale price sheet. Open in browser and Save as PDF.</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <select class="ifield bsm" id="cat-filter-sel" style="flex:1;margin-bottom:0"><option value="">All Categories</option></select>
+      <select class="ifield bsm" id="cat-brand-filter-sel" style="flex:1;margin-bottom:0"><option value="">All Brands</option></select>
+    </div>
+    <div style="background:var(--sur2);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="cat-show-min" checked style="width:18px;height:18px;accent-color:var(--acc)">
+        <span style="font-size:13px;font-weight:600">Show minimum floor price</span>
+      </label>
+      <div style="font-size:11px;color:var(--txt3);margin-top:4px">Uncheck before sharing externally.</div>
+    </div>
+    <div style="background:var(--sur2);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="cat-show-price" checked style="width:18px;height:18px;accent-color:var(--acc)">
+        <span style="font-size:13px;font-weight:600">Show wholesale price</span>
+      </label>
+      <div style="font-size:11px;color:var(--txt3);margin-top:4px">Uncheck for enquiry-only catalog.</div>
+    </div>
+    <button class="btn bpri" id="btn-gen-catalog" style="width:100%">&#128438; Generate B2B Catalog</button>
+  </div>
 </div>
 
 <div class="pg" id="pg-accounts">
@@ -1018,6 +1043,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
+
 // openDistModal handled by listener
 
 
@@ -1063,6 +1092,8 @@ var autoRefreshEnabled = true;
 var backupBeforeSave = true;
 var estimates = [];
 var payments  = [];
+var brandMeta  = {};
+var minPrices  = {};
 var currentStmtCustId = "";      // [{id,estId,custId,custName,date,amount,method,chequeNo,note,received}]
 var nextEstimateNum = 1;
 var editingEstId = null;
@@ -1295,6 +1326,8 @@ function saveMasterToDrive() {
       estimates: estimates,
       nextEstimateNum: nextEstimateNum,
       payments: payments,
+      brandMeta: brandMeta,
+      minPrices: minPrices,
       ts: Date.now()
     });
     gasPost(gdUrl + "?file=master", payload)
@@ -1336,6 +1369,8 @@ function gdSave(onDone) {
     estimates: estimates,
     nextEstimateNum: nextEstimateNum,
     payments: payments,
+    brandMeta: brandMeta,
+    minPrices: minPrices,
     ts: saveTs
   });
 
@@ -3485,6 +3520,8 @@ function savePricing() {
     localStorage.setItem("vs5_estimates", JSON.stringify(estimates));
     localStorage.setItem("vs5_estnum", String(nextEstimateNum));
     localStorage.setItem("vs5_payments", JSON.stringify(payments));
+    localStorage.setItem("vs5_brandmeta", JSON.stringify(brandMeta));
+    localStorage.setItem("vs5_minprices", JSON.stringify(minPrices));
   } catch(e) {}
   saveMasterToDrive(); // Auto-save master on pricing/customer change
 }
@@ -3498,6 +3535,8 @@ function loadPricing() {
     var es = localStorage.getItem("vs5_estimates"); if(es) estimates = JSON.parse(es);
     var en = localStorage.getItem("vs5_estnum"); if(en) nextEstimateNum = parseInt(en)||1;
     var py = localStorage.getItem("vs5_payments"); if(py) payments = JSON.parse(py);
+    var bm = localStorage.getItem("vs5_brandmeta"); if(bm) try{brandMeta=JSON.parse(bm);}catch(x){}
+    var mp = localStorage.getItem("vs5_minprices"); if(mp) try{minPrices=JSON.parse(mp);}catch(x){}
   } catch(e) {}
 }
 
@@ -3682,8 +3721,8 @@ function renderPricingTable() {
     var thead = document.createElement("thead");
     var hrow = document.createElement("tr");
     var cols = isDefault
-      ? ["Brand", "Default Price", ""]
-      : ["Brand", "Default", "Your Price", "Discount"];
+      ? ["Brand", "Default Price", "Min Floor", ""]
+      : ["Brand", "Default", "Min Floor", "Your Price", "Discount"];
     cols.forEach(function(col) {
       var th = document.createElement("th"); th.textContent = col; hrow.appendChild(th);
     });
@@ -3713,7 +3752,17 @@ function renderPricingTable() {
           savePricing(); gdPricingPush();
         }); })(br);
         defTd.appendChild(defInp); tr.appendChild(defTd);
-        // Empty actions cell
+        var minTd=document.createElement("td");
+        var minInp=document.createElement("input");
+        minInp.type="number";minInp.min="0";minInp.step="0.01";minInp.className="default-inp";
+        minInp.value=minPrices[br]!==undefined?minPrices[br]:"";
+        minInp.placeholder="0.00";minInp.title="Minimum negotiable floor price";
+        (function(brand){minInp.addEventListener("change",function(){
+          var v=parseFloat(this.value);
+          if(!isNaN(v)&&v>=0)minPrices[brand]=v;else delete minPrices[brand];
+          savePricing();
+        });})(br);
+        minTd.appendChild(minInp);tr.appendChild(minTd);
         tr.appendChild(document.createElement("td"));
       } else {
         // Default price (read only)
@@ -3722,6 +3771,10 @@ function renderPricingTable() {
         defTd.style.cssText = "font-family:'DM Mono',monospace;color:var(--txt3);font-size:12px";
         defTd.textContent = defP !== undefined ? defP.toFixed(2) : "—";
         tr.appendChild(defTd);
+        var minRoTd=document.createElement("td");
+        minRoTd.style.cssText="font-family:'DM Mono',monospace;color:var(--txt3);font-size:11px;font-style:italic";
+        minRoTd.textContent=minPrices[br]!==undefined?("$"+minPrices[br].toFixed(2)):"—";
+        tr.appendChild(minRoTd);
 
         // Customer price input
         var cpTd = document.createElement("td");
@@ -5982,6 +6035,77 @@ function renderCartSummary() {
     if(totalDiv)totalDiv.style.display=grandAmt>0?"flex":"none";
   }
 }
+
+// ── CATALOG FUNCTIONS ──
+(function(){
+  var defaults = {"Geek Bar 15K":{"puffs":"15,000","nic":"5% · 50mg","ml":"16mL","desc":"World's first full-screen dual mesh coil disposable. LED tracks battery and e-liquid. Dual mode: 15K regular or 7.5K pulse. USB-C rechargeable. Consistent #1 seller globally."},"Geek Bar 25K":{"puffs":"25,000","nic":"5% · 50mg","ml":"20mL","desc":"Ultra-high capacity upgrade on the Geek Bar platform. Enhanced dual mesh coil, smart LED display, bigger clouds. Fastest-growing SKU in the lineup."},"Lava Plus":{"puffs":"2,000","nic":"5% · 50mg","ml":"7mL","desc":"Reliable mid-tier all-rounder with ceramic coil technology. Wide flavour variety, consistent draw, proven performance. Excellent repeat-purchase rate."},"Lava Monster":{"puffs":"25,000","nic":"5% · 50mg","ml":"High cap.","desc":"High-performance device built for the long haul. Dual 1.2 mesh coil for smooth vapor and dense clouds. Power on/off hold function."},"Lava Big Boy":{"puffs":"7,000","nic":"3–5% · 50mg","ml":"12mL","desc":"Best-selling Lava device. 1.2 mesh coil, 600mAh USB-C rechargeable. Available in 0%, 3%, and 5% nicotine strengths. Simple and reliable."},"Crown Bar":{"puffs":"8,000","nic":"5% · 50mg","ml":"18mL","desc":"Al Fakher premium hookah-inspired DTL disposable. Shisha-style flavour profiles, 600mAh battery, smooth restricted draw. Strong international demand."},"Crown Bar 60K":{"puffs":"60,000","nic":"5% · 50mg","ml":"High cap.","desc":"Al Fakher ultra-high capacity flagship. E-Hose X design with transparent display showing battery, e-liquid, and mode. Dual-mode operation."},"Foggers":{"puffs":"30,000","nic":"5% · 50mg","ml":"19mL","desc":"Eco-conscious modular two-piece system. Reusable 850mAh battery dock + swappable pod. OLED screen, dual mesh coil, adjustable airflow."},"Foger Pod 30K":{"puffs":"30,000","nic":"5% · 50mg","ml":"19mL","desc":"Replacement pod for the Foger Switch Pro system. Magnetic snap-in connection. 19mL prefilled. Dual mesh coil. Most economical Foger option."},"Foger Kit 30K":{"puffs":"30,000","nic":"5% · 50mg","ml":"19mL","desc":"Complete Foger Switch Pro kit: 850mAh battery dock + one 19mL pod. OLED screen, dual mesh coil, adjustable airflow, dual mode."},"Tyson 2.0":{"puffs":"15,000","nic":"5% · 50mg","ml":"High cap.","desc":"Mike Tyson endorsed. Championship-level bold flavour profiles, exceptional battery life, USB-C rechargeable. Instant brand recognition drives strong retail sell-through."},"Tyson Legend 30K":{"puffs":"30,000","nic":"5% · 50mg","ml":"High cap.","desc":"Tyson's ultra-capacity flagship. 30K puffs with bold flavour identity. Dual modes, smart display, USB-C. Premium celebrity brand positioning."},"Bloody Mary":{"puffs":"600","nic":"20mg · 2%","ml":"2mL","desc":"UK-market compact MTL disposable. Distinctive brand identity with 50+ unique flavour blends. 1.2 mesh coil, 550mAh battery. UK/European market segment."},"RIPS Vape":{"puffs":"25,000","nic":"5% · 50mg","ml":"16mL","desc":"Ultra-slim high-capacity disposable. Dual mesh coil, LED screen, mode button. 600mAh USB-C rechargeable. Strong flavour output."},"RIPS 25K 5%":{"puffs":"25,000","nic":"5% · 50mg","ml":"16mL","desc":"RIPS Ultra full-nicotine version. Ultra-slim design, dual mesh coil, LED screen and mode button. 600mAh USB-C rechargeable. Premium slim profile."},"RIPS 2800 0%":{"puffs":"2,800","nic":"0% nicotine-free","ml":"6.5mL","desc":"RIPS nicotine-free version. Same great flavours with zero nicotine. Perfect for customers stepping down or avoiding nicotine entirely."},"RIPS 2800 5%":{"puffs":"2,800","nic":"5% · 50mg","ml":"6.5mL","desc":"Classic RIPS compact disposable. Double the puffs of standard disposables. 6.5mL salt nic. Available in 30mg and 50mg. Palm-sized profile."},"Raz 25K":{"puffs":"25,000","nic":"5% · 50mg","ml":"25mL","desc":"RAZ LTX 25K by GeekVape. 1.77in Mega HD display with live puff count and animation. Dual modes: Normal 25K or Boost 15K. Leather grip, adjustable airflow, 650mAh USB-C."},"OxBar Mini":{"puffs":"2,200","nic":"0% nicotine-free","ml":"Compact","desc":"OXBAR Mini 2200 zero-nicotine compact disposable. Entry-level or nicotine-free option. Simple draw-activated design with clean flavour delivery."},"OxBar 30K":{"puffs":"30,000","nic":"5% · 50mg","ml":"High cap.","desc":"OXBAR Magic Maze 2.0 by Pod Juice. Dual mesh Hyper Coil, adjustable wattage 12–28W, Smart LED screen. Normal 30K or Boost 15K mode. 900mAh USB-C."},"OxBar 35K":{"puffs":"35,000","nic":"0–5% adjustable","ml":"35mL","desc":"OXBAR Nic Switch and Ice-Nic 35K. World's first adjustable nicotine 0–5% toggle on a disposable. Adjustable ice level. 1000mAh battery. Full colour display. 27+ flavours."},"OxBar 50K":{"puffs":"50,000","nic":"5% · 50mg","ml":"High cap.","desc":"OXBAR Astro Maze 50K ultra-high capacity flagship. 900mAh USB-C rechargeable, fast charging, advanced coil system. Sets new benchmark for disposable longevity."},"OxBar 75K":{"puffs":"75,000","nic":"5% · 50mg","ml":"High cap.","desc":"OXBAR Maglink 75K modular kit with refillable pods. Large LED display, 1500mAh battery. Maximum longevity and extended performance. Ultimate high-cap system."},"Lost Mary 30K":{"puffs":"30,000","nic":"20mg · 2%","ml":"2x15K pods","desc":"Lost Mary Nera 30K Fullview prefilled pod kit. Wraparound sparkle screen, 800mAh rechargeable, dual turbo/normal modes. Two 15K pods included."},"Sivan":{"puffs":"—","nic":"CBD","ml":"—","desc":"Premium CBD product. Lab-tested formulation for quality and consistency. For adult customers seeking a non-psychoactive hemp-derived CBD experience."},"Double OH":{"puffs":"—","nic":"7-OH","ml":"—","desc":"7-Hydroxy mitragynine product. Potent alkaloid extract for adult use. Lab-tested batch consistency. Store separately from food products."},"Kama 500":{"puffs":"—","nic":"7-OH","ml":"500mg","desc":"Kama 7-Hydroxy 500mg formulation. Entry-level dosage for new customers. Consistent extract quality with clean ingredient profile."},"Kama 1000":{"puffs":"—","nic":"7-OH","ml":"1000mg","desc":"Kama 7-Hydroxy 1000mg mid-strength. Popular repeat-purchase SKU. Double the active content vs Kama 500."},"Kama 2000":{"puffs":"—","nic":"7-OH","ml":"2000mg","desc":"Kama 7-Hydroxy 2000mg high-strength. For experienced customers seeking maximum potency. Best value per mg in the Kama range."},"Opia 80 MG":{"puffs":"—","nic":"7-OH","ml":"80mg","desc":"Opia 7-Hydroxy 80mg formulation. Starter-tier dose. Smooth onset profile, clean extraction process."},"Opia 120 MG":{"puffs":"—","nic":"7-OH","ml":"120mg","desc":"Opia 7-Hydroxy 120mg mid-range. Popular cross-sell with Opia 80mg for customers stepping up."},"Opia 240 MG":{"puffs":"—","nic":"7-OH","ml":"240mg","desc":"Opia 7-Hydroxy 240mg high-strength. Most potent in the Opia line. For regular 7-OH customers."},"Dopium":{"puffs":"—","nic":"7-OH","ml":"—","desc":"Dopium 7-Hydroxy extract. Premium brand presentation with distinct identity. Strong customer loyalty and repeat purchase rate."},"Limitless 500":{"puffs":"—","nic":"7-OH","ml":"500mg","desc":"Limitless 7-Hydroxy 500mg. Competitively priced entry into the Limitless brand. Good gateway product for new customers."},"Limitless 1000":{"puffs":"—","nic":"7-OH","ml":"1000mg","desc":"Limitless 7-Hydroxy 1000mg. Higher dose for established customers. Strong value in the 1000mg category."},"Black":{"puffs":"—","nic":"Cats Claw","ml":"—","desc":"Cats Claw Black herbal extract. Niche product with a dedicated customer base. Botanical supplement format."},"Road Trip":{"puffs":"—","nic":"Mushroom","ml":"Chocolate","desc":"Road Trip mushroom chocolate bar. Premium functional mushroom formulation in chocolate format. Popular adult wellness product."},"Magic Trip":{"puffs":"—","nic":"Mushroom","ml":"Chocolate","desc":"Magic Trip mushroom chocolate bar. Distinctive branding with strong consumer appeal in the functional mushroom segment."},"Micro Dot":{"puffs":"—","nic":"Mushroom","ml":"Chocolate","desc":"Micro Dot mushroom chocolate. Precision micro-dose format for controlled consumption. Popular with wellness-focused customers."},"Polka Dot":{"puffs":"—","nic":"Mushroom","ml":"Chocolate","desc":"Polka Dot mushroom chocolate bar. Well-recognised brand in the mushroom chocolate market. High visual appeal on shelf."},"Zour Dream":{"puffs":"—","nic":"Mushroom","ml":"Chocolate","desc":"Zour Dream mushroom chocolate. Sour-flavoured variant with distinctive taste profile. Appeals to candy-preference customers."},"Silly Farms":{"puffs":"—","nic":"Mushroom","ml":"Chocolate","desc":"Silly Farms mushroom chocolate bar. Fun branding with broad consumer appeal. Good impulse-purchase product."},"Road Trip- Gummies":{"puffs":"—","nic":"Mushroom","ml":"Gummies","desc":"Road Trip mushroom gummies. Convenient gummy format of the popular Road Trip brand. Easy dosing and great taste."},"Magic Trip- Gummies":{"puffs":"—","nic":"Mushroom","ml":"Gummies","desc":"Magic Trip mushroom gummies. Consistent dosing in a portable, discreet format."},"Bitez":{"puffs":"—","nic":"Mushroom","ml":"Gummies","desc":"Bitez mushroom product. Bold branding with strong shelf presence. Popular functional mushroom format."},"Bitez Gummies":{"puffs":"—","nic":"Mushroom","ml":"Gummies","desc":"Bitez mushroom gummies. Easy consumption format for everyday wellness customers."},"Zour Dream Gummies":{"puffs":"—","nic":"Mushroom","ml":"Gummies","desc":"Zour Dream mushroom gummies. Sour gummy format with functional mushroom benefits. Cross-sell with Zour Dream chocolate."},"Redz":{"puffs":"—","nic":"E-Liquid","ml":"Bottle","desc":"Redz premium bottled e-liquid. Lab-formulated flavour profile for consistent batch quality. For refillable pod systems."},"Cloudz":{"puffs":"—","nic":"E-Liquid","ml":"Bottle","desc":"Cloudz high-VG cloud-chasing e-liquid. Rich flavour with smooth throat hit. Designed for sub-ohm and DL vaping."},"Psyched Gummies":{"puffs":"—","nic":"Blue Lotus","ml":"Gummies","desc":"Psyched Blue Lotus gummies. Herbal botanical extract in convenient gummy format. Relaxation-focused product."},"Psyched prerolls bottle":{"puffs":"—","nic":"Blue Lotus","ml":"Bottle","desc":"Psyched Blue Lotus prerolls in bottle packaging. Bulk format. Blue Lotus botanical blend."},"Psyched Preroll box":{"puffs":"—","nic":"Blue Lotus","ml":"Box","desc":"Psyched Blue Lotus prerolls in box packaging. Premium presentation for retail display."},"5 CM Dumplings":{"puffs":"—","nic":"Toy","ml":"5cm","desc":"5cm squishy dumpling toy. Stress-relief novelty impulse purchase. High-margin add-on product. Popular counter-display item."},"8.5 CM Dumplings":{"puffs":"—","nic":"Toy","ml":"8.5cm","desc":"8.5cm squishy dumpling toy. Larger format with stronger tactile appeal. Premium size novelty impulse buy."}};
+  Object.keys(defaults).forEach(function(br){
+    if(!brandMeta[br]) brandMeta[br] = Object.assign({img:""},defaults[br]);
+  });
+})();
+
+function populateCatalogFilters() {
+  var catSel = document.getElementById("cat-filter-sel"); if(!catSel) return;
+  var cur = catSel.value;
+  catSel.innerHTML = '<option value="">All Categories</option>';
+  CATEGORY_NAMES.forEach(function(cat){
+    var o=document.createElement("option");o.value=cat;o.textContent=cat;
+    if(cat===cur)o.selected=true;catSel.appendChild(o);
+  });
+  catSel.onchange = function(){ populateCatalogBrandFilter(catSel.value); };
+  populateCatalogBrandFilter(cur);
+  var brandSel=document.getElementById("cat-brand-filter-sel"); if(!brandSel)return;
+  if(!cur) brandSel.innerHTML='<option value="">All Brands</option>';
+}
+
+function populateCatalogBrandFilter(cat) {
+  var sel=document.getElementById("cat-brand-filter-sel"); if(!sel)return;
+  sel.innerHTML='<option value="">All Brands</option>';
+  var brands = cat ? (CATEGORIES[cat]||[]) : BRANDS;
+  brands.forEach(function(br){
+    var o=document.createElement("option");o.value=br;o.textContent=br;sel.appendChild(o);
+  });
+}
+
+function generateCatalog() {
+  var filterCat   = (document.getElementById("cat-filter-sel")||{}).value||"";
+  var filterBrand = (document.getElementById("cat-brand-filter-sel")||{}).value||"";
+  var showMin     = (document.getElementById("cat-show-min")||{}).checked!==false;
+  var showPrice   = (document.getElementById("cat-show-price")||{}).checked!==false;
+  var catsToPrint = filterCat ? [filterCat] : CATEGORY_NAMES.slice();
+  var cols = showMin ? "72px 1fr 110px 90px" : "72px 1fr 110px";
+  var css = "*{box-sizing:border-box;margin:0;padding:0}:root{--cols:"+cols+"}body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff}@page{margin:14mm 12mm;size:A4}.page{max-width:190mm;margin:0 auto;padding:8mm 0}.hdr{background:#0f172a;padding:20px 24px 16px;margin-bottom:0}.logo{font-size:20px;font-weight:700;color:#fff}.logo span{color:#60a5fa}.hdr-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.pill{font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}.clbl{font-size:9px;text-transform:uppercase;letter-spacing:3px;color:#94a3b8;font-weight:700;padding:12px 0 6px;border-bottom:1px solid #e2e8f0}.chr{display:grid;grid-template-columns:var(--cols);padding:6px 0;background:#f8fafc;border-bottom:1px solid #e2e8f0}.ch{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;font-weight:600;padding:0 8px}.br{display:grid;grid-template-columns:var(--cols);border-bottom:1px solid #f1f5f9;page-break-inside:avoid}.ic{padding:10px 10px 10px 0;display:flex;align-items:center}.th{width:60px;height:60px;border-radius:6px;object-fit:cover;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:8px;color:#aaa;text-align:center;overflow:hidden;flex-shrink:0}.th img{width:100%;height:100%;object-fit:cover;border-radius:6px}.ifc{padding:10px 12px 10px 0;display:flex;flex-direction:column;justify-content:center}.bn{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px}.bd{font-size:10px;color:#64748b;line-height:1.5;margin-bottom:5px}.sr{display:flex;gap:4px;flex-wrap:wrap}.st{font-size:8px;padding:2px 5px;background:#f1f5f9;color:#64748b;border-radius:3px;font-family:monospace}.pc{padding:10px 8px;display:flex;flex-direction:column;justify-content:center;text-align:right}.pv{font-size:17px;font-weight:700;color:#0f172a;font-family:monospace}.ps{font-size:9px;color:#94a3b8;margin-top:2px}.mc{padding:10px 8px;display:flex;flex-direction:column;justify-content:center;text-align:right}.mv{font-size:14px;color:#64748b;font-family:monospace}.ms{font-size:9px;color:#94a3b8;margin-top:2px}.ft{margin-top:20px;padding-top:12px;border-top:2px solid #0f172a;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#94a3b8}.ftb{font-size:13px;font-weight:700;color:#0f172a}";
+  var h="<div class='page'><div class='hdr'><div class='logo'>Krazy<span>Stock</span> Wholesale</div><div class='hdr-sub'>B2B Product Catalog &middot; "+new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"})+" &middot; Confidential &middot; Wholesale Only</div><div class='pills'><span class='pill'>MOQ 10 units/brand</span><span class='pill'>All prices USD</span><span class='pill'>Subject to availability</span>"+(showMin?"":"<span class='pill'>Pricing on request</span>")+"</div></div>";
+  catsToPrint.forEach(function(cat){
+    var brands=filterBrand?[filterBrand]:(CATEGORIES[cat]||[]);
+    if(!brands.length)return;
+    h+="<div class='clbl'>"+cat+"</div><div class='chr'><div class='ch'></div><div class='ch'>Brand &amp; Description</div>";
+    if(showPrice)h+="<div class='ch' style='text-align:right'>Wholesale</div>";
+    else h+="<div class='ch' style='text-align:right'>On Request</div>";
+    if(showMin)h+="<div class='ch' style='text-align:right'>Min Floor</div>";
+    h+="</div>";
+    brands.forEach(function(br){
+      var meta=brandMeta[br]||{};
+      var defP=defaultPrices[br];
+      var minP=minPrices[br];
+      var img=meta.img||"";
+      var flav=(CATALOG[br]||[]).length;
+      h+="<div class='br'><div class='ic'><div class='th'>"+(img?"<img src='"+img+"' onerror='this.style.display=\"none\"'>":br.substring(0,6))+"</div></div>";
+      h+="<div class='ifc'><div class='bn'>"+br+"</div>"+(meta.desc?"<div class='bd'>"+meta.desc+"</div>":"")+"<div class='sr'>"+(meta.puffs&&meta.puffs!=="—"?"<span class='st'>"+meta.puffs+" puffs</span>":"")+(meta.nic&&meta.nic!=="—"?"<span class='st'>"+meta.nic+"</span>":"")+(meta.ml&&meta.ml!=="—"?"<span class='st'>"+meta.ml+"</span>":"")+(flav>0?"<span class='st'>"+flav+" flavours</span>":"")+"</div></div>";
+      h+="<div class='pc'>"+(showPrice&&defP!==undefined?"<div class='pv'>$"+defP.toFixed(2)+"</div><div class='ps'>per unit</div>":"<div class='pv' style='font-size:12px;color:#94a3b8'>Enquire</div>")+"</div>";
+      if(showMin)h+="<div class='mc'>"+(minP!==undefined?"<div class='mv'>$"+minP.toFixed(2)+"</div><div class='ms'>floor</div>":"<div class='mv' style='color:#e2e8f0'>—</div>")+"</div>";
+      h+="</div>";
+    });
+  });
+  h+="<div class='ft'><div class='ftb'>Krazy Wholesale</div><div>Prices valid "+new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"})+" &middot; Subject to change &middot; Not for redistribution</div></div></div>";
+  var w=window.open("","_blank","width=900,height=700");
+  if(!w){toast("Pop-up blocked — allow pop-ups and try again","err");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Krazy Wholesale Catalog</title><style>"+css+"</style></head><body>"+h+"</body></html>");
+  w.document.close();w.focus();setTimeout(function(){w.print();},600);
+  toast("Catalog opened — Print > Save as PDF","ok");
+}
+
+(function(){var el=document.getElementById("btn-gen-catalog");if(!el)return;el.addEventListener("click",generateCatalog);})();
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -6004,6 +6128,10 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
+
+
 
 
 
