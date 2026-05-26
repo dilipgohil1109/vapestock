@@ -5701,13 +5701,37 @@ function exportMasterExcel() {
     });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dpRows), "Distributor Prices");
 
-    // ── Sheet 8: Catalog ──
-    var catRows = [["Category","Brand","Flavor"]];
+    // ── Sheet 8: Catalog (all brands, with or without flavours) ──
+    var catRows = [["Category","Brand","Flavour Count","Flavours"]];
+    // Use CATEGORY_NAMES + CATEGORIES to preserve category order and include ALL brands
+    CATEGORY_NAMES.forEach(function(cat){
+      var brands = CATEGORIES[cat] || [];
+      // Also catch any CATALOG brands not assigned to a category
+      Object.keys(CATALOG).forEach(function(br){
+        if(catOfBrand(br)===cat && brands.indexOf(br)===-1) brands.push(br);
+      });
+      brands.forEach(function(br){
+        var flavours = CATALOG[br] || [];
+        if(flavours.length === 0){
+          // Brand exists but no flavours yet
+          catRows.push([cat, br, 0, "(no flavours added yet)"]);
+        } else {
+          // One row per brand with all flavours joined
+          catRows.push([cat, br, flavours.length, flavours.join(", ")]);
+        }
+      });
+    });
+    // Catch any CATALOG brands with no category at all
     Object.keys(CATALOG).forEach(function(br){
       var cat=catOfBrand(br)||"";
-      (CATALOG[br]||[]).forEach(function(fl){ catRows.push([cat,br,fl]); });
+      if(!cat){
+        var flavours=CATALOG[br]||[];
+        catRows.push(["(uncategorised)", br, flavours.length, flavours.join(", ")||"(no flavours added yet)"]);
+      }
     });
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(catRows), "Catalog");
+    var wsCat = XLSX.utils.aoa_to_sheet(catRows);
+    wsCat["!cols"] = [{wch:16},{wch:24},{wch:14},{wch:80}];
+    XLSX.utils.book_append_sheet(wb, wsCat, "Catalog");
 
     // ── Sheet 9: Account Summary ──
     var accRows = [["Customer","Total Billed","Total Received","Pending","Balance Due"]];
