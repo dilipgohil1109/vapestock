@@ -411,6 +411,15 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
         <div style="flex:1"><div class="ilbl">Estimate #</div><input class="ifield" id="est-num-inp" placeholder="e.g. 001" style="margin-bottom:0"></div>
         <div style="flex:1"><div class="ilbl">Date</div><input class="ifield" id="est-date-inp" type="date" style="margin-bottom:0"></div>
       </div>
+      <!-- Cart Summary -->
+      <div id="sell-cart-summary" style="display:none;background:var(--sur2);border:1px solid var(--brd);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:8px">Order Summary</div>
+        <div id="sell-cart-summary-body"></div>
+        <div id="sell-cart-summary-total" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:2px solid var(--brd)">
+          <span style="font-size:13px;font-weight:700">Grand Total</span>
+          <span id="sell-cart-summary-grand" style="font-family:'DM Mono',monospace;font-size:16px;font-weight:900;color:var(--acc)"></span>
+        </div>
+      </div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn bdgr" id="btn-confirm-manual-sell" style="width:100%">&#10003; Commit Sale &amp; Save Estimate</button>
         <button class="btn bpri" id="btn-save-edit" style="width:100%;display:none">&#10003; Save Changes</button>
@@ -978,6 +987,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+
 
 
 
@@ -2748,6 +2758,8 @@ function renderSellCart() {
     var cartWrap = document.getElementById("sell-cart-wrap");
     if(cartWrap) cartWrap.insertBefore(totalRow, cartWrap.querySelector("#sell-action-btns"));
   }
+  // Update cart summary panel
+  renderCartSummary();
 }
 
 (function(){
@@ -2780,7 +2792,9 @@ function renderSellCart() {
     // ── STEP 2: Build the estimate record ──
     var rawDate = diVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
     var rec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false};
-    // ── STEP 3: Now deduct stock (all validation passed) ──
+    // ── STEP 3: Save estimate (no stock touched yet) ──
+    estimates.unshift(rec);
+    // ── STEP 4: Deduct stock AFTER estimate safely recorded ──
     estItems.forEach(function(it){
       var k=it.brand+"~~"+it.flavor;
       stock[k]=Math.max(0,(stock[k]||0)-it.qty);
@@ -2788,8 +2802,8 @@ function renderSellCart() {
         qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice,
         total:it.total,date:saleDate,estId:estId});
     });
-    // ── STEP 4: Save estimate ──
-    estimates.unshift(rec); afterChange(); savePricing(); printEstimate(rec);
+    afterChange(); savePricing();
+    // NO auto-print — user taps Print button on the estimate card
     sellCart={};
     var ni=document.getElementById("est-num-inp"); if(ni) ni.value="";
     var di=document.getElementById("est-date-inp"); if(di) di.value="";
@@ -5868,6 +5882,82 @@ updateExportReminder();
   var last=localStorage.getItem("vs5_lastmasterexport");
   if(last) el.textContent="Master backup: "+last;
 })();
+
+function renderCartSummary() {
+  var summaryEl = document.getElementById("sell-cart-summary");
+  var bodyEl = document.getElementById("sell-cart-summary-body");
+  var grandEl = document.getElementById("sell-cart-summary-grand");
+  if(!summaryEl || !bodyEl) return;
+  var keys = Object.keys(sellCart);
+  if(!keys.length) { summaryEl.style.display="none"; return; }
+  summaryEl.style.display="block";
+  bodyEl.innerHTML="";
+
+  // Build category > brand > {units, total} structure
+  var catMap = {};
+  var grandUnits = 0, grandAmt = 0;
+  keys.forEach(function(k){
+    var pts=k.split("~~"), br=pts[0], fl=pts.slice(1).join("~~");
+    var entry=sellCart[k];
+    var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
+    var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
+    var lt=up*q;
+    var cat=catOfBrand(br)||"Other";
+    if(!catMap[cat]) catMap[cat]={brands:{},units:0,total:0};
+    if(!catMap[cat].brands[br]) catMap[cat].brands[br]={flavors:[],units:0,total:0};
+    catMap[cat].brands[br].flavors.push({fl:fl,qty:q,price:up,total:lt});
+    catMap[cat].brands[br].units+=q;
+    catMap[cat].brands[br].total+=lt;
+    catMap[cat].units+=q;
+    catMap[cat].total+=lt;
+    grandUnits+=q; grandAmt+=lt;
+  });
+
+  Object.keys(catMap).forEach(function(cat){
+    var cd=catMap[cat];
+    // Category header
+    var catHdr=document.createElement("div");
+    catHdr.style.cssText="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--acc);margin-bottom:4px;margin-top:8px;border-bottom:1px solid var(--brd);padding-bottom:3px";
+    catHdr.textContent=cat+" — "+cd.units+" units"+(cd.total>0?" / $"+cd.total.toFixed(2):"");
+    bodyEl.appendChild(catHdr);
+    // Brand rows
+    Object.keys(cd.brands).forEach(function(br){
+      var bd=cd.brands[br];
+      var brRow=document.createElement("div");
+      brRow.style.cssText="display:flex;justify-content:space-between;align-items:flex-start;padding:3px 0;border-bottom:1px dotted var(--brd)";
+      var brLeft=document.createElement("div");
+      var brName=document.createElement("div");
+      brName.style.cssText="font-size:12px;font-weight:700";
+      brName.textContent=br;
+      // Flavor breakdown
+      var flList=document.createElement("div");
+      flList.style.cssText="font-size:10px;color:var(--txt3);margin-top:1px";
+      flList.textContent=bd.flavors.map(function(f){return f.fl+" ×"+f.qty;}).join("  ·  ");
+      brLeft.appendChild(brName); brLeft.appendChild(flList);
+      var brRight=document.createElement("div");
+      brRight.style.cssText="text-align:right;flex-shrink:0;margin-left:8px";
+      var brUnits=document.createElement("div");
+      brUnits.style.cssText="font-size:13px;font-weight:800;font-family:'DM Mono',monospace";
+      brUnits.textContent=bd.units+" units";
+      brRight.appendChild(brUnits);
+      if(bd.total>0){
+        var brAmt=document.createElement("div");
+        brAmt.style.cssText="font-size:11px;color:var(--txt3);font-family:'DM Mono',monospace";
+        brAmt.textContent="$"+bd.total.toFixed(2);
+        brRight.appendChild(brAmt);
+      }
+      brRow.appendChild(brLeft); brRow.appendChild(brRight);
+      bodyEl.appendChild(brRow);
+    });
+  });
+
+  // Grand total
+  if(grandEl){
+    grandEl.textContent=grandUnits+" units"+(grandAmt>0?" / $"+grandAmt.toFixed(2):"");
+    var totalDiv=document.getElementById("sell-cart-summary-total");
+    if(totalDiv)totalDiv.style.display=grandAmt>0?"flex":"none";
+  }
+}
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -5890,6 +5980,7 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
 
 
 
