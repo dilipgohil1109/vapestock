@@ -2335,6 +2335,7 @@ function renderExportPage(){
   var mLast=localStorage.getItem("vs5_lastmasterexport");
   var mEl=document.getElementById("master-xl-last"); if(mEl)mEl.textContent=mLast?"Master backup: "+mLast:"Master backup: Never";
   populateBulkEstCust();
+  populateCatalogFilters();
   updateExportReminder();
 }
 function exportToExcel(){
@@ -6052,10 +6053,10 @@ function populateCatalogFilters() {
     var o=document.createElement("option");o.value=cat;o.textContent=cat;
     if(cat===cur)o.selected=true;catSel.appendChild(o);
   });
+  // Wire onchange only once
   catSel.onchange = function(){ populateCatalogBrandFilter(catSel.value); };
+  // Always populate brands (show all brands when no category selected)
   populateCatalogBrandFilter(cur);
-  var brandSel=document.getElementById("cat-brand-filter-sel"); if(!brandSel)return;
-  if(!cur) brandSel.innerHTML='<option value="">All Brands</option>';
 }
 
 function populateCatalogBrandFilter(cat) {
