@@ -1047,6 +1047,8 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
 // openDistModal handled by listener
 
 
@@ -1069,7 +1071,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  try {\n    var mode      = (e.parameter && e.parameter.mode) || 'write';\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n\n    // Resolve file name\n    var fileName = getFileName(fileParam);\n\n    if (mode === 'read') {\n      // Special: list all backup files\n      if (fileParam === 'backup_list') {\n        var folder = getAppFolder();\n        var files  = folder.getFiles();\n        var list   = [];\n        while (files.hasNext()) {\n          var f = files.next();\n          if (f.getName().indexOf('backup_') === 0) {\n            list.push({ name: f.getName(), id: f.getId(), updated: f.getLastUpdated().toISOString() });\n          }\n        }\n        list.sort(function(a,b){ return b.name > a.name ? 1 : -1; });\n        return ContentService.createTextOutput(JSON.stringify({ ok:true, files:list }))\n          .setMimeType(ContentService.MimeType.JSON);\n      }\n      // Normal read\n      var file = getNamedFile(fileName);\n      return ContentService.createTextOutput(file.getBlob().getDataAsString() || '{}')\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n\n    // Write\n    var file = getNamedFile(fileName);\n    file.setContent(e.postData.contents);\n    return ContentService.createTextOutput(JSON.stringify({ ok:true, fileId:file.getId(), file:fileName }))\n      .setMimeType(ContentService.MimeType.JSON);\n\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ ok:false, error:err.message }))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  try {\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n    var fileName  = getFileName(fileParam);\n    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || '{}')\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\n// Map short file param to actual filename\nfunction getFileName(param) {\n  if (param === 'master')      return 'vapestock_master.json';\n  if (param === 'stock')       return 'vapestock_stock.json';\n  if (param.indexOf('backup_') === 0) return param + '.json';\n  return param + '.json';  // fallback: use as-is\n}\n\n// Get or create a file in the KrazyStock folder\nfunction getAppFolder() {\n  var root    = DriveApp.getRootFolder();\n  var folders = root.getFoldersByName('KrazyStock_Data');\n  return folders.hasNext() ? folders.next() : root.createFolder('KrazyStock_Data');\n}\n\nfunction getNamedFile(name) {\n  var folder = getAppFolder();\n  var files  = folder.getFilesByName(name);\n  var file   = files.hasNext() ? files.next()\n             : folder.createFile(name, '{}', MimeType.PLAIN_TEXT);\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
+var GAS_CODE = "function doPost(e) {\n  try {\n    var mode      = (e.parameter && e.parameter.mode) || 'write';\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n\n    // Resolve file name\n    var fileName = getFileName(fileParam);\n\n    if (mode === 'read') {\n      // Special: list all backup files\n      if (fileParam === 'backup_list') {\n        var folder = getAppFolder();\n        var files  = folder.getFiles();\n        var list   = [];\n        while (files.hasNext()) {\n          var f = files.next();\n          if (f.getName().indexOf('backup_') === 0) {\n            list.push({ name: f.getName(), id: f.getId(), updated: f.getLastUpdated().toISOString() });\n          }\n        }\n        list.sort(function(a,b){ return b.name > a.name ? 1 : -1; });\n        return ContentService.createTextOutput(JSON.stringify({ ok:true, files:list }))\n          .setMimeType(ContentService.MimeType.JSON);\n      }\n      // Normal read\n      var file = getNamedFile(fileName);\n      return ContentService.createTextOutput(file.getBlob().getDataAsString() || '{}')\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n\n    // Write\n    var file = getNamedFile(fileName);\n    file.setContent(e.postData.contents);\n    return ContentService.createTextOutput(JSON.stringify({ ok:true, fileId:file.getId(), file:fileName }))\n      .setMimeType(ContentService.MimeType.JSON);\n\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ ok:false, error:err.message }))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  try {\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n    var fileName  = getFileName(fileParam);\n    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || '{}')\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\n// Map short file param to actual filename\nfunction getFileName(param) {\n  if (param === 'master')      return 'vapestock_master.json';\n  if (param === 'stock')       return 'vapestock_stock.json';\n  if (param.indexOf('backup_') === 0) {\n    // param may already include .json extension — avoid doubling it\n    return param.endsWith('.json') ? param : param + '.json';\n  }\n  return param.endsWith('.json') ? param : param + '.json';\n}\n\n// Get or create a file in the KrazyStock folder\nfunction getAppFolder() {\n  var root    = DriveApp.getRootFolder();\n  var folders = root.getFoldersByName('KrazyStock_Data');\n  return folders.hasNext() ? folders.next() : root.createFolder('KrazyStock_Data');\n}\n\nfunction getNamedFile(name) {\n  var folder = getAppFolder();\n  var files  = folder.getFilesByName(name);\n  var file   = files.hasNext() ? files.next()\n             : folder.createFile(name, '{}', MimeType.PLAIN_TEXT);\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
 
 var stock = {};
 var txLog = [];
@@ -1377,7 +1379,15 @@ function gdSave(onDone) {
   // Save both files in parallel
   if(backupBeforeSave){
     var backupTs=new Date(saveTs).toISOString().replace(/[:.]/g,"-").substring(0,16);
-    var bkPayload=JSON.stringify({stock:stock,txLog:txLog.slice(0,2000),customFlavors:customFlavors,customers:customers,defaultPrices:defaultPrices,customerPrices:customerPrices,distributors:distributors,distributorPrices:distributorPrices,estimates:estimates,ts:saveTs,label:"Backup "+backupTs});
+    var bkPayload=JSON.stringify({
+      stock:stock,txLog:txLog.slice(0,2000),
+      customFlavors:customFlavors,customers:customers,
+      defaultPrices:defaultPrices,customerPrices:customerPrices,
+      distributors:distributors,distributorPrices:distributorPrices,
+      estimates:estimates,nextEstimateNum:nextEstimateNum,
+      payments:payments,brandMeta:brandMeta,minPrices:minPrices,
+      ts:saveTs,label:"Backup "+backupTs
+    });
     gasPost(gdUrl+"?file=backup_"+backupTs,bkPayload).catch(function(){});
   }
   Promise.all([
@@ -4547,20 +4557,59 @@ function renderSyncToggles(){
       el2.innerHTML="";
       resp.files.sort(function(a,b){return b.name.localeCompare(a.name);}).forEach(function(f){
         var row=document.createElement("div"); row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--brd)";
-        var lbl=document.createElement("span"); lbl.style.cssText="font-size:12px;font-family:'DM Mono',monospace"; lbl.textContent=f.name.replace("backup_","").replace(/-/g,"/").replace("T","  ");
+        var lbl=document.createElement("span"); lbl.style.cssText="font-size:12px;font-family:'DM Mono',monospace;flex:1";
+        var rawName = f.name.replace("backup_","").replace(".json","");
+        var parts = rawName.split("T");
+        var datePart = parts[0]||""; var timePart = (parts[1]||"").replace(/-/g,":");
+        lbl.textContent = datePart + "  " + timePart;
+        if(f.updated){var age=Math.floor((Date.now()-new Date(f.updated).getTime())/(1000*60*60*24));var ageLbl=document.createElement("span");ageLbl.style.cssText="font-size:10px;color:var(--txt3);margin-left:8px";ageLbl.textContent=age===0?"today":age===1?"1 day ago":age+" days ago";lbl.appendChild(ageLbl);}
         var rbtn=document.createElement("button"); rbtn.className="btn bsec bsm"; rbtn.textContent="Restore";
         (function(fn){rbtn.addEventListener("click",function(){
-          if(!confirm("Restore from backup "+fn+"?\n\nThis will overwrite Drive and local data.")) return;
-          gasPost(gdUrl+"?file="+fn+"&mode=read","{}").then(function(d){
-            if(!d||d.error){toast("Failed to read backup","err");return;}
-            if(d.stock)stock=d.stock; if(d.txLog)txLog=d.txLog;
+          var displayName = fn.replace("backup_","").replace(".json","").replace(/-/g,":").replace("T"," ");
+          if(!confirm("Restore from backup:\n" + displayName + "\n\nThis will replace ALL current data on this device and Drive.\n\nMake sure you have the right backup before continuing.")) return;
+          toast("Fetching backup...","ok");
+          // Try reading backup — first via POST, fallback to GET if empty
+          var readUrl = gdUrl+"?file="+fn+"&mode=read";
+          gasPost(readUrl,"{}").then(function(d){
+            // If POST returns empty/bad, try GET
+            var hasData = d&&(d.stock||d.estimates||d.customers||d.payments);
+            if(!hasData && !d?.error) {
+              return fetch(readUrl).then(function(r){return r.json();});
+            }
+            return d;
+          }).then(function(d){
+            if(!d){toast("Could not read backup — no response","err");return;}
+            if(d.error){toast("Backup error: "+d.error,"err");return;}
+            // Check if this looks like real backup data
+            var hasData = d.stock||d.estimates||d.customers||d.payments;
+            if(!hasData){
+              toast("Backup file appears empty or corrupt","err");
+              console.error("Backup response:", JSON.stringify(d).substring(0,200));
+              return;
+            }
+            // Restore stock data
+            if(d.stock) stock=d.stock;
+            if(d.txLog) txLog=d.txLog;
+            // Restore master data
             if(d.customFlavors){customFlavors=d.customFlavors;rebuildCatalogFromCustomFlavors();}
-            if(d.customers)customers=d.customers; if(d.defaultPrices)defaultPrices=d.defaultPrices;
-            if(d.customerPrices)customerPrices=d.customerPrices; if(d.distributors)distributors=d.distributors;
-            if(d.distributorPrices)distributorPrices=d.distributorPrices; if(d.estimates)estimates=d.estimates;
+            if(d.customers)       customers=d.customers;
+            if(d.defaultPrices)   defaultPrices=d.defaultPrices;
+            if(d.customerPrices)  customerPrices=d.customerPrices;
+            if(d.distributors)    distributors=d.distributors;
+            if(d.distributorPrices) distributorPrices=d.distributorPrices;
+            if(d.estimates)       estimates=d.estimates;
+            if(d.nextEstimateNum) nextEstimateNum=d.nextEstimateNum;
+            if(d.payments)        payments=d.payments;
+            if(d.brandMeta)       brandMeta=d.brandMeta;
+            if(d.minPrices)       minPrices=d.minPrices;
             saveLocal(); savePricing();
-            gdSave(function(){toast("Backup restored \u2713","ok"); renderStock(); updateStats();});
-          }).catch(function(){toast("Failed to restore","err");});
+            toast("Backup loaded to device — saving to Drive...", "ok");
+            gdSave(function(){
+              toast("Backup restored \u2713 All data recovered","ok");
+              renderStock(); updateStats();
+            });
+          }).catch(function(err){ toast("Restore failed: "+(err.message||err),"err"); console.error(err); });
+          // catch handled above
         });})(f.name);
         row.appendChild(lbl); row.appendChild(rbtn); el2.appendChild(row);
       });
@@ -6129,6 +6178,8 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
 
 
 
