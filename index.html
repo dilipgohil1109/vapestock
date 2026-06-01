@@ -448,9 +448,76 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <div class="pg" id="pg-order">
   <div class="tabs" id="otabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
-    <div class="tab on" data-ot="verify" style="border-radius:6px">Verify Order</div>
+    <div class="tab on" data-ot="neworder" style="border-radius:6px">New Order</div>
+    <div class="tab" data-ot="openorders" style="border-radius:6px">Open Orders</div>
+    <div class="tab" data-ot="shortage" style="border-radius:6px">Shortage</div>
+    <div class="tab" data-ot="buysuggest" style="border-radius:6px">Buy Suggest</div>
+    <div class="tab" data-ot="verify" style="border-radius:6px">Verify</div>
     <div class="tab" data-ot="generate" style="border-radius:6px">Generate List</div>
     <div class="tab" data-ot="printstock" style="border-radius:6px">Print Stock</div>
+  </div>
+
+  <!-- NEW ORDER PANE -->
+  <div id="ord-new-pane">
+    <p class="stitle" style="margin:0">New Customer Order</p>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Pick items for a customer. No stock deducted until fulfilled.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <select class="ifield bsm" id="ord-cust-sel" style="flex:1;margin-bottom:0"><option value="">&#8212; Walk-in &#8212;</option></select>
+      <input class="ifield bsm" id="ord-num-inp" placeholder="ORD-001" style="width:100px;margin-bottom:0">
+      <input class="ifield bsm" id="ord-date-inp" type="date" style="width:130px;margin-bottom:0">
+    </div>
+    <div class="cat-chips" id="ord-cat-chips"></div>
+    <div class="bscroll" id="ord-brand-scroll"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px">
+      <div class="swrap" style="flex:1;margin:0">
+        <span class="sico">&#128269;</span>
+        <input class="ifield" id="ord-search" placeholder="Search flavor..." style="padding-left:32px;margin:0">
+      </div>
+    </div>
+    <div id="ord-flavor-list" style="max-height:220px;overflow-y:auto;border:1px solid var(--brd);border-radius:var(--r);margin-bottom:8px"></div>
+    <div id="ord-cart-wrap" style="display:none">
+      <div id="ord-cart"></div>
+      <div id="ord-cart-summary" style="background:var(--sur2);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:none">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:6px">Order Summary</div>
+        <div id="ord-cart-summary-body"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input class="ifield" id="ord-note-inp" placeholder="Order note (optional)" style="margin-bottom:0">
+        <button class="btn bpri" id="btn-save-order">&#10003; Save Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPEN ORDERS PANE -->
+  <div id="ord-open-pane" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <p class="stitle" style="margin:0">Open Orders</p>
+      <select class="ifield bsm" id="ord-filter-cust" style="margin:0;width:150px"><option value="">All Customers</option></select>
+    </div>
+    <div id="ord-open-list"></div>
+  </div>
+
+  <!-- SHORTAGE REVIEW PANE -->
+  <div id="ord-shortage-pane" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <p class="stitle" style="margin:0">Shortage Review</p>
+      <div style="display:flex;gap:6px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="shortage-only" checked style="accent-color:var(--acc)"> Shortages only
+        </label>
+        <button class="btn bsec bsm" id="btn-shortage-print">&#128438; Print</button>
+      </div>
+    </div>
+    <div id="ord-shortage-list"></div>
+  </div>
+
+  <!-- BUY SUGGESTIONS PANE -->
+  <div id="ord-buysuggest-pane" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <p class="stitle" style="margin:0">Buy Suggestions</p>
+      <button class="btn bsec bsm" id="btn-buysuggest-print">&#128438; Print</button>
+    </div>
+    <div id="ord-buysuggest-list"></div>
   </div>
   <div id="ov-pane">
     <p class="stitle">Paste WhatsApp Order</p>
@@ -1049,6 +1116,8 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
 // openDistModal handled by listener
 
 
@@ -1094,6 +1163,8 @@ var autoRefreshEnabled = true;
 var backupBeforeSave = true;
 var estimates = [];
 var payments  = [];
+var orders        = [];   // [{id,num,date,rawDate,custId,custName,items[],total,status,estId,note}]
+var nextOrderNum  = 1;    // ORD-001, ORD-002...
 var brandMeta  = {};
 var minPrices  = {};
 var currentStmtCustId = "";      // [{id,estId,custId,custName,date,amount,method,chequeNo,note,received}]
@@ -1330,6 +1401,8 @@ function saveMasterToDrive() {
       payments: payments,
       brandMeta: brandMeta,
       minPrices: minPrices,
+      orders: orders,
+      nextOrderNum: nextOrderNum,
       ts: Date.now()
     });
     gasPost(gdUrl + "?file=master", payload)
@@ -1373,6 +1446,8 @@ function gdSave(onDone) {
     payments: payments,
     brandMeta: brandMeta,
     minPrices: minPrices,
+    orders: orders,
+    nextOrderNum: nextOrderNum,
     ts: saveTs
   });
 
@@ -1386,6 +1461,7 @@ function gdSave(onDone) {
       distributors:distributors,distributorPrices:distributorPrices,
       estimates:estimates,nextEstimateNum:nextEstimateNum,
       payments:payments,brandMeta:brandMeta,minPrices:minPrices,
+      orders:orders,nextOrderNum:nextOrderNum,
       ts:saveTs,label:"Backup "+backupTs
     });
     gasPost(gdUrl+"?file=backup_"+backupTs,bkPayload).catch(function(){});
@@ -1459,6 +1535,10 @@ function gdRefresh() {
       if(masterData.estimates)       estimates = masterData.estimates;
       if(masterData.nextEstimateNum) nextEstimateNum = masterData.nextEstimateNum;
       if(masterData.payments)        payments = masterData.payments;
+      if(masterData.brandMeta)       brandMeta = masterData.brandMeta;
+      if(masterData.minPrices)       minPrices = masterData.minPrices;
+      if(masterData.orders)          orders = masterData.orders;
+      if(masterData.nextOrderNum)    nextOrderNum = masterData.nextOrderNum;
       changed = true;
     }
 
@@ -1550,7 +1630,7 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   document.getElementById("pg-"+pg).classList.add("on");
   if(pg==="stock") renderStock();
   if(pg==="purchase"){ renderPurBrands(); renderPurFlavors(); }
-  if(pg==="order") renderGenBrands();
+  if(pg==="order"){ renderOrdBrands(); renderOrdFlavors(); }
   if(pg==="history") renderHistory();
   if(pg==="sync") renderSyncPage();
   if(pg==="catalog") renderCatalogPage();
@@ -1574,9 +1654,13 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   var ot=tab.getAttribute("data-ot");
   document.querySelectorAll("#otabs .tab").forEach(function(t){t.classList.remove("on");});
   tab.classList.add("on");
-  document.getElementById("ov-pane").style.display=ot==="verify"?"block":"none";
-  document.getElementById("og-pane").style.display=ot==="generate"?"block":"none";
-  document.getElementById("ops-pane").style.display=ot==="printstock"?"block":"none";
+  var panes={neworder:"ord-new-pane",openorders:"ord-open-pane",shortage:"ord-shortage-pane",
+    buysuggest:"ord-buysuggest-pane",verify:"ov-pane",generate:"og-pane",printstock:"ops-pane"};
+  Object.keys(panes).forEach(function(k){var el=document.getElementById(panes[k]);if(el)el.style.display=k===ot?"block":"none";});
+  if(ot==="neworder"){renderOrdBrands();renderOrdFlavors();}
+  if(ot==="openorders"){populateOrdFilterCust();renderOpenOrders();}
+  if(ot==="shortage"){renderShortageReview();}
+  if(ot==="buysuggest"){renderBuySuggestions();}
   if(ot==="printstock") renderPsPage();
 })})();
 
@@ -3533,6 +3617,8 @@ function savePricing() {
     localStorage.setItem("vs5_payments", JSON.stringify(payments));
     localStorage.setItem("vs5_brandmeta", JSON.stringify(brandMeta));
     localStorage.setItem("vs5_minprices", JSON.stringify(minPrices));
+    localStorage.setItem("vs5_orders",    JSON.stringify(orders));
+    localStorage.setItem("vs5_ordernum",  String(nextOrderNum));
   } catch(e) {}
   saveMasterToDrive(); // Auto-save master on pricing/customer change
 }
@@ -3548,6 +3634,8 @@ function loadPricing() {
     var py = localStorage.getItem("vs5_payments"); if(py) payments = JSON.parse(py);
     var bm = localStorage.getItem("vs5_brandmeta"); if(bm) try{brandMeta=JSON.parse(bm);}catch(x){}
     var mp = localStorage.getItem("vs5_minprices"); if(mp) try{minPrices=JSON.parse(mp);}catch(x){}
+    var or2 = localStorage.getItem("vs5_orders");    if(or2) try{orders=JSON.parse(or2);}catch(x){}
+    var on2 = localStorage.getItem("vs5_ordernum");  if(on2) nextOrderNum=parseInt(on2)||1;
   } catch(e) {}
 }
 
@@ -4600,8 +4688,10 @@ function renderSyncToggles(){
             if(d.estimates)       estimates=d.estimates;
             if(d.nextEstimateNum) nextEstimateNum=d.nextEstimateNum;
             if(d.payments)        payments=d.payments;
-            if(d.brandMeta)       brandMeta=d.brandMeta;
-            if(d.minPrices)       minPrices=d.minPrices;
+            if(d.brandMeta)      brandMeta    = d.brandMeta;
+            if(d.minPrices)      minPrices    = d.minPrices;
+            if(d.orders)         orders       = d.orders;
+            if(d.nextOrderNum)   nextOrderNum = d.nextOrderNum;
             saveLocal(); savePricing();
             toast("Backup loaded to device — saving to Drive...", "ok");
             gdSave(function(){
@@ -5844,6 +5934,15 @@ function exportMasterExcel() {
     });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(accRows), "Account Summary");
 
+    // ── Sheet 10: Orders ──
+    var ordRows = [["Order #","Date","Customer","Status","Items","Total","Fulfilled Est #"]];
+    orders.forEach(function(o){
+      var itemDesc=(o.items||[]).map(function(it){return it.brand+" - "+it.flavor+" x"+it.qty;}).join("; ");
+      ordRows.push([o.id,o.date,o.custName||"Walk-in",o.status||"pending",itemDesc,o.total||0,o.estId||""]);
+    });
+    var wsOrd=XLSX.utils.aoa_to_sheet(ordRows); wsOrd["!cols"]=[{wch:12},{wch:20},{wch:22},{wch:12},{wch:60},{wch:12},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, wsOrd, "Orders");
+
     // Save
     var ts = new Date().toISOString().replace(/[:.]/g,"-").substring(0,16);
     XLSX.writeFile(wb, "KrazyStock_Master_"+ts+".xlsx");
@@ -6156,6 +6255,366 @@ function generateCatalog() {
 }
 
 (function(){var el=document.getElementById("btn-gen-catalog");if(!el)return;el.addEventListener("click",generateCatalog);})();
+
+// ════════════════════════════════════════════════════
+// ── ORDER MANAGEMENT ──
+// ════════════════════════════════════════════════════
+
+var ordBrand = BRANDS[0];
+var ordCategory = "all";
+var ordCart = {};
+
+function getOrdNextId(){
+  return "ORD-"+String(nextOrderNum).padStart(3,"0");
+}
+
+function populateOrdCustDropdown(){
+  var sel=document.getElementById("ord-cust-sel"); if(!sel)return;
+  var cur=sel.value;
+  sel.innerHTML='<option value="">\u2014 Walk-in \u2014</option>';
+  customers.forEach(function(c){var o=document.createElement("option");o.value=c.id;o.textContent=c.name;if(c.id===cur)o.selected=true;sel.appendChild(o);});
+  sel.onchange=function(){ renderOrdCart(); };
+}
+
+function getOrdCustId(){ var s=document.getElementById("ord-cust-sel");return s?s.value:""; }
+
+function renderOrdBrands(){
+  populateOrdCustDropdown();
+  // Set default date
+  var di=document.getElementById("ord-date-inp");
+  if(di&&!di.value){var t=new Date();di.value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
+  // Set default order num
+  var ni=document.getElementById("ord-num-inp");
+  if(ni&&!ni.value) ni.value=getOrdNextId();
+  renderCatChips("ord-cat-chips", ordCategory, function(cat){
+    ordCategory=cat;ordBrand=brandsForCat(cat)[0]||null;renderOrdBrands();renderOrdFlavors();
+  });
+  var wrap=document.getElementById("ord-brand-scroll"); if(!wrap)return;
+  wrap.innerHTML="";
+  var brs=brandsForCat(ordCategory);
+  if(!brs.length){wrap.innerHTML="<div style='font-size:12px;color:var(--txt3);padding:6px'>No brands</div>";ordBrand=null;return;}
+  if(!ordBrand||brs.indexOf(ordBrand)===-1)ordBrand=brs[0];
+  brs.forEach(function(br){
+    var d=document.createElement("div");d.className="chip"+(br===ordBrand?" on":"");d.textContent=br;
+    d.addEventListener("click",function(){ordBrand=br;renderOrdBrands();renderOrdFlavors();});
+    wrap.appendChild(d);
+  });
+}
+
+function renderOrdFlavors(){
+  var q=(document.getElementById("ord-search")||{}).value||"";q=q.toLowerCase();
+  var list=document.getElementById("ord-flavor-list"); if(!list)return;
+  list.innerHTML="";
+  if(!ordBrand){list.innerHTML="<div style='padding:12px;font-size:12px;color:var(--txt3)'>Select a brand above</div>";return;}
+  var flavors=(CATALOG[ordBrand]||[]).filter(function(f){return !q||f.toLowerCase().includes(q);});
+  if(!flavors.length){list.innerHTML="<div style='padding:12px;font-size:12px;color:var(--txt3)'>No match</div>";return;}
+  flavors.forEach(function(fl){
+    var k=skey(ordBrand,fl); var inCart=ordCart[k]!==undefined; var avail=qty(ordBrand,fl);
+    var item=document.createElement("div"); item.className="fitem"+(inCart?" sel":"");
+    var info=document.createElement("div");
+    var ne=document.createElement("div"); ne.className="fin"; ne.textContent=fl;
+    var se=document.createElement("div"); se.className="fsub";
+    se.textContent=ordBrand+" \u00b7 Stock: "+avail;
+    se.style.color=avail===0?"var(--red)":avail<=3?"var(--amb)":"var(--txt3)";
+    info.appendChild(ne); info.appendChild(se);
+    var chk=document.createElement("div"); chk.className="fchk"; if(inCart)chk.textContent="\u2713";
+    // Show qty badge if low/zero
+    if(avail===0){var zBadge=document.createElement("span");zBadge.style.cssText="font-size:9px;background:rgba(255,77,109,.15);color:var(--red);padding:1px 5px;border-radius:4px;margin-left:4px";zBadge.textContent="OUT";ne.appendChild(zBadge);}
+    else if(avail<=3){var lBadge=document.createElement("span");lBadge.style.cssText="font-size:9px;background:rgba(200,124,0,.15);color:var(--amb);padding:1px 5px;border-radius:4px;margin-left:4px";lBadge.textContent="LOW";ne.appendChild(lBadge);}
+    item.appendChild(info); item.appendChild(chk);
+    item.addEventListener("click",function(){
+      if(ordCart[k]!==undefined)delete ordCart[k];
+      else{var custId=getOrdCustId();var p=getSellCustPrice(custId,ordBrand);ordCart[k]={qty:1,price:p!==null?p:""};}
+      renderOrdFlavors(); renderOrdCart();
+    });
+    list.appendChild(item);
+  });
+}
+
+function renderOrdCart(){
+  var keys=Object.keys(ordCart);
+  var wrap=document.getElementById("ord-cart-wrap"); if(wrap)wrap.style.display=keys.length?"block":"none";
+  var el=document.getElementById("ord-cart"); if(!el)return;
+  el.innerHTML="";
+  var custId=getOrdCustId(); var grandTotal=0;
+  keys.forEach(function(k){
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    var avail=qty(br,fl);
+    if(typeof ordCart[k]!=="object"){var p=getSellCustPrice(custId,br);ordCart[k]={qty:1,price:p!==null?p:""};}
+    var entry=ordCart[k]; var lt=(parseFloat(entry.price)||0)*(entry.qty||1); grandTotal+=lt;
+    var item=document.createElement("div"); item.className="citem"; item.style.cssText="flex-direction:column;align-items:stretch;gap:6px";
+    var topRow=document.createElement("div"); topRow.style.cssText="display:flex;align-items:center;justify-content:space-between";
+    var info=document.createElement("div"); info.className="cinfo"; info.style.flex="1";
+    var ne=document.createElement("div"); ne.className="cin"; ne.textContent=fl;
+    var be=document.createElement("div"); be.className="cbr";
+    be.textContent=br+" \u00b7 Stock: "+avail;
+    be.style.color=avail===0?"var(--red)":avail<=3?"var(--amb)":"var(--txt3)";
+    info.appendChild(ne); info.appendChild(be);
+    var rm=document.createElement("span"); rm.className="crm"; rm.textContent="\u00d7";
+    (function(key){rm.addEventListener("click",function(){delete ordCart[key];renderOrdFlavors();renderOrdCart();});})(k);
+    topRow.appendChild(info); topRow.appendChild(rm);
+    var botRow=document.createElement("div"); botRow.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap";
+    var qLbl=document.createElement("span"); qLbl.style.cssText="font-size:11px;color:var(--txt3)"; qLbl.textContent="Qty:";
+    var qInp=document.createElement("input"); qInp.type="number"; qInp.min="1"; qInp.value=String(entry.qty); qInp.className="cqinp"; qInp.style.width="60px";
+    (function(key){qInp.addEventListener("change",function(){if(typeof ordCart[key]==="object")ordCart[key].qty=Math.max(1,parseInt(this.value,10)||1);renderOrdCart();});})(k);
+    var pLbl=document.createElement("span"); pLbl.style.cssText="font-size:11px;color:var(--txt3)"; pLbl.textContent="Unit $:";
+    var pInp=document.createElement("input"); pInp.type="number"; pInp.min="0"; pInp.step="0.01"; pInp.value=entry.price!==""?entry.price:""; pInp.placeholder="0.00"; pInp.className="cqinp"; pInp.style.width="75px";
+    (function(key){pInp.addEventListener("change",function(){var v=parseFloat(this.value);if(typeof ordCart[key]==="object")ordCart[key].price=isNaN(v)?"":v;renderOrdCart();});})(k);
+    var totSpan=document.createElement("span"); totSpan.style.cssText="font-size:12px;font-weight:700;color:var(--acc);font-family:'DM Mono',monospace;margin-left:auto";
+    totSpan.textContent=lt>0?"$"+lt.toFixed(2):"";
+    botRow.appendChild(qLbl);botRow.appendChild(qInp);botRow.appendChild(pLbl);botRow.appendChild(pInp);botRow.appendChild(totSpan);
+    item.appendChild(topRow);item.appendChild(botRow);el.appendChild(item);
+  });
+  // Summary
+  var sumEl=document.getElementById("ord-cart-summary");
+  var sumBody=document.getElementById("ord-cart-summary-body");
+  if(!keys.length){if(sumEl)sumEl.style.display="none";return;}
+  if(sumEl)sumEl.style.display="block";
+  if(sumBody){
+    sumBody.innerHTML="";
+    var catMap={};
+    keys.forEach(function(k){var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");var e2=ordCart[k];var q2=e2&&typeof e2==="object"?e2.qty:1;var cat=catOfBrand(br)||"Other";if(!catMap[cat])catMap[cat]={};if(!catMap[cat][br])catMap[cat][br]=0;catMap[cat][br]+=q2;});
+    Object.keys(catMap).forEach(function(cat){
+      var catHdr=document.createElement("div");catHdr.style.cssText="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--acc);margin-top:6px;margin-bottom:2px";catHdr.textContent=cat;sumBody.appendChild(catHdr);
+      Object.keys(catMap[cat]).forEach(function(br){
+        var row=document.createElement("div");row.style.cssText="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-bottom:1px dotted var(--brd)";
+        var brSpan=document.createElement("span");brSpan.style.fontWeight="600";brSpan.textContent=br;
+        var qSpan=document.createElement("span");qSpan.style.cssText="font-family:'DM Mono',monospace;font-size:13px;font-weight:800";qSpan.textContent=catMap[cat][br]+" units";
+        row.appendChild(brSpan);row.appendChild(qSpan);sumBody.appendChild(row);
+      });
+    });
+    if(grandTotal>0){var totRow=document.createElement("div");totRow.style.cssText="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:8px 0 0;border-top:2px solid var(--brd);margin-top:6px";totRow.innerHTML="<span>Total</span><span style='font-family:DM Mono,monospace;color:var(--acc)'>$"+grandTotal.toFixed(2)+"</span>";sumBody.appendChild(totRow);}
+  }
+}
+
+// Save order
+(function(){
+  var btn=document.getElementById("btn-save-order"); if(!btn)return;
+  btn.addEventListener("click",function(){
+    var keys=Object.keys(ordCart);
+    if(!keys.length){toast("No items in order","err");return;}
+    var custId=getOrdCustId();
+    var custObj=custId?customers.find(function(c){return c.id===custId;}):null;
+    var custName=custObj?custObj.name:"Walk-in";
+    var niVal=(document.getElementById("ord-num-inp")||{}).value||getOrdNextId();
+    var diVal=(document.getElementById("ord-date-inp")||{}).value||"";
+    var noteVal=(document.getElementById("ord-note-inp")||{}).value||"";
+    var ordId=niVal.trim()||getOrdNextId();
+    var dateStr=diVal?new Date(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    var rawDate=diVal||(function(){var t=new Date();return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");})();
+    var ordItems=[]; var grandTotal=0;
+    keys.forEach(function(k){
+      var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+      var e2=ordCart[k]; var q2=e2&&typeof e2==="object"?(e2.qty||1):(parseInt(e2,10)||1);
+      var up=e2&&typeof e2==="object"?(e2.price!==""?parseFloat(e2.price)||0:0):0;
+      var lt=up*q2; grandTotal+=lt;
+      ordItems.push({brand:br,flavor:fl,qty:q2,unitPrice:up,total:lt,category:catOfBrand(br)||""});
+    });
+    var rec={id:ordId,num:nextOrderNum++,date:dateStr,rawDate:rawDate,custId:custId,custName:custName,items:ordItems,total:grandTotal,status:"pending",estId:null,note:noteVal};
+    orders.unshift(rec);
+    savePricing();
+    ordCart={};
+    var ni=document.getElementById("ord-num-inp"); if(ni)ni.value="";
+    var di=document.getElementById("ord-date-inp"); if(di)di.value="";
+    var no=document.getElementById("ord-note-inp"); if(no)no.value="";
+    renderOrdFlavors(); renderOrdCart();
+    // Switch to open orders
+    document.querySelectorAll("#otabs .tab").forEach(function(t){t.classList.remove("on");});
+    document.querySelector("#otabs [data-ot='openorders']").classList.add("on");
+    var panes2={neworder:"ord-new-pane",openorders:"ord-open-pane",shortage:"ord-shortage-pane",buysuggest:"ord-buysuggest-pane",verify:"ov-pane",generate:"og-pane",printstock:"ops-pane"};
+    Object.keys(panes2).forEach(function(k){var pe=document.getElementById(panes2[k]);if(pe)pe.style.display=k==="openorders"?"block":"none";});
+    populateOrdFilterCust(); renderOpenOrders();
+    toast(ordId+" saved \u2713","ok");
+  });
+})();
+
+// Search listener
+(function(){var el=document.getElementById("ord-search");if(!el)return;el.addEventListener("input",function(){renderOrdFlavors();});})();
+
+// ── OPEN ORDERS ──
+function populateOrdFilterCust(){
+  var sel=document.getElementById("ord-filter-cust"); if(!sel)return;
+  var cur=sel.value;
+  sel.innerHTML='<option value="">All Customers</option>';
+  customers.forEach(function(c){var o=document.createElement("option");o.value=c.id;o.textContent=c.name;if(c.id===cur)o.selected=true;sel.appendChild(o);});
+  sel.onchange=renderOpenOrders;
+}
+
+function renderOpenOrders(){
+  var el=document.getElementById("ord-open-list"); if(!el)return;
+  var filterCust=(document.getElementById("ord-filter-cust")||{}).value||"";
+  var list=orders.filter(function(o){return o.status!=="fulfilled"&&(!filterCust||o.custId===filterCust);});
+  el.innerHTML="";
+  if(!list.length){el.innerHTML="<div class='empty'><div class='ei'>&#128203;</div><div class='et'>No open orders.<br>Create one in New Order tab.</div></div>";return;}
+  list.forEach(function(ord){
+    var card=document.createElement("div"); card.className="scard"; card.style.marginBottom="10px";
+    // Header
+    var hdr=document.createElement("div"); hdr.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px";
+    var left=document.createElement("div");
+    var idBadge=document.createElement("span"); idBadge.style.cssText="font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:var(--acc);background:rgba(91,79,232,.1);padding:2px 8px;border-radius:4px;margin-right:6px"; idBadge.textContent=ord.id;
+    var statusBadge=document.createElement("span");
+    var sColor=ord.status==="partial"?"rgba(200,124,0,.15)":"rgba(0,168,112,.12)";
+    var sTxt=ord.status==="partial"?"PARTIAL":"PENDING";
+    statusBadge.style.cssText="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:"+sColor+";color:"+(ord.status==="partial"?"#c87c00":"#00a870");
+    statusBadge.textContent=sTxt;
+    left.appendChild(idBadge); left.appendChild(statusBadge);
+    var meta=document.createElement("div"); meta.style.cssText="font-size:12px;color:var(--txt3);margin-top:4px";
+    meta.textContent=(ord.custName||"Walk-in")+" \u00b7 "+ord.date+" \u00b7 "+ord.items.length+" lines \u00b7 "+ord.items.reduce(function(s,it){return s+it.qty;},0)+" units";
+    left.appendChild(meta);
+    if(ord.total>0){var totSpan=document.createElement("div");totSpan.style.cssText="font-family:'DM Mono',monospace;font-size:16px;font-weight:800;color:var(--acc);flex-shrink:0;margin-left:8px";totSpan.textContent="$"+ord.total.toFixed(2);hdr.appendChild(left);hdr.appendChild(totSpan);}else{hdr.appendChild(left);}
+    card.appendChild(hdr);
+    // Items preview
+    var preview=document.createElement("div"); preview.style.cssText="font-size:11px;color:var(--txt3);margin-bottom:8px";
+    preview.textContent=ord.items.slice(0,4).map(function(it){return it.brand+" - "+it.flavor+" \u00d7"+it.qty;}).join("  \u00b7  ")+(ord.items.length>4?"  +("+( ord.items.length-4)+" more)":"");
+    card.appendChild(preview);
+    if(ord.note){var noteEl=document.createElement("div");noteEl.style.cssText="font-size:11px;color:var(--txt3);font-style:italic;margin-bottom:6px";noteEl.textContent="Note: "+ord.note;card.appendChild(noteEl);}
+    // Action buttons
+    var btns=document.createElement("div"); btns.style.cssText="display:flex;gap:6px;flex-wrap:wrap";
+    var fulfilBtn=document.createElement("button"); fulfilBtn.className="btn bsuc bsm"; fulfilBtn.textContent="\u2713 Fulfil";
+    (function(o){fulfilBtn.addEventListener("click",function(){fulfilOrder(o.id);});})(ord);
+    var delBtn=document.createElement("button"); delBtn.className="btn bdgr bsm"; delBtn.textContent="\u00d7";
+    (function(id){delBtn.addEventListener("click",function(){if(!confirm("Delete order "+id+"?"))return;orders=orders.filter(function(o){return o.id!==id;});savePricing();renderOpenOrders();toast("Order deleted","warn");});})(ord.id);
+    btns.appendChild(fulfilBtn); btns.appendChild(delBtn);
+    card.appendChild(btns); el.appendChild(card);
+  });
+}
+
+function fulfilOrder(ordId){
+  var ord=orders.find(function(o){return o.id===ordId;}); if(!ord)return;
+  var shortItems=ord.items.filter(function(it){return qty(it.brand,it.flavor)<it.qty;});
+  var msg="Fulfil order "+ordId+"?";
+  if(shortItems.length){msg+="\n\n\u26a0 "+shortItems.length+" item(s) have insufficient stock:\n"+shortItems.slice(0,5).map(function(it){return it.brand+" - "+it.flavor+": need "+it.qty+", have "+qty(it.brand,it.flavor);}).join("\n")+(shortItems.length>5?"\n...":"")+"\n\nThis will deduct available stock and create an estimate.";}
+  if(!confirm(msg))return;
+  var custId=ord.custId; var custName=ord.custName||"Walk-in";
+  var saleDate=ord.date; var rawDate=ord.rawDate||"";
+  var estId="EST-"+Date.now().toString().slice(-5);
+  var estItems=[];
+  ord.items.forEach(function(it){
+    var k=it.brand+"~~"+it.flavor;
+    var avail=stock[k]||0; var deduct=Math.min(it.qty,avail);
+    stock[k]=Math.max(0,avail-it.qty);
+    estItems.push({brand:it.brand,flavor:it.flavor,qty:it.qty,unitPrice:it.unitPrice,total:it.total,category:it.category||""});
+    txLog.unshift({type:"sale",category:it.category,brand:it.brand,flavor:it.flavor,qty:deduct,custId:custId,custName:custName,unitPrice:it.unitPrice,total:it.total,date:saleDate,estId:estId});
+  });
+  var estRec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:true,total:ord.total,locked:false,fromOrderId:ordId};
+  estimates.unshift(estRec);
+  // Mark order fulfilled
+  ord.status="fulfilled"; ord.estId=estId;
+  afterChange(); savePricing();
+  renderOpenOrders();
+  toast(ordId+" fulfilled \u2192 "+estId+" created \u2713","ok");
+}
+
+// ── SHORTAGE REVIEW ──
+function renderShortageReview(){
+  var el=document.getElementById("ord-shortage-list"); if(!el)return;
+  var shortOnly=(document.getElementById("shortage-only")||{}).checked!==false;
+  var pendingOrders=orders.filter(function(o){return o.status!=="fulfilled";});
+  if(!pendingOrders.length){el.innerHTML="<div class='empty'><div class='ei'>&#128202;</div><div class='et'>No pending orders. Create orders in New Order tab.</div></div>";return;}
+  // Aggregate needed quantities
+  var needed={};
+  pendingOrders.forEach(function(ord){
+    ord.items.forEach(function(it){
+      var k=it.brand+"~~"+it.flavor;
+      if(!needed[k])needed[k]={brand:it.brand,flavor:it.flavor,category:it.category||"",orders:[],totalNeeded:0};
+      needed[k].orders.push({ordId:ord.id,custName:ord.custName||"Walk-in",qty:it.qty});
+      needed[k].totalNeeded+=it.qty;
+    });
+  });
+  var rows=Object.keys(needed).map(function(k){var n=needed[k];var have=stock[k]||0;return Object.assign({key:k,have:have,shortage:Math.max(0,n.totalNeeded-have)},n);});
+  if(shortOnly)rows=rows.filter(function(r){return r.shortage>0;});
+  rows.sort(function(a,b){return b.shortage-a.shortage||a.brand.localeCompare(b.brand);});
+  if(!rows.length){el.innerHTML="<div class='empty'><div class='ei'>&#10003;</div><div class='et'>All items fully covered by current stock!</div></div>";return;}
+  // Summary
+  var totalShort=rows.filter(function(r){return r.shortage>0;}).length;
+  var h="<div class='bal-amounts' style='margin-bottom:12px'><div class='bal-amt'><div class='bal-amt-lbl'>Pending Orders</div><div class='bal-amt-val'>"+pendingOrders.length+"</div></div><div class='bal-amt'><div class='bal-amt-lbl'>Items Needed</div><div class='bal-amt-val'>"+rows.length+"</div></div><div class='bal-amt'><div class='bal-amt-lbl'>Shortages</div><div class='bal-amt-val' style='color:#c0392b'>"+totalShort+"</div></div></div>";
+  h+="<table style='width:100%;border-collapse:collapse;font-size:12px'><thead><tr style='border-bottom:2px solid var(--brd)'><th style='text-align:left;padding:5px 4px;font-size:10px;color:var(--txt3)'>Brand · Flavor</th><th style='text-align:center;padding:5px 4px;font-size:10px;color:var(--txt3)'>Need</th><th style='text-align:center;padding:5px 4px;font-size:10px;color:var(--txt3)'>Have</th><th style='text-align:center;padding:5px 4px;font-size:10px;color:var(--txt3)'>Short</th><th style='text-align:left;padding:5px 4px;font-size:10px;color:var(--txt3)'>Orders</th></tr></thead><tbody>";
+  rows.forEach(function(r,idx){
+    var rowBg=idx%2?"background:var(--sur2)":"";
+    var shortColor=r.shortage>0?"color:#c0392b;font-weight:800":"color:#00a870";
+    h+="<tr style='"+rowBg+";border-bottom:1px solid var(--brd)'>";
+    h+="<td style='padding:5px 4px'><div style='font-weight:600;font-size:12px'>"+r.brand+"</div><div style='font-size:10px;color:var(--txt3)'>"+r.flavor+"</div></td>";
+    h+="<td style='text-align:center;padding:5px 4px;font-family:monospace;font-weight:700'>"+r.totalNeeded+"</td>";
+    h+="<td style='text-align:center;padding:5px 4px;font-family:monospace;color:"+(r.have>0?"#00a870":"#c0392b")+"'>"+r.have+"</td>";
+    h+="<td style='text-align:center;padding:5px 4px;font-family:monospace;"+shortColor+"'>"+(r.shortage>0?r.shortage:"\u2713")+"</td>";
+    h+="<td style='padding:5px 4px;font-size:10px;color:var(--txt3)'>"+r.orders.map(function(o){return o.ordId+" ("+o.custName+" \u00d7"+o.qty+")";}).join(", ")+"</td>";
+    h+="</tr>";
+  });
+  h+="</tbody></table>";
+  el.innerHTML=h;
+  // Wire shortage-only checkbox
+  var cb=document.getElementById("shortage-only"); if(cb)cb.onchange=renderShortageReview;
+}
+
+// Print shortage
+(function(){var el=document.getElementById("btn-shortage-print");if(!el)return;el.addEventListener("click",function(){
+  var content=document.getElementById("ord-shortage-list"); if(!content||!content.innerHTML)return;
+  var css="*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}table{width:100%;border-collapse:collapse}th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:5px 4px;border-bottom:1px solid #ccc}td{padding:5px 4px;border-bottom:1px solid #eee}";
+  var w=window.open("","_blank","width=800,height=600");if(!w){toast("Pop-up blocked","err");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Shortage Review</title><style>"+css+"</style></head><body><h2 style='margin:0 0 6px'>Krazy Wholesale — Shortage Review</h2><p style='font-size:11px;color:#666;margin-bottom:12px'>"+new Date().toLocaleDateString()+"</p>"+content.innerHTML+"</body></html>");
+  w.document.close();w.focus();setTimeout(function(){w.print();},400);
+});})();
+
+// ── BUY SUGGESTIONS ──
+function renderBuySuggestions(){
+  var el=document.getElementById("ord-buysuggest-list"); if(!el)return;
+  if(!distributors.length){el.innerHTML="<div class='empty'><div class='ei'>&#128201;</div><div class='et'>No distributors set up.<br>Add distributors and their prices in the Distrib tab.</div></div>";return;}
+  // Get shortage list
+  var pendingOrders=orders.filter(function(o){return o.status!=="fulfilled";});
+  if(!pendingOrders.length){el.innerHTML="<div class='empty'><div class='ei'>&#128201;</div><div class='et'>No pending orders. Create orders first.</div></div>";return;}
+  var needed={};
+  pendingOrders.forEach(function(ord){ord.items.forEach(function(it){var k=it.brand+"~~"+it.flavor;if(!needed[k])needed[k]={brand:it.brand,category:it.category||"",totalNeeded:0,have:stock[k]||0};needed[k].totalNeeded+=it.qty;});});
+  var toBuy=Object.keys(needed).map(function(k){var n=needed[k];var short=Math.max(0,n.totalNeeded-n.have);return{brand:n.brand,category:n.category,shortage:short};}).filter(function(r){return r.shortage>0;});
+  // Deduplicate by brand
+  var byBrand={};
+  toBuy.forEach(function(r){if(!byBrand[r.brand])byBrand[r.brand]={brand:r.brand,category:r.category,totalShort:0};byBrand[r.brand].totalShort+=r.shortage;});
+  var brandList=Object.keys(byBrand).map(function(k){return byBrand[k];}).sort(function(a,b){return a.category.localeCompare(b.category)||a.brand.localeCompare(b.brand);});
+  if(!brandList.length){el.innerHTML="<div class='empty'><div class='ei'>&#10003;</div><div class='et'>No shortages — all orders covered by stock!</div></div>";return;}
+  // For each brand find cheapest distributor
+  var byDist={};
+  var grandTotal=0;
+  brandList.forEach(function(br){
+    var prices=distributors.map(function(d){var p=getDistPrice(d.id,br.brand);return p!==null?{dist:d,price:p}:null;}).filter(Boolean).sort(function(a,b){return a.price-b.price;});
+    var best=prices[0]||null;
+    var cost=best?best.price*br.totalShort:0;
+    if(best){if(!byDist[best.dist.id])byDist[best.dist.id]={dist:best.dist,items:[],totalCost:0};byDist[best.dist.id].items.push({brand:br.brand,category:br.category,qty:br.totalShort,price:best.price,cost:cost,allPrices:prices});byDist[best.dist.id].totalCost+=cost;grandTotal+=cost;}
+    else{if(!byDist["__none__"])byDist["__none__"]={dist:null,items:[],totalCost:0};byDist["__none__"].items.push({brand:br.brand,category:br.category,qty:br.totalShort,price:null,cost:0,allPrices:[]});}
+  });
+  var h="";
+  // Totals bar
+  if(grandTotal>0)h+="<div style='background:var(--sur2);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center'><span style='font-size:13px;font-weight:700'>Est. Total Purchase Cost</span><span style='font-family:DM Mono,monospace;font-size:18px;font-weight:900;color:var(--acc)'>$"+grandTotal.toFixed(2)+"</span></div>";
+  // By distributor
+  Object.keys(byDist).forEach(function(did){
+    var section=byDist[did]; var dist=section.dist;
+    h+="<div class='scard' style='margin-bottom:10px'>";
+    if(dist){h+="<div style='font-size:15px;font-weight:800;margin-bottom:2px'>"+dist.name+"</div>";if(dist.phone)h+="<div style='font-size:12px;color:var(--txt3);margin-bottom:8px'>"+dist.phone+"</div>";}
+    else{h+="<div style='font-size:14px;font-weight:700;color:var(--txt3);margin-bottom:8px'>&#9888; No distributor has prices for these brands</div>";}
+    h+="<table style='width:100%;border-collapse:collapse;font-size:12px'><thead><tr style='border-bottom:2px solid var(--brd)'><th style='text-align:left;padding:4px;font-size:10px;color:var(--txt3)'>Brand</th><th style='text-align:center;padding:4px;font-size:10px;color:var(--txt3)'>Buy Qty</th>";
+    if(dist)h+="<th style='text-align:right;padding:4px;font-size:10px;color:var(--txt3)'>Unit $</th><th style='text-align:right;padding:4px;font-size:10px;color:var(--txt3)'>Total</th>";
+    h+="</tr></thead><tbody>";
+    section.items.forEach(function(it,idx){
+      h+="<tr style='"+(idx%2?"background:var(--sur2)":"")+"border-bottom:1px solid var(--brd)'>";
+      h+="<td style='padding:5px 4px'><div style='font-weight:600'>"+it.brand+"</div><div style='font-size:10px;color:var(--txt3)'>"+it.category+"</div>";
+      if(it.allPrices.length>1){h+="<div style='font-size:10px;color:var(--txt3)'>Also: "+it.allPrices.slice(1,3).map(function(p){return p.dist.name+" $"+p.price.toFixed(2);}).join(", ")+"</div>";}
+      h+="</td><td style='text-align:center;padding:5px 4px;font-family:monospace;font-weight:700'>"+it.qty+"</td>";
+      if(dist){h+="<td style='text-align:right;padding:5px 4px;font-family:monospace'>$"+(it.price||0).toFixed(2)+"</td><td style='text-align:right;padding:5px 4px;font-family:monospace;font-weight:700;color:var(--acc)'>$"+it.cost.toFixed(2)+"</td>";}
+      h+="</tr>";
+    });
+    h+="</tbody></table>";
+    if(dist&&section.totalCost>0)h+="<div style='text-align:right;margin-top:8px;font-size:13px;font-weight:800;font-family:DM Mono,monospace;color:var(--acc)'>Subtotal: $"+section.totalCost.toFixed(2)+"</div>";
+    h+="</div>";
+  });
+  el.innerHTML=h;
+}
+
+// Print buy suggestions
+(function(){var el=document.getElementById("btn-buysuggest-print");if(!el)return;el.addEventListener("click",function(){
+  var content=document.getElementById("ord-buysuggest-list"); if(!content||!content.innerHTML)return;
+  var css="*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}table{width:100%;border-collapse:collapse}th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:5px 4px;border-bottom:1px solid #ccc}td{padding:5px 4px;border-bottom:1px solid #eee}.scard{border:1px solid #ddd;border-radius:6px;padding:10px;margin-bottom:10px}";
+  var w=window.open("","_blank","width=800,height=600");if(!w){toast("Pop-up blocked","err");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Buy Suggestions</title><style>"+css+"</style></head><body><h2 style='margin:0 0 6px'>Krazy Wholesale — Buy Suggestions</h2><p style='font-size:11px;color:#666;margin-bottom:12px'>"+new Date().toLocaleDateString()+"</p>"+content.innerHTML+"</body></html>");
+  w.document.close();w.focus();setTimeout(function(){w.print();},400);
+});})();
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -6178,6 +6637,8 @@ if(gdUrl){
 } else { setSyncDot("","local"); }
 
 })();
+
+
 
 
 
