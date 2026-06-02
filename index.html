@@ -297,7 +297,23 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div class="fc" data-sf="low">Low <span class="fc-count" id="fc-low">0</span></div>
     <div class="fc" data-sf="out">Out <span class="fc-count" id="fc-out">0</span></div>
   </div>
-  <p style="font-size:11px;color:var(--txt3);margin-bottom:10px">Tap a number to edit it directly. Use + / - for quick adjust.</p>
+  <!-- Stock adjustment mode bar -->
+  <div id="stock-adj-bar" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+    <button id="btn-stock-adj" class="btn bpri bsm" style="flex:1;min-width:140px">&#9998; Stock Adjustment</button>
+    <div id="stock-readonly-msg" style="font-size:11px;color:var(--txt3);flex:1">Read-only. Tap to adjust stock.</div>
+  </div>
+  <div id="stock-adj-active" style="display:none;background:rgba(200,124,0,.10);border:1.5px solid var(--amb);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--amb)">&#9998; Adjustment Mode Active</div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:2px">Auto-locks &amp; saves in <span id="adj-countdown">5:00</span></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button id="btn-stock-adj-save" class="btn bsuc bsm">&#10003; Save &amp; Lock</button>
+        <button id="btn-stock-adj-cancel" class="btn bsec bsm">Cancel</button>
+      </div>
+    </div>
+  </div>
   <div class="fgrid" id="sgrid"></div>
 </div>
 
@@ -1096,6 +1112,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
 var BRANDS = Object.keys(CATALOG);
 
@@ -1840,8 +1857,11 @@ function renderStockGrid() {
     var qrow=document.createElement("div"); qrow.className="qrow";
     var btnM=document.createElement("button"); btnM.className="qbtn m"; btnM.textContent="\u2212";
     btnM.setAttribute("data-br",activeBrand); btnM.setAttribute("data-fl",fl); btnM.setAttribute("data-d","-1");
+    btnM.style.visibility=stockAdjMode?"visible":"hidden";
     var qvalEl=document.createElement("div"); qvalEl.className="qval"+(q===0?" z":q<=3?" lw":""); qvalEl.textContent=q;
     qvalEl.addEventListener("click",function(){
+      if(!stockAdjMode){ toast("Tap 'Stock Adjustment' to edit stock","warn"); return; }
+      resetAdjTimer();
       var inp=document.createElement("input"); inp.type="number"; inp.min="0"; inp.value=q; inp.className="qedit";
       inp.addEventListener("blur",function(){
         var nv=Math.max(0,parseInt(inp.value,10)||0);
@@ -1855,6 +1875,7 @@ function renderStockGrid() {
     });
     var btnP=document.createElement("button"); btnP.className="qbtn p"; btnP.textContent="+";
     btnP.setAttribute("data-br",activeBrand); btnP.setAttribute("data-fl",fl); btnP.setAttribute("data-d","1");
+    btnP.style.visibility=stockAdjMode?"visible":"hidden";
     qrow.appendChild(btnM); qrow.appendChild(qvalEl); qrow.appendChild(btnP);
     card.appendChild(dot); card.appendChild(name); card.appendChild(qrow);
     grid.appendChild(card);
@@ -1862,10 +1883,12 @@ function renderStockGrid() {
 }
 (function(){var __el=document.getElementById("sgrid");if(!__el)return;__el.addEventListener("click",function(e){
   var btn=e.target.closest("[data-d]"); if(!btn) return;
+  if(!stockAdjMode){ toast("Tap 'Stock Adjustment' to edit stock","warn"); return; }
+  resetAdjTimer();
   var br=btn.getAttribute("data-br"), fl=btn.getAttribute("data-fl"), d=parseInt(btn.getAttribute("data-d"),10);
   var k=skey(br,fl), cur=stock[k]||0, nxt=Math.max(0,cur+d);
   stock[k]=nxt;
-  if(d<0&&cur>0) txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:1,date:new Date().toLocaleString()});
+  txLog.unshift({type:"adj",category:catOfBrand(br),brand:br,flavor:fl,qty:d,date:new Date().toLocaleString()});
   afterChange(); renderStockGrid();
 })})();
 
@@ -2205,7 +2228,8 @@ function renderCart(){
       distId:distId,distName:dName,unitPrice:up,total:up*q,date:now});
   });
   afterChange(); cart={}; renderCart(); renderPurFlavors();
-  toast(totalUnits+" units added to stock \u2713","ok");
+  toast(totalUnits+" units added to stock \u2014 saving...","ok");
+  if(gdConnected) { gdSave(function(){ toast(totalUnits+" units purchased & saved to Drive \u2713","ok"); }); } else { saveLocal(); }
 })})();
 
 // ── SELL PAGE ──
@@ -2993,6 +3017,8 @@ function renderSellCart() {
         total:it.total,date:saleDate,estId:estId});
     });
     afterChange(); savePricing();
+    // Auto-save to Drive after sale commits
+    if(gdConnected) { gdSave(function(){ toast("Sale saved to Drive \u2713","ok"); }); } else { saveLocal(); }
     // NO auto-print — user taps Print button on the estimate card
     sellCart={};
     var ni=document.getElementById("est-num-inp"); if(ni) ni.value="";
@@ -6480,6 +6506,8 @@ function renderOrdCart(){
     var rec={id:ordId,num:nextOrderNum++,date:dateStr,rawDate:rawDate,custId:custId,custName:custName,items:ordItems,total:grandTotal,status:"pending",estId:null,note:noteVal,createdAt:Date.now(),updatedAt:Date.now()};
     orders.unshift(rec);
     savePricing();
+    // Auto-save to Drive
+    if(gdConnected) gdSave(null);
     ordCart={};
     var ni=document.getElementById("ord-num-inp"); if(ni)ni.value="";
     var di=document.getElementById("ord-date-inp"); if(di)di.value="";
@@ -6568,8 +6596,10 @@ function fulfilOrder(ordId){
   // Mark order fulfilled
   ord.status="fulfilled"; ord.estId=estId; ord.updatedAt=Date.now();
   afterChange(); savePricing();
+  // Auto-save to Drive after fulfil
+  if(gdConnected) { gdSave(function(){ toast(ordId+" fulfilled \u2192 "+estId+" \u2014 saved to Drive \u2713","ok"); }); }
+  else { saveLocal(); toast(ordId+" fulfilled \u2192 "+estId+" created \u2713","ok"); }
   renderOpenOrders();
-  toast(ordId+" fulfilled \u2192 "+estId+" created \u2713","ok");
 }
 
 // ── SHORTAGE REVIEW ──
@@ -6745,6 +6775,95 @@ function mergeStock(local, drive) {
   Object.keys(local||{}).forEach(function(k){ result[k] = local[k]; });
   return result;
 }
+
+// ── STOCK ADJUSTMENT MODE ──
+var stockAdjMode = false;
+var stockAdjTimer = null;
+var stockAdjCountdownTimer = null;
+var STOCK_ADJ_TIMEOUT = 5 * 60; // 5 minutes in seconds
+var stockAdjSecondsLeft = STOCK_ADJ_TIMEOUT;
+
+function enterStockAdjMode() {
+  if(!confirm("Enter Stock Adjustment mode?\n\nChanges take effect immediately. Mode will auto-save and lock after 5 minutes of inactivity.\n\nProceed?")) return;
+  stockAdjMode = true;
+  stockAdjSecondsLeft = STOCK_ADJ_TIMEOUT;
+  document.getElementById("stock-adj-bar").style.display = "none";
+  document.getElementById("stock-adj-active").style.display = "block";
+  renderStockGrid();
+  startAdjTimer();
+  toast("Adjustment mode active","warn");
+}
+
+function exitStockAdjMode(autoSave) {
+  stockAdjMode = false;
+  clearInterval(stockAdjTimer); stockAdjTimer = null;
+  clearInterval(stockAdjCountdownTimer); stockAdjCountdownTimer = null;
+  document.getElementById("stock-adj-bar").style.display = "flex";
+  document.getElementById("stock-adj-active").style.display = "none";
+  renderStockGrid();
+  if(autoSave && gdConnected) {
+    gdSave(function(){ toast("Stock saved to Drive \u2713","ok"); });
+  } else if(autoSave) {
+    saveLocal();
+    toast("Stock locked (Drive not connected — saved locally)","warn");
+  }
+}
+
+function startAdjTimer() {
+  clearInterval(stockAdjTimer); clearInterval(stockAdjCountdownTimer);
+  stockAdjSecondsLeft = STOCK_ADJ_TIMEOUT;
+  updateAdjCountdown();
+  stockAdjCountdownTimer = setInterval(function() {
+    stockAdjSecondsLeft--;
+    updateAdjCountdown();
+    if(stockAdjSecondsLeft <= 0) {
+      clearInterval(stockAdjCountdownTimer);
+      clearInterval(stockAdjTimer);
+      exitStockAdjMode(true);
+      toast("Adjustment timed out \u2014 saved to Drive \u2713","ok");
+    }
+  }, 1000);
+}
+
+function resetAdjTimer() {
+  if(!stockAdjMode) return;
+  stockAdjSecondsLeft = STOCK_ADJ_TIMEOUT;
+}
+
+function updateAdjCountdown() {
+  var el = document.getElementById("adj-countdown"); if(!el) return;
+  var m = Math.floor(stockAdjSecondsLeft / 60);
+  var s = stockAdjSecondsLeft % 60;
+  el.textContent = m + ":" + (s<10?"0":"")+s;
+  el.style.color = stockAdjSecondsLeft <= 60 ? "var(--red)" : "inherit";
+}
+
+(function(){
+  var btn = document.getElementById("btn-stock-adj"); if(!btn) return;
+  btn.addEventListener("click", enterStockAdjMode);
+})();
+(function(){
+  var btn = document.getElementById("btn-stock-adj-save"); if(!btn) return;
+  btn.addEventListener("click", function(){ exitStockAdjMode(true); toast("Stock saved \u2713","ok"); });
+})();
+(function(){
+  var btn = document.getElementById("btn-stock-adj-cancel"); if(!btn) return;
+  btn.addEventListener("click", function(){
+    if(confirm("Cancel adjustment mode?\n\nAny changes made will be kept but NOT saved to Drive automatically.")) {
+      exitStockAdjMode(false);
+      toast("Adjustment cancelled \u2014 remember to Save to Drive","warn");
+    }
+  });
+})();
+
+// Warn on browser close/refresh if unsaved changes
+window.addEventListener("beforeunload", function(e) {
+  if(isDirty || stockAdjMode) {
+    e.preventDefault();
+    e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+    return e.returnValue;
+  }
+});
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -6765,6 +6884,7 @@ if(gdUrl){
     toast("Connected. Auto-load is OFF","warn");
   }
 } else { setSyncDot("","local"); }
+
 
 
 
