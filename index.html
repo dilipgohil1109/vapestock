@@ -1096,38 +1096,9 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// openDistModal handled by listener
-
-
-(function(){
-"use strict";
-
 var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
 var BRANDS = Object.keys(CATALOG);
-// CATEGORIES: { catName: [brandName, ...] }
-// All built-in brands start under "Vape"
+
 var CATEGORIES = { "Vape": Object.keys(CATALOG).slice() };
 var CATEGORY_NAMES = Object.keys(CATEGORIES);
 
@@ -1140,7 +1111,7 @@ function catOfBrand(br) {
   return found;
 }
 
-var GAS_CODE = "function doPost(e) {\n  try {\n    var mode      = (e.parameter && e.parameter.mode) || 'write';\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n\n    // Resolve file name\n    var fileName = getFileName(fileParam);\n\n    if (mode === 'read') {\n      // Special: list all backup files\n      if (fileParam === 'backup_list') {\n        var folder = getAppFolder();\n        var files  = folder.getFiles();\n        var list   = [];\n        while (files.hasNext()) {\n          var f = files.next();\n          if (f.getName().indexOf('backup_') === 0) {\n            list.push({ name: f.getName(), id: f.getId(), updated: f.getLastUpdated().toISOString() });\n          }\n        }\n        list.sort(function(a,b){ return b.name > a.name ? 1 : -1; });\n        return ContentService.createTextOutput(JSON.stringify({ ok:true, files:list }))\n          .setMimeType(ContentService.MimeType.JSON);\n      }\n      // Normal read\n      var file = getNamedFile(fileName);\n      return ContentService.createTextOutput(file.getBlob().getDataAsString() || '{}')\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n\n    // Write\n    var file = getNamedFile(fileName);\n    file.setContent(e.postData.contents);\n    return ContentService.createTextOutput(JSON.stringify({ ok:true, fileId:file.getId(), file:fileName }))\n      .setMimeType(ContentService.MimeType.JSON);\n\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ ok:false, error:err.message }))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  try {\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n    var fileName  = getFileName(fileParam);\n    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || '{}')\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\n// Map short file param to actual filename\nfunction getFileName(param) {\n  if (param === 'master')      return 'vapestock_master.json';\n  if (param === 'stock')       return 'vapestock_stock.json';\n  if (param.indexOf('backup_') === 0) {\n    // param may already include .json extension — avoid doubling it\n    return param.endsWith('.json') ? param : param + '.json';\n  }\n  return param.endsWith('.json') ? param : param + '.json';\n}\n\n// Get or create a file in the KrazyStock folder\nfunction getAppFolder() {\n  var root    = DriveApp.getRootFolder();\n  var folders = root.getFoldersByName('KrazyStock_Data');\n  return folders.hasNext() ? folders.next() : root.createFolder('KrazyStock_Data');\n}\n\nfunction getNamedFile(name) {\n  var folder = getAppFolder();\n  var files  = folder.getFilesByName(name);\n  var file   = files.hasNext() ? files.next()\n             : folder.createFile(name, '{}', MimeType.PLAIN_TEXT);\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
+var GAS_CODE ="function doPost(e) {\n  try {\n    var mode      = (e.parameter && e.parameter.mode) || 'write';\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n    var fileName  = getFileName(fileParam);\n\n    if (mode === 'read') {\n      if (fileParam === 'backup_list') {\n        var folder = getAppFolder();\n        var files  = folder.getFiles();\n        var list   = [];\n        while (files.hasNext()) {\n          var f = files.next();\n          if (f.getName().indexOf('backup_') === 0) {\n            list.push({ name: f.getName(), id: f.getId(), updated: f.getLastUpdated().toISOString() });\n          }\n        }\n        list.sort(function(a,b){ return b.name > a.name ? 1 : -1; });\n        return ContentService.createTextOutput(JSON.stringify({ ok:true, files:list }))\n          .setMimeType(ContentService.MimeType.JSON);\n      }\n      var file = getNamedFile(fileName);\n      var content = file.getBlob().getDataAsString();\n      return ContentService.createTextOutput(content || '{}')\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n\n    // Write\n    var file = getNamedFile(fileName);\n    file.setContent(e.postData.contents);\n    return ContentService.createTextOutput(JSON.stringify({ ok:true, fileId:file.getId(), file:fileName }))\n      .setMimeType(ContentService.MimeType.JSON);\n\n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({ ok:false, error:err.message }))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doGet(e) {\n  try {\n    var fileParam = (e.parameter && e.parameter.file) || 'stock';\n    var mode      = (e.parameter && e.parameter.mode) || 'read';\n    var fileName  = getFileName(fileParam);\n    if (fileParam === 'backup_list') {\n      var folder = getAppFolder();\n      var files  = folder.getFiles();\n      var list   = [];\n      while (files.hasNext()) {\n        var f = files.next();\n        if (f.getName().indexOf('backup_') === 0) {\n          list.push({ name: f.getName(), id: f.getId(), updated: f.getLastUpdated().toISOString() });\n        }\n      }\n      list.sort(function(a,b){ return b.name > a.name ? 1 : -1; });\n      return ContentService.createTextOutput(JSON.stringify({ ok:true, files:list }))\n        .setMimeType(ContentService.MimeType.JSON);\n    }\n    return ContentService.createTextOutput(getNamedFile(fileName).getBlob().getDataAsString() || '{}')\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch(err) {\n    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction getFileName(param) {\n  if (param === 'master')    return 'vapestock_master.json';\n  if (param === 'stock')     return 'vapestock_stock.json';\n  if (param === 'estimates') return 'vapestock_estimates.json';\n  if (param === 'payments')  return 'vapestock_payments.json';\n  if (param === 'orders')    return 'vapestock_orders.json';\n  if (param === 'distributors') return 'vapestock_distributors.json';\n  if (param.indexOf('backup_') === 0) {\n    return param.endsWith('.json') ? param : param + '.json';\n  }\n  return param.endsWith('.json') ? param : param + '.json';\n}\n\nfunction getAppFolder() {\n  var root    = DriveApp.getRootFolder();\n  var folders = root.getFoldersByName('KrazyStock_Data');\n  return folders.hasNext() ? folders.next() : root.createFolder('KrazyStock_Data');\n}\n\nfunction getNamedFile(name) {\n  var folder = getAppFolder();\n  var files  = folder.getFilesByName(name);\n  var file   = files.hasNext() ? files.next()\n             : folder.createFile(name, '{}', MimeType.PLAIN_TEXT);\n  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}\n  return file;\n}";
 
 var stock = {};
 var txLog = [];
@@ -1185,10 +1156,10 @@ var sellItems = [];
 function skey(b, f) { return b + "~~" + f; }
 function qty(b, f) { return stock[skey(b, f)] || 0; }
 function esc(s) {
-  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\x22/g,"&quot;");
 }
 function eattr(s) {
-  return String(s).replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  return String(s).replace(/\x22/g,"&quot;").replace(/\x27/g,"&#39;");
 }
 
 // ── FUZZY MATCH ──
@@ -1429,29 +1400,8 @@ function gdSave(onDone) {
   setSyncDot("busy","saving...");
 
   var saveTs = Date.now();
-  var stockPayload = JSON.stringify({
-    stock: stock,
-    txLog: txLog.slice(0, 2000),
-    ts: saveTs
-  });
-  var masterPayload = JSON.stringify({
-    customFlavors: customFlavors,
-    customers: customers,
-    defaultPrices: defaultPrices,
-    customerPrices: customerPrices,
-    distributors: distributors,
-    distributorPrices: distributorPrices,
-    estimates: estimates,
-    nextEstimateNum: nextEstimateNum,
-    payments: payments,
-    brandMeta: brandMeta,
-    minPrices: minPrices,
-    orders: orders,
-    nextOrderNum: nextOrderNum,
-    ts: saveTs
-  });
 
-  // Save both files in parallel
+  // ── STEP 1: Write backup FIRST (before any merge/write) ──
   if(backupBeforeSave){
     var backupTs=new Date(saveTs).toISOString().replace(/[:.]/g,"-").substring(0,16);
     var bkPayload=JSON.stringify({
@@ -1462,39 +1412,125 @@ function gdSave(onDone) {
       estimates:estimates,nextEstimateNum:nextEstimateNum,
       payments:payments,brandMeta:brandMeta,minPrices:minPrices,
       orders:orders,nextOrderNum:nextOrderNum,
+      distributors:distributors,distributorPrices:distributorPrices,
       ts:saveTs,label:"Backup "+backupTs
     });
     gasPost(gdUrl+"?file=backup_"+backupTs,bkPayload).catch(function(){});
   }
+
+  // ── STEP 2: Read current Drive files FIRST, then merge ──
+  // This prevents overwriting records added by another device
   Promise.all([
-    gasPost(gdUrl + "?file=stock", stockPayload),
-    gasPost(gdUrl + "?file=master", masterPayload)
-  ])
+    gasPost(gdUrl+"?file=stock&mode=read","{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=estimates&mode=read","{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=payments&mode=read","{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=orders&mode=read","{}").catch(function(){return {};})
+  ]).then(function(reads){
+    var driveStock    = reads[0]||{};
+    var driveEst      = reads[1]||{};
+    var drivePay      = reads[2]||{};
+    var driveOrd      = reads[3]||{};
+    var driveDist     = reads[4]||{};
+
+    // ── STEP 3: Merge arrays by timestamp ──
+    var mergedEstimates    = mergeByTimestamp(estimates,    driveEst.estimates    ||[]);
+    var mergedPayments     = mergeByTimestamp(payments,     drivePay.payments     ||[]);
+    var mergedOrders       = mergeByTimestamp(orders,       driveOrd.orders       ||[]);
+    var mergedNextEstNum   = mergeCounters(nextEstimateNum, driveEst.nextEstimateNum||1);
+    var mergedNextOrdNum   = mergeCounters(nextOrderNum,    driveOrd.nextOrderNum  ||1);
+
+    // Merge distributors
+    var mergedDistributors = mergeByTimestamp(distributors, driveDist.distributors||[]);
+    distributors = mergedDistributors;
+
+    // Apply merged arrays back to local memory
+    estimates      = mergedEstimates;
+    payments       = mergedPayments;
+    orders         = mergedOrders;
+    nextEstimateNum= mergedNextEstNum;
+    nextOrderNum   = mergedNextOrdNum;
+
+    // Stock: merge keys (local stock values win — reflects latest purchases/sales)
+    var mergedStock = mergeStock(stock, driveStock.stock||{});
+    stock = mergedStock;
+
+    // ── STEP 4: Write all 6 split files in parallel ──
+    var stockPayload = JSON.stringify({
+      stock: stock,
+      txLog: txLog.slice(0,2000),
+      ts: saveTs
+    });
+    var estimatesPayload = JSON.stringify({
+      estimates: estimates,
+      nextEstimateNum: nextEstimateNum,
+      ts: saveTs
+    });
+    var paymentsPayload = JSON.stringify({
+      payments: payments,
+      ts: saveTs
+    });
+    var ordersPayload = JSON.stringify({
+      orders: orders,
+      nextOrderNum: nextOrderNum,
+      ts: saveTs
+    });
+    var masterPayload = JSON.stringify({
+      customFlavors: customFlavors,
+      customers: customers,
+      defaultPrices: defaultPrices,
+      customerPrices: customerPrices,
+      distributors: distributors,
+      distributorPrices: distributorPrices,
+      brandMeta: brandMeta,
+      minPrices: minPrices,
+      // Also include arrays for backward compatibility
+      estimates: estimates,
+      nextEstimateNum: nextEstimateNum,
+      payments: payments,
+      orders: orders,
+      nextOrderNum: nextOrderNum,
+      ts: saveTs
+    });
+
+    var distributorsPayload = JSON.stringify({
+      distributors: distributors,
+      distributorPrices: distributorPrices,
+      ts: saveTs
+    });
+    return Promise.all([
+      gasPost(gdUrl+"?file=stock",        stockPayload),
+      gasPost(gdUrl+"?file=master",       masterPayload),
+      gasPost(gdUrl+"?file=estimates",    estimatesPayload),
+      gasPost(gdUrl+"?file=payments",     paymentsPayload),
+      gasPost(gdUrl+"?file=orders",       ordersPayload),
+      gasPost(gdUrl+"?file=distributors", distributorsPayload)
+    ]);
+  })
   .then(function(results) {
-    if(sb) { sb.textContent = "⬆ Save"; sb.disabled = false; }
-    var stockResp = results[0], masterResp = results[1];
-    var stockOk = stockResp && stockResp.ok;
-    var masterOk = masterResp && masterResp.ok;
-    var err = (!stockOk ? (stockResp && stockResp.error) : null) || (!masterOk ? (masterResp && masterResp.error) : null);
-    if(err) {
+    if(sb) { sb.textContent = "\u2b06 Save"; sb.disabled = false; }
+    var allOk = results.every(function(r){ return r&&r.ok; });
+    var errMsg = null;
+    results.forEach(function(r){ if(r&&r.error&&!errMsg) errMsg=r.error; });
+    if(!allOk||errMsg) {
       setSyncDot("err","error");
-      addSyncLog("error", "Save error: " + err, true);
-      toast("Save error: " + String(err).substring(0,80), "err");
+      addSyncLog("error","Save error: "+(errMsg||"unknown"),true);
+      toast("Save error: "+String(errMsg||"").substring(0,60),"err");
     } else {
-      setSyncDot("ok","saved ✓");
-      var stockCount = Object.keys(stock).length;
-      isDirty = false; lastSaveTs = saveTs; updateDirtyIndicator();
-      addSyncLog("push", "Saved · " + stockCount + " stock entries + master data · " + new Date(saveTs).toLocaleTimeString());
-      toast("Saved to Drive ✓","ok");
+      setSyncDot("ok","saved \u2713");
+      isDirty=false; lastSaveTs=saveTs; updateDirtyIndicator();
+      // Update local storage with merged data
+      savePricing(); saveLocal();
+      addSyncLog("push","Saved (merged) \u00b7 "+Object.keys(stock).length+" stock \u00b7 "+estimates.length+" estimates \u00b7 "+payments.length+" payments \u00b7 "+orders.length+" orders \u00b7 "+new Date(saveTs).toLocaleTimeString());
+      toast("Saved & merged \u2713","ok");
     }
     if(onDone) onDone();
   })
   .catch(function(err) {
     if(sb) { sb.textContent = "\u2b06 Save"; sb.disabled = false; }
     setSyncDot("err","error");
-    var msg = err.message || String(err);
-    addSyncLog("error", "Save failed: " + msg, true);
-    toast("Save failed: " + msg.substring(0,60), "err");
+    var msg=err.message||String(err);
+    addSyncLog("error","Save failed: "+msg,true);
+    toast("Save failed: "+msg.substring(0,60),"err");
   });
 }
 
@@ -1502,92 +1538,118 @@ function gdSave(onDone) {
 function gdRefresh() {
   if(!gdConnected) { toast("Not connected","err"); return; }
   var rb = document.getElementById("btn-refresh-drive");
-  if(rb) { rb.textContent = "⏳ Loading..."; rb.disabled = true; }
+  if(rb) { rb.textContent = "\u23f3 Loading..."; rb.disabled = true; }
   setSyncDot("busy","loading...");
 
-  // Read both files in parallel
+  // Read all 6 split files in parallel
   Promise.all([
-    gasPost(gdUrl + "?file=stock&mode=read", "{}"),
-    gasPost(gdUrl + "?file=master&mode=read", "{}")
+    gasPost(gdUrl+"?file=stock&mode=read",         "{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=master&mode=read",         "{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=estimates&mode=read",      "{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=payments&mode=read",       "{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=orders&mode=read",         "{}").catch(function(){return {};}),
+    gasPost(gdUrl+"?file=distributors&mode=read",   "{}").catch(function(){return {};})
   ])
   .then(function(results) {
-    var stockData  = results[0];
-    var masterData = results[1];
+    var stockData    = results[0]||{};
+    var masterData   = results[1]||{};
+    var estData      = results[2]||{};
+    var payData      = results[3]||{};
+    var ordData      = results[4]||{};
+    var distData     = results[5]||{};
 
-    // Validate
-    if(stockData && stockData.error)  throw new Error("Stock read error: " + stockData.error);
-    if(masterData && masterData.error) throw new Error("Master read error: " + masterData.error);
+    if(stockData.error)  throw new Error("Stock: "+stockData.error);
+    if(masterData.error) throw new Error("Master: "+masterData.error);
 
     var changed = false;
 
-    // Apply MASTER data (full replace — source of truth)
-    if(masterData && (masterData.customFlavors || masterData.customers)) {
-      if(masterData.customFlavors) {
-        customFlavors = masterData.customFlavors;
-        try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(x) {}
+    // ── Apply MASTER (config data — full replace from Drive) ──
+    if(masterData && (masterData.customFlavors||masterData.customers)) {
+      if(masterData.customFlavors){
+        customFlavors=masterData.customFlavors;
+        try{localStorage.setItem("vs5_custom",JSON.stringify(customFlavors));}catch(x){}
         rebuildCatalogFromCustomFlavors();
       }
-      if(masterData.customers)      customers = masterData.customers;
-      if(masterData.defaultPrices)  defaultPrices = masterData.defaultPrices;
-      if(masterData.customerPrices) customerPrices = masterData.customerPrices;
-      if(masterData.distributors)   distributors = masterData.distributors;
-      if(masterData.distributorPrices) distributorPrices = masterData.distributorPrices;
-      if(masterData.estimates)       estimates = masterData.estimates;
-      if(masterData.nextEstimateNum) nextEstimateNum = masterData.nextEstimateNum;
-      if(masterData.payments)        payments = masterData.payments;
-      if(masterData.brandMeta)       brandMeta = masterData.brandMeta;
-      if(masterData.minPrices)       minPrices = masterData.minPrices;
-      if(masterData.orders)          orders = masterData.orders;
-      if(masterData.nextOrderNum)    nextOrderNum = masterData.nextOrderNum;
+      if(masterData.customers)        customers        = masterData.customers;
+      if(masterData.defaultPrices)    defaultPrices    = masterData.defaultPrices;
+      if(masterData.customerPrices)   customerPrices   = masterData.customerPrices;
+      if(masterData.distributors)     distributors     = masterData.distributors;
+      if(masterData.distributorPrices)distributorPrices= masterData.distributorPrices;
+      if(masterData.brandMeta)        brandMeta        = masterData.brandMeta;
+      if(masterData.minPrices)        minPrices        = masterData.minPrices;
       changed = true;
     }
 
-    // Apply STOCK data (full replace for stock qty)
-    if(stockData && stockData.stock) {
+    // ── Apply ESTIMATES (prefer split file, fall back to master) ──
+    var driveEstimates = (estData.estimates||masterData.estimates||[]);
+    if(driveEstimates.length || estData.ts) {
+      // Merge with local (keep newer records from either side)
+      estimates       = mergeByTimestamp(estimates, driveEstimates);
+      nextEstimateNum = mergeCounters(nextEstimateNum, estData.nextEstimateNum||masterData.nextEstimateNum||1);
+      changed = true;
+    }
+
+    // ── Apply PAYMENTS ──
+    var drivePayments = (payData.payments||masterData.payments||[]);
+    if(drivePayments.length || payData.ts) {
+      payments = mergeByTimestamp(payments, drivePayments);
+      changed = true;
+    }
+
+    // ── Apply DISTRIBUTORS ──
+    var driveDistributors = (distData.distributors||masterData.distributors||[]);
+    if(driveDistributors.length || distData.ts) {
+      distributors = mergeByTimestamp(distributors, driveDistributors);
+      if(distData.distributorPrices) distributorPrices = Object.assign({}, distData.distributorPrices, distributorPrices);
+      changed = true;
+    }
+
+    // ── Apply ORDERS ──
+    var driveOrders = (ordData.orders||masterData.orders||[]);
+    if(driveOrders.length || ordData.ts) {
+      orders       = mergeByTimestamp(orders, driveOrders);
+      nextOrderNum = mergeCounters(nextOrderNum, ordData.nextOrderNum||masterData.nextOrderNum||1);
+      changed = true;
+    }
+
+    // ── Apply STOCK ──
+    if(stockData.stock) {
       stock = stockData.stock;
       changed = true;
     }
 
-    // Merge txLog — union of local + Drive entries, no duplicates
-    if(stockData && stockData.txLog) {
+    // ── Merge txLog ──
+    if(stockData.txLog) {
       var localSync = txLog.filter(function(e){ return e.type==="sync"; });
       var driveLog = stockData.txLog;
-      // Build a set of existing keys
       var seen = {};
-      driveLog.forEach(function(e){ seen[e.type+"_"+e.date] = true; });
-      // Add local sync entries not in Drive
-      localSync.forEach(function(e){
-        if(!seen[e.type+"_"+e.date]) driveLog.unshift(e);
-      });
+      driveLog.forEach(function(e){ seen[e.type+"_"+e.date]=true; });
+      localSync.forEach(function(e){ if(!seen[e.type+"_"+e.date]) driveLog.unshift(e); });
       txLog = driveLog;
-      if(txLog.length > 2000) txLog.length = 2000;
+      if(txLog.length>2000) txLog.length=2000;
       changed = true;
     }
 
-    if(stockData && stockData.ts) gdLastTs = stockData.ts;
+    if(changed){ savePricing(); saveLocal(); }
 
-    if(changed) { savePricing(); saveLocal(); }
     renderStock(); renderHistory(); updateStats();
     if(document.getElementById("pg-catalog")&&document.getElementById("pg-catalog").classList.contains("on")) renderCatalogPage();
     if(document.getElementById("pg-customers")&&document.getElementById("pg-customers").classList.contains("on")) renderCustomers();
     if(document.getElementById("pg-pricing")&&document.getElementById("pg-pricing").classList.contains("on")) renderPricingPage();
     if(document.getElementById("pg-distributor")&&document.getElementById("pg-distributor").classList.contains("on")) renderDistributors();
-    if(document.getElementById("pg-analysis")&&document.getElementById("pg-analysis").classList.contains("on")) renderAnalysisPage();
+    if(document.getElementById("pg-accounts")&&document.getElementById("pg-accounts").classList.contains("on")) renderAccountsPage();
 
-    if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
-    setSyncDot("ok","updated ✓");
-
-    var stockCount = Object.keys(stockData&&stockData.stock||{}).length;
-    var masterTs = masterData && masterData.ts ? new Date(masterData.ts).toLocaleTimeString() : "no ts";
-    var stockTs  = stockData  && stockData.ts  ? new Date(stockData.ts).toLocaleTimeString()  : "no ts";
-    addSyncLog("pull", "Loaded · " + stockCount + " stock entries · stock:" + stockTs + " master:" + masterTs);
-    toast("Updated from Drive ✓","ok");
+    if(rb){ rb.textContent="\u2b07 Refresh"; rb.disabled=false; }
+    setSyncDot("ok","updated \u2713");
+    var estCount=estimates.length, payCount=payments.length, ordCount=orders.filter(function(o){return o.status!=="fulfilled";}).length;
+    addSyncLog("pull","Loaded (merged) \u00b7 "+estCount+" estimates \u00b7 "+payCount+" payments \u00b7 "+ordCount+" open orders");
+    toast("Updated from Drive \u2713","ok");
   })
   .catch(function(err) {
-    if(rb) { rb.textContent = "⬇ Refresh"; rb.disabled = false; }
+    if(rb){ rb.textContent="\u2b07 Refresh"; rb.disabled=false; }
     setSyncDot("err","error");
-    var msg = (err&&err.message) ? err.message : String(err);
-    addSyncLog("error", "Refresh failed: " + msg, true);
+    var msg=(err&&err.message)?err.message:String(err);
+    addSyncLog("error","Refresh failed: "+msg,true);
     toast(msg.substring(0,60),"err");
   });
 }
@@ -2649,10 +2711,8 @@ function renderCustomFlavorList() {
 })})();
 
 (function(){var __el=document.getElementById("btn-add-flavor-cancel");if(!__el)return;__el.addEventListener("click",closeAddFlavorModal);})();
-(function(){var __el=document.getElementById("modal-close-btn");if(!__el)return;__el.addEventListener("click", closeAddFlavorModal)})();
-(function(){var __el=document.getElementById("add-flavor-modal");if(!__el)return;__el.addEventListener("click", function(e) {
-  if (e.target === __el) closeAddFlavorModal();
-})})();
+(function(){var __el=document.getElementById("modal-close-btn");if(!__el)return;__el.addEventListener("click", closeAddFlavorModal);})();
+(function(){var __el=document.getElementById("add-flavor-modal");if(!__el)return;__el.addEventListener("click",function(e){if(e.target===__el)closeAddFlavorModal();});})();
 
 // Show FAB only on stock page
 
@@ -2921,7 +2981,7 @@ function renderSellCart() {
     });
     // ── STEP 2: Build the estimate record ──
     var rawDate = diVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
-    var rec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false};
+    var rec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false,createdAt:Date.now(),updatedAt:Date.now()};
     // ── STEP 3: Save estimate (no stock touched yet) ──
     estimates.unshift(rec);
     // ── STEP 4: Deduct stock AFTER estimate safely recorded ──
@@ -3700,9 +3760,9 @@ function closeCustModal() {
     var phone = phoneInp ? phoneInp.value.trim() : "";
     if (id) {
       var cust = customers.find(function(c){ return c.id === id; });
-      if (cust) { cust.name=name; cust.phone=phone; cust.addr1=addr1.trim(); cust.addr2=addr2.trim(); cust.city=city.trim(); cust.state=state; cust.zip=zip.trim(); cust.notes=notes.trim(); }
+      if (cust) { cust.name=name; cust.phone=phone; cust.addr1=addr1.trim(); cust.addr2=addr2.trim(); cust.city=city.trim(); cust.state=state; cust.zip=zip.trim(); cust.notes=notes.trim(); cust.updatedAt=Date.now(); }
     } else {
-      customers.push({ id:"c"+Date.now(), name:name, phone:phone, addr1:addr1.trim(), addr2:addr2.trim(), city:city.trim(), state:state, zip:zip.trim(), notes:notes.trim() });
+      customers.push({ id:"c"+Date.now(), name:name, phone:phone, addr1:addr1.trim(), addr2:addr2.trim(), city:city.trim(), state:state, zip:zip.trim(), notes:notes.trim(), createdAt:Date.now(), updatedAt:Date.now() });
     }
     savePricing(); closeCustModal(); renderCustomers();
     toast((id ? "Customer updated" : "Customer added") + "!", "ok");
@@ -4348,11 +4408,14 @@ function openDistModal(id) {
   var id=document.getElementById("dist-edit-id").value.trim();
   function gf(f){var x=document.getElementById("dist-"+f+"-inp");return x?x.value.trim():"";}
   var sel=document.getElementById("dist-state-inp");
+  var _distNow=Date.now();
   var data={
-    id:id||("d"+Date.now()), name:name,
+    id:id||("d"+_distNow), name:name,
     contact:gf("contact"), phone:gf("phone"),
     addr1:gf("addr1"), addr2:gf("addr2"),
-    city:gf("city"), state:sel?sel.value:"", zip:gf("zip"), notes:gf("notes")
+    city:gf("city"), state:sel?sel.value:"", zip:gf("zip"), notes:gf("notes"),
+    createdAt:id?(distributors.find(function(x){return x.id===id;})||{}).createdAt||_distNow:_distNow,
+    updatedAt:_distNow
   };
   if(id){
     var idx=distributors.findIndex(function(x){return x.id===id;});
@@ -4690,8 +4753,10 @@ function renderSyncToggles(){
             if(d.payments)        payments=d.payments;
             if(d.brandMeta)      brandMeta    = d.brandMeta;
             if(d.minPrices)      minPrices    = d.minPrices;
-            if(d.orders)         orders       = d.orders;
-            if(d.nextOrderNum)   nextOrderNum = d.nextOrderNum;
+            if(d.orders)               orders             = d.orders;
+            if(d.nextOrderNum)         nextOrderNum       = d.nextOrderNum;
+            if(d.distributors)         distributors       = d.distributors;
+            if(d.distributorPrices)    distributorPrices  = d.distributorPrices;
             saveLocal(); savePricing();
             toast("Backup loaded to device — saving to Drive...", "ok");
             gdSave(function(){
@@ -5322,7 +5387,9 @@ function initPayModalListeners() {
       method:(document.getElementById("pay-method")||{}).value||"cash",
       chequeNo:(document.getElementById("pay-cheque")||{}).value||"",
       note:(document.getElementById("pay-note")||{}).value||"",
-      received:(document.getElementById("pay-received")||{}).checked!==false
+      received:(document.getElementById("pay-received")||{}).checked!==false,
+      createdAt:editId?undefined:Date.now(),
+      updatedAt:Date.now()
     };
     if(editId){var idx=payments.findIndex(function(p){return p.id===editId;});if(idx>-1)payments[idx]=pay;else payments.unshift(pay);}
     else{payments.unshift(pay);}
@@ -6410,7 +6477,7 @@ function renderOrdCart(){
       var lt=up*q2; grandTotal+=lt;
       ordItems.push({brand:br,flavor:fl,qty:q2,unitPrice:up,total:lt,category:catOfBrand(br)||""});
     });
-    var rec={id:ordId,num:nextOrderNum++,date:dateStr,rawDate:rawDate,custId:custId,custName:custName,items:ordItems,total:grandTotal,status:"pending",estId:null,note:noteVal};
+    var rec={id:ordId,num:nextOrderNum++,date:dateStr,rawDate:rawDate,custId:custId,custName:custName,items:ordItems,total:grandTotal,status:"pending",estId:null,note:noteVal,createdAt:Date.now(),updatedAt:Date.now()};
     orders.unshift(rec);
     savePricing();
     ordCart={};
@@ -6499,7 +6566,7 @@ function fulfilOrder(ordId){
   var estRec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:true,total:ord.total,locked:false,fromOrderId:ordId};
   estimates.unshift(estRec);
   // Mark order fulfilled
-  ord.status="fulfilled"; ord.estId=estId;
+  ord.status="fulfilled"; ord.estId=estId; ord.updatedAt=Date.now();
   afterChange(); savePricing();
   renderOpenOrders();
   toast(ordId+" fulfilled \u2192 "+estId+" created \u2713","ok");
@@ -6615,6 +6682,69 @@ function renderBuySuggestions(){
   w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Buy Suggestions</title><style>"+css+"</style></head><body><h2 style='margin:0 0 6px'>Krazy Wholesale — Buy Suggestions</h2><p style='font-size:11px;color:#666;margin-bottom:12px'>"+new Date().toLocaleDateString()+"</p>"+content.innerHTML+"</body></html>");
   w.document.close();w.focus();setTimeout(function(){w.print();},400);
 });})();
+
+// ════════════════════════════════════════════════════════
+// ── TIMESTAMP MERGE LOGIC ──
+// Merges two arrays by id — newer updatedAt wins
+// Records in Drive but not local are always kept (never lose)
+// ════════════════════════════════════════════════════════
+
+function mergeByTimestamp(local, drive) {
+  // Build map of local records by id
+  var localMap = {};
+  (local||[]).forEach(function(r){ if(r.id) localMap[r.id] = r; });
+  // Start with drive records as base
+  var driveMap = {};
+  (drive||[]).forEach(function(r){ if(r.id) driveMap[r.id] = r; });
+  // Merge: for each id, keep the newer version
+  var allIds = {};
+  Object.keys(localMap).forEach(function(id){ allIds[id]=true; });
+  Object.keys(driveMap).forEach(function(id){ allIds[id]=true; });
+  var result = [];
+  Object.keys(allIds).forEach(function(id){
+    var loc = localMap[id];
+    var drv = driveMap[id];
+    if(loc && drv) {
+      // Both have it — keep newer
+      var locTs = loc.updatedAt || loc.createdAt || 0;
+      var drvTs = drv.updatedAt || drv.createdAt || 0;
+      result.push(locTs >= drvTs ? loc : drv);
+    } else if(loc) {
+      result.push(loc); // only local — new record, keep it
+    } else {
+      result.push(drv); // only on drive — keep it (was there before)
+    }
+  });
+  // Sort by createdAt or num to maintain order
+  result.sort(function(a,b){
+    var at = b.createdAt||b.num||0;
+    var bt = a.createdAt||a.num||0;
+    return at-bt;
+  });
+  return result;
+}
+
+function mergeCounters(local, drive) {
+  // For counters like nextEstimateNum — always keep the higher value
+  return Math.max(local||1, drive||1);
+}
+
+function mergeObjects(local, drive) {
+  // For flat objects like defaultPrices, customerPrices, distributorPrices
+  // Drive values win unless local has a newer entry
+  // Since these don't have timestamps, we merge: local wins on conflict
+  var result = Object.assign({}, drive||{}, local||{});
+  return result;
+}
+
+function mergeStock(local, drive) {
+  // Stock is tricky — we can't blindly overwrite
+  // Strategy: use whichever value is in local (device just committed purchases/sales)
+  // but add any keys that are in drive but missing locally
+  var result = Object.assign({}, drive||{});
+  Object.keys(local||{}).forEach(function(k){ result[k] = local[k]; });
+  return result;
+}
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -6636,7 +6766,15 @@ if(gdUrl){
   }
 } else { setSyncDot("","local"); }
 
-})();
+
+
+
+
+
+
+
+
+
 
 
 
