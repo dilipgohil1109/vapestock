@@ -1094,7 +1094,26 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Custom confirm modal -->
+<div id="cmodal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--sur);border-radius:var(--r);padding:22px 18px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <div id="cmodal-title" style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px"></div>
+    <div id="cmodal-body" style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:18px;white-space:pre-line"></div>
+    <div id="cmodal-btns" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"></div>
+  </div>
+</div>
 <script>
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1161,7 +1180,9 @@ var editingEstId = null;
 var editingManualEstId  = null;
 var stockSort   = "az";
 var stockSearch = "";
-var editingOriginalItems = {}; // stock snapshot when edit opens
+var editingOriginalItems = {}; // snapshot of original estimate qtys — NEVER changes during edit
+var editingOpenedStock    = {}; // snapshot of stock AFTER restore at edit-open — NEVER changes during edit
+var editingAdjustments    = {}; // {key: adjustment_qty} — the delta user sets per item // stock snapshot when edit opens
 var gdPollTimer = null;
 var gdPushTimer = null;
 var gdLastTs = 0;
@@ -1740,6 +1761,7 @@ document.getElementById("mtabs").addEventListener("click",function(e){
   if(ot==="openorders"){populateOrdFilterCust();renderOpenOrders();}
   if(ot==="shortage"){renderShortageReview();}
   if(ot==="buysuggest"){renderBuySuggestions();}
+  if(ot==="generate"){renderGenBrands();}
   if(ot==="printstock") renderPsPage();
 })})();
 
@@ -2908,8 +2930,9 @@ function renderSellCart() {
     // If in edit mode, re-deduct the removed item's original qty back from stock
     // (it was restored when edit opened — now it's being permanently removed)
     if(editingEstId && editingOriginalItems[key]) {
-      stock[key] = Math.max(0, (stock[key]||0) - editingOriginalItems[key]);
-      delete editingOriginalItems[key]; // no longer tracking — it's been re-settled
+      // Stock was already restored to inventory when edit opened.
+      // Removing this item from cart means it stays in stock — do nothing.
+      delete editingOriginalItems[key]; // stop tracking this item
     }
     delete sellCart[key];
     renderSellFlavors(); renderSellCart();
@@ -2923,14 +2946,29 @@ function renderSellCart() {
     var qLbl = document.createElement("span"); qLbl.style.cssText = "font-size:11px;color:var(--txt3)"; qLbl.textContent = "Qty:";
     var qInp = document.createElement("input"); qInp.type = "number"; qInp.min = "1";
     qInp.value = String(entry.qty); qInp.className = "cqinp"; qInp.style.width = "60px";
+    // In edit mode: cap at available stock (which includes restored original items)
+    if(editingEstId) {
+      // Max = stock at edit-open time (includes restored original qty)
+      var _avail = editingOpenedStock[k] !== undefined ? editingOpenedStock[k] : (stock[k]||0);
+      qInp.max = String(_avail);
+      qInp.title = "Max: " + _avail + " (original " + (editingOriginalItems[k]||0) + " + extra " + Math.max(0,_avail-(editingOriginalItems[k]||0)) + ")";
+      if(entry.qty > _avail) { qInp.style.borderColor="#c0392b"; }
+    }
     (function(key){ qInp.addEventListener("change", function(){
       var newQty = Math.max(1, parseInt(this.value,10)||1);
-      if(editingEstId && editingOriginalItems[key] !== undefined) {
-        // Adjust stock: give back old qty, take new qty
-        var oldQty = editingOriginalItems[key];
-        stock[key] = Math.max(0, (stock[key]||0) + oldQty - newQty);
-        editingOriginalItems[key] = newQty; // update snapshot to new qty
+      // In edit mode: hard cap at available stock
+      if(editingEstId) {
+        // Use opened stock snapshot as the hard cap — prevents compounding errors
+        var maxAvail = editingOpenedStock[key] !== undefined ? editingOpenedStock[key] : (stock[key]||0);
+        if(newQty > maxAvail) {
+          newQty = maxAvail;
+          this.value = String(newQty);
+          var origQty = editingOriginalItems[key]||0;
+          var extraAvail = Math.max(0, maxAvail - origQty);
+          toast("Max: original " + origQty + " + " + extraAvail + " extra = " + maxAvail + " total","warn");
+        }
       }
+      // DO NOT touch stock here — only openEstimateEdit (restore) and saveEstimateEdit (deduct) touch stock
       if(typeof sellCart[key]==="object") sellCart[key].qty = newQty;
       renderSellCart();
     }); })(k);
@@ -2989,7 +3027,7 @@ function renderSellCart() {
     var showPrice = spEl ? spEl.checked : true;
     var niVal = (document.getElementById("est-num-inp")||{}).value||"";
     var diVal = (document.getElementById("est-date-inp")||{}).value||"";
-    var estId = niVal.trim() || ("EST-"+Date.now().toString().slice(-5));
+    var estId = niVal.trim() || ("EST-"+String(nextEstimateNum).padStart(3,"0"));
     var saleDate = diVal ? new Date(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}) : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
     // ── STEP 1: Build items list WITHOUT touching stock yet ──
     var grandTotal=0, estItems=[], count=0, warn=0;
@@ -3006,7 +3044,46 @@ function renderSellCart() {
     // ── STEP 2: Build the estimate record ──
     var rawDate = diVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
     var rec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false,createdAt:Date.now(),updatedAt:Date.now()};
-    // ── STEP 3: Save estimate (no stock touched yet) ──
+    // ── STEP 3: Check for duplicate ID — if exists, UPDATE instead of INSERT ──
+    var existingIdx = estimates.findIndex(function(e){ return e.id===rec.id; });
+    if(existingIdx > -1) {
+      // Update existing estimate in place — restore its old stock first
+      var oldEst = estimates[existingIdx];
+      if(!oldEst.locked) {
+        // Restore old items' stock (we already deducted new items above — undo)
+        estItems.forEach(function(it){
+          var k=it.brand+"~~"+it.flavor;
+          stock[k]=(stock[k]||0)+it.qty; // undo deduction
+        });
+        // Now do the proper edit: restore old stock, deduct new
+        (oldEst.items||[]).forEach(function(it){
+          stock[it.brand+"~~"+it.flavor]=(stock[it.brand+"~~"+it.flavor]||0)+it.qty;
+        });
+        estItems.forEach(function(it){
+          stock[it.brand+"~~"+it.flavor]=Math.max(0,(stock[it.brand+"~~"+it.flavor]||0)-it.qty);
+        });
+        // Update the estimate
+        oldEst.items=estItems; oldEst.total=grandTotal;
+        oldEst.custId=custId; oldEst.custName=custName;
+        oldEst.showPrice=showPrice; oldEst.updatedAt=Date.now();
+        // Update txLog
+        txLog=txLog.filter(function(e){return e.estId!==rec.id;});
+        estItems.forEach(function(it){txLog.unshift({type:"sale",category:catOfBrand(it.brand),brand:it.brand,flavor:it.flavor,qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice,total:it.total,date:saleDate,estId:rec.id});});
+        afterChange(); savePricing();
+        if(gdConnected) gdSave(null);
+        resetSellCart(); renderEstimatesList();
+        document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
+        var et2=document.querySelector("#stabs [data-st='estimates']"); if(et2)et2.classList.add("on");
+        document.getElementById("sell-upload-pane").style.display="none";
+        document.getElementById("sell-manual-pane").style.display="none";
+        var ep2=document.getElementById("sell-estimates-pane"); if(ep2)ep2.style.display="block";
+        toast(rec.id+" updated ✓","ok");
+        return; // Stop here — don't fall through to create new estimate
+      } else {
+        toast("Estimate "+rec.id+" is locked and cannot be overwritten. Use a different number.","err");
+        return;
+      }
+    }
     estimates.unshift(rec);
     // ── STEP 4: Deduct stock AFTER estimate safely recorded ──
     estItems.forEach(function(it){
@@ -4945,7 +5022,62 @@ function renderEstimatesList(){
       (function(id){eBtn.addEventListener("click",function(){openEstimateEdit(id);});})(est.id); btns.appendChild(eBtn);
     }
     var dBtn=document.createElement("button"); dBtn.className="btn bdgr bsm"; dBtn.textContent="\u00D7"; dBtn.title="Delete";
-    (function(id){dBtn.addEventListener("click",function(){if(!confirm("Delete estimate "+id+"?"))return;estimates=estimates.filter(function(e){return e.id!==id;});savePricing();renderEstimatesList();toast("Deleted","warn");});})(est.id); btns.appendChild(dBtn);
+    (function(id,estObj){dBtn.addEventListener("click",function(){
+    var totalUnits=(estObj.items||[]).reduce(function(s,it){return s+it.qty;},0);
+    var hasItems=!estObj.manual&&(estObj.items||[]).length>0;
+    // Step 1: Confirm deletion
+    showConfirm(
+      "Delete Estimate "+id+"?",
+      "Customer: "+(estObj.custName||"Walk-in")+
+      "\nTotal: $"+(estObj.total||0).toFixed(2)+
+      "\n\nThis cannot be undone.",
+      [{label:"Delete",style:"bdgr",value:true},{label:"Cancel",style:"bsec",value:false}]
+    ).then(function(confirmed){
+      if(!confirmed)return;
+      // Step 2: Restore stock?
+      var p2=hasItems
+        ?showConfirm(
+          "Restore stock to inventory?",
+          "This estimate had "+totalUnits+" units deducted from stock."+
+          "\n\n• Yes, restore — items go back to stock"+
+          "\n  (use when sale never happened)"+
+          "\n\n• No, keep as-is — stock stays deducted"+
+          "\n  (use when removing a duplicate record only)",
+          [{label:"Yes, restore",style:"bsuc",value:true},{label:"No, keep as-is",style:"bsec",value:false}]
+        )
+        :Promise.resolve(false);
+      p2.then(function(restoreStock){
+        if(restoreStock){
+          (estObj.items||[]).forEach(function(it){
+            var k=it.brand+"~~"+it.flavor;
+            stock[k]=(stock[k]||0)+it.qty;
+            txLog.unshift({type:"adj",category:catOfBrand(it.brand),brand:it.brand,flavor:it.flavor,qty:it.qty,date:new Date().toLocaleString(),note:"Restored: deleted "+id});
+          });
+          afterChange();
+        }
+        // Step 3: Linked payments
+        var linkedPays=payments.filter(function(p){return p.estId===id;});
+        var p3=linkedPays.length>0
+          ?showConfirm(
+            "Linked payments found",
+            linkedPays.length+" payment(s) are linked to "+id+"."+
+            "\n\nThey will be kept but unlinked from this estimate."+
+            "\nYou can re-link them manually afterwards.",
+            [{label:"OK, proceed",style:"bpri",value:true},{label:"Cancel",style:"bsec",value:false}]
+          )
+          :Promise.resolve(true);
+        p3.then(function(proceed){
+          if(!proceed)return;
+          linkedPays.forEach(function(p){p.estId="";p.note=(p.note?"  ":"")+"[was: "+id+"]";});
+          estimates=estimates.filter(function(e){return e.id!==id;});
+          savePricing();
+          if(gdConnected)gdSave(null);
+          renderEstimatesList();
+          toast("Estimate "+id+" deleted"+(restoreStock?" — stock restored":""),"warn");
+        });
+      });
+    });
+  });})(est.id,est); btns.appendChild(dBtn);
     // Pay button
     if(est.custId) {
       var payBtn2=document.createElement("button"); payBtn2.className="btn bsec bsm"; payBtn2.textContent="\uD83D\uDCB0 Pay";
@@ -4984,16 +5116,23 @@ function renderEstimatesList(){
 
 function openEstimateEdit(estId){
   var est=estimates.find(function(e){return e.id===estId;}); if(!est||est.locked)return;
-  // Manual estimates use a different edit modal
-  if(est.manual) { openManualEstEdit(est); return; }
+  if(est.manual){openManualEstEdit(est);return;}
   editingEstId=estId;
-  // Snapshot original items BEFORE restoring to stock
+  // Snapshot: original estimate items (never changes during edit)
   editingOriginalItems={};
   (est.items||[]).forEach(function(it){
     var k=it.brand+"~~"+it.flavor;
-    editingOriginalItems[k]=it.qty;   // remember original qty
-    stock[k]=(stock[k]||0)+it.qty;   // restore to stock
+    editingOriginalItems[k]=it.qty;
   });
+  // Snapshot: REAL-TIME stock at moment Edit is tapped (no restore — stock stays as-is)
+  editingOpenedStock={};
+  editingAdjustments={};
+  (est.items||[]).forEach(function(it){
+    var k=it.brand+"~~"+it.flavor;
+    editingOpenedStock[k]=stock[k]||0;  // live stock RIGHT NOW — what customer can use
+    editingAdjustments[k]=0;            // start adjustment at zero
+  });
+  // Keep sellCart in sync (used by save logic)
   sellCart={};
   (est.items||[]).forEach(function(it){sellCart[it.brand+"~~"+it.flavor]={qty:it.qty,price:it.unitPrice||""};});
   populateSellCustDropdown();
@@ -5012,16 +5151,18 @@ function openEstimateEdit(estId){
   document.getElementById("sell-upload-pane").style.display="none";
   var ep=document.getElementById("sell-estimates-pane"); if(ep)ep.style.display="none";
   document.getElementById("sell-manual-pane").style.display="block";
-  renderSellBrands(); renderSellFlavors(); renderSellCart();
-  saveLocal(); updateStats(); toast("Editing "+estId+" \u2014 add or remove items","ok");
+  renderEstimateEditTable();
+  saveLocal(); updateStats(); toast("Editing "+estId+" — adjust quantities","ok");
 }
 function cancelEstimateEdit(){
   if(!editingEstId)return;
-  var est=estimates.find(function(e){return e.id===editingEstId;});
-  if(est)(est.items||[]).forEach(function(it){var k=it.brand+"~~"+it.flavor;stock[k]=Math.max(0,(stock[k]||0)-it.qty);});
+  // No stock changes needed — openEstimateEdit no longer restores stock,
+  // so cancel simply discards the edit state without touching stock at all.
   editingEstId=null; sellCart={}; exitEditMode(); saveLocal(); updateStats(); toast("Edit cancelled","warn");
 }
 function exitEditMode(){
+  editingOpenedStock={};
+  editingAdjustments={};
   editingEstId=null;
   editingOriginalItems={};
   var ni=document.getElementById("est-num-inp"); if(ni)ni.value="";
@@ -5035,7 +5176,6 @@ function exitEditMode(){
 function saveEstimateEdit(lock){
   if(!editingEstId)return;
   var est=estimates.find(function(e){return e.id===editingEstId;}); if(!est)return;
-  var keys=Object.keys(sellCart); if(!keys.length){toast("Cart is empty","err");return;}
   var custId=getSellCustId(); var custObj=custId?customers.find(function(c){return c.id===custId;}):null;
   var custName=custObj?custObj.name:"Walk-in";
   var sp=document.getElementById("sell-show-price"); var showPrice=sp?sp.checked:true;
@@ -5043,23 +5183,48 @@ function saveEstimateEdit(lock){
   var di=(document.getElementById("est-date-inp")||{}).value||"";
   var newId=ni.trim()||est.id;
   var newDate=di?new Date(di).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):est.date;
-  // Build items WITHOUT touching stock yet
-  var newItems=[],grandTotal=0; var saleDate=new Date().toLocaleString();
-  keys.forEach(function(k){
+  var saleDate=new Date().toLocaleString();
+  var newItems=[]; var grandTotal=0;
+
+  // Process each original item using adjustment column
+  Object.keys(editingOriginalItems).forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
-    var entry=sellCart[k]; var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
-    var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
-    var lt=up*q; grandTotal+=lt;
-    newItems.push({brand:br,flavor:fl,qty:q,unitPrice:up,total:lt,category:catOfBrand(br)||""});
+    var estQty=editingOriginalItems[k]||0;
+    var adj=editingAdjustments[k]||0;
+    var finalQty=estQty+adj;
+    var avail=editingOpenedStock[k]||0;
+    // Validate adjustment doesn't exceed available stock
+    if(adj>avail){toast("Adjustment for "+fl+" exceeds available stock ("+avail+")","err");return;}
+    // Apply stock change — only the adjustment affects stock
+    // Positive adj = more sold = deduct from stock
+    // Negative adj = less sold = restore to stock
+    // adj=0 means no change to stock
+    stock[k]=Math.max(0,(stock[k]||0)-adj);
+    // If finalQty > 0, keep line in estimate; if 0, line is removed (stock restored above)
+    if(finalQty>0){
+      var entry=sellCart[k]||{}; var up=parseFloat(entry.price)||0;
+      var lt=up*finalQty; grandTotal+=lt;
+      newItems.push({brand:br,flavor:fl,qty:finalQty,unitPrice:up,total:lt,category:catOfBrand(br)||""});
+    }
+    // if finalQty===0: line removed, stock already restored by adj (adj=-estQty, stock+=estQty)
   });
-  // Deduct stock NOW (after items built successfully)
-  newItems.forEach(function(it){
-    var k=it.brand+"~~"+it.flavor;
-    stock[k]=Math.max(0,(stock[k]||0)-it.qty);
-  });
+
+  if(!newItems.length){toast("All items removed — estimate would be empty. Delete it instead.","err");
+    // Undo stock changes
+    Object.keys(editingOriginalItems).forEach(function(k){
+      var adj=editingAdjustments[k]||0; stock[k]=Math.max(0,(stock[k]||0)+adj);
+    });
+    return;
+  }
   txLog=txLog.filter(function(e){return e.estId!==editingEstId;});
   newItems.forEach(function(it){txLog.unshift({type:"sale",category:catOfBrand(it.brand),brand:it.brand,flavor:it.flavor,qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice,total:it.total,date:saleDate,estId:newId});});
-  if(newId!==est.id){txLog.forEach(function(e){if(e.estId===est.id)e.estId=newId;});est.id=newId;}
+  if(newId!==est.id){
+    var oldId=est.id;
+    txLog.forEach(function(e){if(e.estId===oldId)e.estId=newId;});
+    // Update payments linked to old estimate ID
+    payments.forEach(function(p){if(p.estId===oldId)p.estId=newId;});
+    est.id=newId;
+  }
   est.items=newItems;est.total=grandTotal;est.custId=custId;est.custName=custName;est.showPrice=showPrice;est.date=newDate;est.locked=lock||false;
   afterChange(); savePricing(); exitEditMode(); renderEstimatesList();
   document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
@@ -6440,7 +6605,15 @@ function renderOrdCart(){
     var info=document.createElement("div"); info.className="cinfo"; info.style.flex="1";
     var ne=document.createElement("div"); ne.className="cin"; ne.textContent=fl;
     var be=document.createElement("div"); be.className="cbr";
-    be.textContent=br+" \u00b7 Stock: "+avail;
+    if(editingEstId){
+      var origQty=editingOriginalItems[k]||0;
+      var poolTotal=editingOpenedStock[k]!==undefined?editingOpenedStock[k]:avail;
+      var extraAvail=Math.max(0,poolTotal-origQty);
+      // Show: original qty in estimate + how much extra can be added
+      be.textContent=br+" · Est: "+origQty+(extraAvail>0?" · Extra available: "+extraAvail:"");
+    } else {
+      be.textContent=br+" · Stock: "+avail;
+    }
     be.style.color=avail===0?"var(--red)":avail<=3?"var(--amb)":"var(--txt3)";
     info.appendChild(ne); info.appendChild(be);
     var rm=document.createElement("span"); rm.className="crm"; rm.textContent="\u00d7";
@@ -6541,65 +6714,318 @@ function renderOpenOrders(){
   var list=orders.filter(function(o){return o.status!=="fulfilled"&&(!filterCust||o.custId===filterCust);});
   el.innerHTML="";
   if(!list.length){el.innerHTML="<div class='empty'><div class='ei'>&#128203;</div><div class='et'>No open orders.<br>Create one in New Order tab.</div></div>";return;}
-  list.forEach(function(ord){
-    var card=document.createElement("div"); card.className="scard"; card.style.marginBottom="10px";
-    // Header
-    var hdr=document.createElement("div"); hdr.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px";
-    var left=document.createElement("div");
-    var idBadge=document.createElement("span"); idBadge.style.cssText="font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:var(--acc);background:rgba(91,79,232,.1);padding:2px 8px;border-radius:4px;margin-right:6px"; idBadge.textContent=ord.id;
-    var statusBadge=document.createElement("span");
-    var sColor=ord.status==="partial"?"rgba(200,124,0,.15)":"rgba(0,168,112,.12)";
-    var sTxt=ord.status==="partial"?"PARTIAL":"PENDING";
-    statusBadge.style.cssText="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:"+sColor+";color:"+(ord.status==="partial"?"#c87c00":"#00a870");
-    statusBadge.textContent=sTxt;
-    left.appendChild(idBadge); left.appendChild(statusBadge);
-    var meta=document.createElement("div"); meta.style.cssText="font-size:12px;color:var(--txt3);margin-top:4px";
-    meta.textContent=(ord.custName||"Walk-in")+" \u00b7 "+ord.date+" \u00b7 "+ord.items.length+" lines \u00b7 "+ord.items.reduce(function(s,it){return s+it.qty;},0)+" units";
-    left.appendChild(meta);
-    if(ord.total>0){var totSpan=document.createElement("div");totSpan.style.cssText="font-family:'DM Mono',monospace;font-size:16px;font-weight:800;color:var(--acc);flex-shrink:0;margin-left:8px";totSpan.textContent="$"+ord.total.toFixed(2);hdr.appendChild(left);hdr.appendChild(totSpan);}else{hdr.appendChild(left);}
-    card.appendChild(hdr);
-    // Items preview
-    var preview=document.createElement("div"); preview.style.cssText="font-size:11px;color:var(--txt3);margin-bottom:8px";
-    preview.textContent=ord.items.slice(0,4).map(function(it){return it.brand+" - "+it.flavor+" \u00d7"+it.qty;}).join("  \u00b7  ")+(ord.items.length>4?"  +("+( ord.items.length-4)+" more)":"");
-    card.appendChild(preview);
-    if(ord.note){var noteEl=document.createElement("div");noteEl.style.cssText="font-size:11px;color:var(--txt3);font-style:italic;margin-bottom:6px";noteEl.textContent="Note: "+ord.note;card.appendChild(noteEl);}
-    // Action buttons
-    var btns=document.createElement("div"); btns.style.cssText="display:flex;gap:6px;flex-wrap:wrap";
-    var fulfilBtn=document.createElement("button"); fulfilBtn.className="btn bsuc bsm"; fulfilBtn.textContent="\u2713 Fulfil";
-    (function(o){fulfilBtn.addEventListener("click",function(){fulfilOrder(o.id);});})(ord);
-    var delBtn=document.createElement("button"); delBtn.className="btn bdgr bsm"; delBtn.textContent="\u00d7";
-    (function(id){delBtn.addEventListener("click",function(){if(!confirm("Delete order "+id+"?"))return;orders=orders.filter(function(o){return o.id!==id;});savePricing();renderOpenOrders();toast("Order deleted","warn");});})(ord.id);
-    btns.appendChild(fulfilBtn); btns.appendChild(delBtn);
-    card.appendChild(btns); el.appendChild(card);
-  });
+  list.forEach(function(ord){ renderOrderCard(el, ord); });
 }
+
+function checkOrdAllInStock(items){
+  return items.every(function(it){ return (stock[skey(it.brand,it.flavor)]||0)>=it.qty; });
+}
+
+function renderOrderCard(container, ord){
+  var card=document.createElement("div"); card.className="scard"; card.style.marginBottom="10px";
+  var allOk=checkOrdAllInStock(ord.items);
+  // Header
+  var hdr=document.createElement("div"); hdr.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px";
+  var left=document.createElement("div");
+  var idBadge=document.createElement("span"); idBadge.style.cssText="font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:var(--acc);background:rgba(91,79,232,.1);padding:2px 8px;border-radius:4px;margin-right:6px"; idBadge.textContent=ord.id;
+  var statusBadge=document.createElement("span");
+  statusBadge.style.cssText="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:"+(allOk?"rgba(0,168,112,.12)":"rgba(200,124,0,.15)")+";color:"+(allOk?"#00a870":"#c87c00");
+  statusBadge.textContent=allOk?"READY":"SHORT";
+  left.appendChild(idBadge); left.appendChild(statusBadge);
+  var meta=document.createElement("div"); meta.style.cssText="font-size:12px;color:var(--txt3);margin-top:4px";
+  meta.textContent=(ord.custName||"Walk-in")+" · "+ord.date+" · "+ord.items.length+" lines · "+ord.items.reduce(function(s,it){return s+it.qty;},0)+" units";
+  left.appendChild(meta);
+  if(ord.total>0){var totSpan=document.createElement("div");totSpan.style.cssText="font-family:'DM Mono',monospace;font-size:16px;font-weight:800;color:var(--acc);flex-shrink:0;margin-left:8px";totSpan.textContent="$"+ord.total.toFixed(2);hdr.appendChild(left);hdr.appendChild(totSpan);}
+  else hdr.appendChild(left);
+  card.appendChild(hdr);
+  // Per-item stock preview
+  var prevWrap=document.createElement("div"); prevWrap.style.marginBottom="8px";
+  ord.items.forEach(function(it){
+    var avail=stock[skey(it.brand,it.flavor)]||0; var ok=avail>=it.qty;
+    var row=document.createElement("div"); row.style.cssText="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted var(--brd);font-size:12px";
+    var nm=document.createElement("div"); nm.innerHTML="<b>"+it.brand+"</b> <span style='color:var(--txt3)'>"+it.flavor+"</span>";
+    var st=document.createElement("div"); st.style.cssText="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:"+(ok?"#00a870":"#c0392b");
+    st.textContent=ok?("×"+it.qty+"  ✓ Have "+avail):("×"+it.qty+"  Short "+(it.qty-avail));
+    row.appendChild(nm); row.appendChild(st); prevWrap.appendChild(row);
+  });
+  card.appendChild(prevWrap);
+  if(ord.note){var noteEl=document.createElement("div");noteEl.style.cssText="font-size:11px;color:var(--txt3);font-style:italic;margin-bottom:6px";noteEl.textContent="Note: "+ord.note;card.appendChild(noteEl);}
+  // Status bar
+  var sb=document.createElement("div"); sb.style.cssText="font-size:11px;padding:5px 8px;border-radius:6px;margin-bottom:8px;font-weight:600;"+(allOk?"background:rgba(0,168,112,.1);color:#00a870":"background:rgba(200,124,0,.1);color:#c87c00");
+  sb.textContent=allOk?"✓ All items covered — ready to fulfil":"⚠ Some items short. Use Edit to adjust quantities.";
+  card.appendChild(sb);
+  // Buttons
+  var btns=document.createElement("div"); btns.style.cssText="display:flex;gap:6px;flex-wrap:wrap";
+  var fulfilBtn=document.createElement("button");
+  fulfilBtn.textContent="✓ Fulfil";
+  if(allOk){
+    fulfilBtn.className="btn bsuc bsm";
+    (function(o){fulfilBtn.addEventListener("click",function(){fulfilOrder(o.id);});})(ord);
+  } else {
+    fulfilBtn.className="btn bsm"; fulfilBtn.disabled=true;
+    fulfilBtn.style.cssText="opacity:.35;cursor:not-allowed;background:var(--sur2);color:var(--txt3);border:1px solid var(--brd);padding:4px 10px;border-radius:6px;font-size:12px";
+    fulfilBtn.title="Adjust quantities in Edit mode first";
+  }
+  btns.appendChild(fulfilBtn);
+  var editBtn=document.createElement("button"); editBtn.className="btn bpri bsm"; editBtn.textContent="✎ Edit";
+  (function(o2,cardEl){editBtn.addEventListener("click",function(){
+    cardEl.parentNode.removeChild(cardEl);
+    renderOrderCardEdit(document.getElementById("ord-open-list"), o2);
+  });})(ord, card);
+  btns.appendChild(editBtn);
+  var delBtn=document.createElement("button"); delBtn.className="btn bdgr bsm"; delBtn.textContent="×";
+  (function(id){delBtn.addEventListener("click",function(){
+    if(!confirm("Delete order "+id+"?"))return;
+    orders=orders.filter(function(o){return o.id!==id;});
+    savePricing(); renderOpenOrders(); toast("Order deleted","warn");
+  });})(ord.id);
+  btns.appendChild(delBtn);
+  card.appendChild(btns); container.appendChild(card);
+}
+
+function renderOrderCardEdit(container, ord){
+  var editItems=ord.items.map(function(it){return {brand:it.brand,flavor:it.flavor,qty:it.qty,unitPrice:it.unitPrice||0,total:(it.unitPrice||0)*it.qty,category:it.category||""};});
+  var card=document.createElement("div"); card.className="scard"; card.style.cssText="margin-bottom:10px;border:2px solid var(--acc)";
+
+  // ── HEADER ──
+  var hdrDiv=document.createElement("div"); hdrDiv.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px";
+  var idEl=document.createElement("div");
+  idEl.innerHTML="<span style='font-family:DM Mono,monospace;font-size:13px;font-weight:800;color:var(--acc)'>"+ord.id+"</span> <span style='font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(91,79,232,.12);color:var(--acc)'>EDITING</span>";
+  hdrDiv.appendChild(idEl); card.appendChild(hdrDiv);
+
+  // ── CUSTOMER SELECTOR ──
+  var custRow=document.createElement("div"); custRow.style.cssText="margin-bottom:10px";
+  var custLbl=document.createElement("div"); custLbl.style.cssText="font-size:11px;color:var(--txt3);margin-bottom:4px"; custLbl.textContent="Customer";
+  var custSel=document.createElement("select"); custSel.className="ifield bsm"; custSel.style.cssText="width:100%;margin-bottom:0";
+  var walkOpt=document.createElement("option"); walkOpt.value=""; walkOpt.textContent="— Walk-in —"; custSel.appendChild(walkOpt);
+  customers.forEach(function(c){
+    var o=document.createElement("option"); o.value=c.id; o.textContent=c.name;
+    if(c.id===ord.custId) o.selected=true;
+    custSel.appendChild(o);
+  });
+  custRow.appendChild(custLbl); custRow.appendChild(custSel); card.appendChild(custRow);
+
+  // ── HINT ──
+  var hint=document.createElement("div"); hint.style.cssText="font-size:11px;color:var(--txt3);margin-bottom:10px;padding:6px 8px;background:var(--sur2);border-radius:6px";
+  hint.textContent="Edit item quantities, remove items, or add new items. Stock is NOT affected until Fulfil.";
+  card.appendChild(hint);
+
+  // ── ITEM LIST (editable) ──
+  var itemsWrap=document.createElement("div"); itemsWrap.style.marginBottom="10px";
+
+  // Status + Fulfil button (created early, updated by refreshStatus)
+  var statusBar=document.createElement("div"); statusBar.style.cssText="font-size:11px;padding:6px 8px;border-radius:6px;margin-bottom:10px;font-weight:600";
+  var fulfilEditBtn=document.createElement("button"); fulfilEditBtn.textContent="✓ Save & Fulfil";
+
+  function refreshStatus(){
+    var allGreen=editItems.length>0&&editItems.every(function(it){return (stock[skey(it.brand,it.flavor)]||0)>=it.qty;});
+    if(allGreen){
+      statusBar.style.cssText="font-size:11px;padding:6px 8px;border-radius:6px;margin-bottom:10px;font-weight:600;background:rgba(0,168,112,.1);color:#00a870";
+      statusBar.textContent="✓ All items covered — ready to fulfil";
+      fulfilEditBtn.className="btn bsuc bsm"; fulfilEditBtn.disabled=false; fulfilEditBtn.style.opacity="1"; fulfilEditBtn.style.cursor="pointer";
+    } else {
+      var shorts=editItems.filter(function(it){return (stock[skey(it.brand,it.flavor)]||0)<it.qty;});
+      statusBar.style.cssText="font-size:11px;padding:6px 8px;border-radius:6px;margin-bottom:10px;font-weight:600;background:rgba(200,124,0,.1);color:#c87c00";
+      statusBar.textContent="⚠ "+shorts.length+" item(s) still short";
+      fulfilEditBtn.className="btn bsm"; fulfilEditBtn.disabled=true; fulfilEditBtn.style.cssText="opacity:.35;cursor:not-allowed;background:var(--sur2);color:var(--txt3);border:1px solid var(--brd);padding:4px 10px;border-radius:6px;font-size:12px";
+    }
+  }
+
+  function rebuildItemRows(){
+    itemsWrap.innerHTML="";
+    if(!editItems.length){
+      var empty=document.createElement("div"); empty.style.cssText="font-size:12px;color:var(--txt3);padding:8px"; empty.textContent="No items. Add from browser below.";
+      itemsWrap.appendChild(empty); refreshStatus(); return;
+    }
+    editItems.forEach(function(it,idx){
+      var avail=stock[skey(it.brand,it.flavor)]||0; var ok=avail>=it.qty;
+      var row=document.createElement("div"); row.style.cssText="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--brd)";
+      var nameDiv=document.createElement("div"); nameDiv.style.flex="1";
+      nameDiv.innerHTML="<div style='font-size:12px;font-weight:600'>"+it.brand+"</div><div style='font-size:10px;color:var(--txt3)'>"+it.flavor+"</div>";
+      var stBadge=document.createElement("div"); stBadge.style.cssText="font-size:10px;font-family:'DM Mono',monospace;font-weight:700;white-space:nowrap;min-width:80px;text-align:right;color:"+(ok?"#00a870":"#c0392b");
+      stBadge.textContent=ok?("✓ Have "+avail):("Have "+avail+" / Need "+(it.qty-avail)+" more");
+      var qInp=document.createElement("input"); qInp.type="number"; qInp.min="1"; qInp.value=String(it.qty);
+      qInp.style.cssText="width:55px;padding:4px 6px;border-radius:6px;border:2px solid "+(ok?"var(--acc)":"#c0392b")+";font-size:13px;font-family:'DM Mono',monospace;font-weight:700;text-align:center;background:var(--sur)";
+      (function(i2,inp,badge){
+        inp.addEventListener("input",function(){
+          var v=Math.max(1,parseInt(this.value)||1); editItems[i2].qty=v;
+          var av=stock[skey(editItems[i2].brand,editItems[i2].flavor)]||0; var isOk=av>=v;
+          inp.style.borderColor=isOk?"var(--acc)":"#c0392b";
+          badge.style.color=isOk?"#00a870":"#c0392b";
+          badge.textContent=isOk?("✓ Have "+av):("Have "+av+" / Need "+(v-av)+" more");
+          refreshStatus();
+        });
+      })(idx,qInp,stBadge);
+      // Unit price input
+      var pInp=document.createElement("input"); pInp.type="number"; pInp.min="0"; pInp.step="0.01";
+      pInp.placeholder="$0.00"; pInp.value=it.unitPrice>0?it.unitPrice:"";
+      pInp.style.cssText="width:65px;padding:4px 6px;border-radius:6px;border:1.5px solid var(--brd);font-size:12px;font-family:'DM Mono',monospace;text-align:center;background:var(--sur)";
+      (function(i2){pInp.addEventListener("input",function(){editItems[i2].unitPrice=parseFloat(this.value)||0;editItems[i2].total=editItems[i2].unitPrice*editItems[i2].qty;});;})(idx);
+      var rmBtn=document.createElement("button"); rmBtn.style.cssText="background:none;border:none;color:var(--txt3);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1"; rmBtn.textContent="×"; rmBtn.title="Remove item";
+      (function(i2){rmBtn.addEventListener("click",function(){editItems.splice(i2,1);rebuildItemRows();refreshStatus();});})(idx);
+      row.appendChild(nameDiv); row.appendChild(stBadge); row.appendChild(qInp); row.appendChild(pInp); row.appendChild(rmBtn);
+      itemsWrap.appendChild(row);
+    });
+    refreshStatus();
+  }
+
+  rebuildItemRows();
+
+  // ── ADD ITEMS SECTION ──
+  var addSection=document.createElement("div"); addSection.style.cssText="margin-top:10px;border:1px dashed var(--brd);border-radius:8px;padding:10px";
+  var addTitle=document.createElement("div"); addTitle.style.cssText="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px"; addTitle.textContent="Add Items";
+
+  // Category chips
+  var addCatWrap=document.createElement("div"); addCatWrap.className="cat-chips"; addCatWrap.style.marginBottom="6px";
+  var addBrandWrap=document.createElement("div"); addBrandWrap.className="bscroll"; addBrandWrap.style.marginBottom="6px";
+  var addFlavorList=document.createElement("div"); addFlavorList.style.cssText="max-height:160px;overflow-y:auto;border:1px solid var(--brd);border-radius:var(--r)";
+
+  var activeCat2="all"; var activeBrand2=BRANDS[0];
+
+  function renderAddCats(){
+    addCatWrap.innerHTML="";
+    var allCats=["all"].concat(CATEGORY_NAMES);
+    allCats.forEach(function(cat){
+      var chip=document.createElement("div"); chip.className="chip"+(activeCat2===cat?" on":"");
+      chip.textContent=cat==="all"?"All":cat;
+      chip.addEventListener("click",function(){activeCat2=cat;var brs=brandsForCat(cat);activeBrand2=brs[0]||null;renderAddCats();renderAddBrands();renderAddFlavors();});
+      addCatWrap.appendChild(chip);
+    });
+  }
+
+  function renderAddBrands(){
+    addBrandWrap.innerHTML="";
+    var brs=brandsForCat(activeCat2);
+    if(!activeBrand2||brs.indexOf(activeBrand2)===-1) activeBrand2=brs[0]||null;
+    brs.forEach(function(br){
+      var chip=document.createElement("div"); chip.className="chip"+(br===activeBrand2?" on":"");
+      chip.textContent=br;
+      chip.addEventListener("click",function(){activeBrand2=br;renderAddBrands();renderAddFlavors();});
+      addBrandWrap.appendChild(chip);
+    });
+  }
+
+  function renderAddFlavors(){
+    addFlavorList.innerHTML="";
+    if(!activeBrand2)return;
+    var fls=CATALOG[activeBrand2]||[];
+    fls.forEach(function(fl){
+      var k=skey(activeBrand2,fl);
+      var avail=stock[k]||0;
+      var alreadyIn=editItems.some(function(it){return it.brand===activeBrand2&&it.flavor===fl;});
+      var item=document.createElement("div"); item.className="fitem"+(alreadyIn?" sel":"");
+      var info=document.createElement("div");
+      var ne=document.createElement("div"); ne.className="fin"; ne.textContent=fl;
+      var se=document.createElement("div"); se.className="fsub"; se.textContent=activeBrand2+" · Stock: "+avail;
+      se.style.color=avail===0?"var(--red)":avail<=3?"var(--amb)":"var(--txt3)";
+      if(avail===0){var zb=document.createElement("span");zb.style.cssText="font-size:9px;background:rgba(255,77,109,.15);color:var(--red);padding:1px 5px;border-radius:4px;margin-left:4px";zb.textContent="OUT";ne.appendChild(zb);}
+      info.appendChild(ne); info.appendChild(se);
+      var chk=document.createElement("div"); chk.className="fchk"; if(alreadyIn)chk.textContent="✓";
+      item.appendChild(info); item.appendChild(chk);
+      item.addEventListener("click",function(){
+        if(alreadyIn){
+          // Toggle off — remove
+          var idx2=editItems.findIndex(function(it){return it.brand===activeBrand2&&it.flavor===fl;});
+          if(idx2>-1){editItems.splice(idx2,1);}
+        } else {
+          // Add with qty 1
+          var custId2=custSel.value||"";
+          var up=getSellCustPrice(custId2,activeBrand2);
+          editItems.push({brand:activeBrand2,flavor:fl,qty:1,unitPrice:up||0,total:up||0,category:catOfBrand(activeBrand2)||""});
+        }
+        rebuildItemRows(); renderAddFlavors(); refreshStatus();
+      });
+      addFlavorList.appendChild(item);
+    });
+  }
+
+  renderAddCats(); renderAddBrands(); renderAddFlavors();
+  addSection.appendChild(addTitle); addSection.appendChild(addCatWrap); addSection.appendChild(addBrandWrap); addSection.appendChild(addFlavorList);
+
+  // ── ASSEMBLE ──
+  card.appendChild(statusBar);
+  card.appendChild(itemsWrap);
+  card.appendChild(addSection);
+
+  // ── BUTTONS ──
+  var btns=document.createElement("div"); btns.style.cssText="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px";
+
+  var saveBtn=document.createElement("button"); saveBtn.className="btn bpri bsm"; saveBtn.textContent="✓ Save";
+  (function(o2,cardEl){saveBtn.addEventListener("click",function(){
+    if(!editItems.length){toast("Order must have at least one item","err");return;}
+    o2.custId=custSel.value||""; o2.custName=custSel.value?(customers.find(function(c){return c.id===custSel.value;})||{}).name||"Walk-in":"Walk-in";
+    o2.items=editItems.map(function(it){return {brand:it.brand,flavor:it.flavor,qty:it.qty,unitPrice:it.unitPrice||0,total:(it.unitPrice||0)*it.qty,category:it.category||""};});
+    o2.total=o2.items.reduce(function(s,it){return s+(it.total||0);},0);
+    o2.updatedAt=Date.now(); savePricing();
+    cardEl.parentNode.removeChild(cardEl);
+    renderOrderCard(document.getElementById("ord-open-list"), o2);
+    toast(o2.id+" updated","ok");
+  });})(ord,card);
+  btns.appendChild(saveBtn);
+
+  (function(o2,cardEl){fulfilEditBtn.addEventListener("click",function(){
+    if(fulfilEditBtn.disabled)return;
+    if(!editItems.every(function(it){return (stock[skey(it.brand,it.flavor)]||0)>=it.qty;})){
+      toast("Stock changed — re-check quantities","err"); refreshStatus(); rebuildItemRows(); return;
+    }
+    o2.custId=custSel.value||""; o2.custName=custSel.value?(customers.find(function(c){return c.id===custSel.value;})||{}).name||"Walk-in":"Walk-in";
+    o2.items=editItems.map(function(it){return {brand:it.brand,flavor:it.flavor,qty:it.qty,unitPrice:it.unitPrice||0,total:(it.unitPrice||0)*it.qty,category:it.category||""};});
+    o2.total=o2.items.reduce(function(s,it){return s+(it.total||0);},0); o2.updatedAt=Date.now();
+    cardEl.parentNode.removeChild(cardEl);
+    fulfilOrder(o2.id);
+  });})(ord,card);
+  btns.appendChild(fulfilEditBtn);
+
+  var cancelBtn=document.createElement("button"); cancelBtn.className="btn bsec bsm"; cancelBtn.textContent="Cancel";
+  (function(o2,cardEl){cancelBtn.addEventListener("click",function(){
+    cardEl.parentNode.removeChild(cardEl);
+    renderOrderCard(document.getElementById("ord-open-list"), o2);
+  });})(ord,card);
+  btns.appendChild(cancelBtn);
+
+  card.appendChild(btns);
+  var first=container.firstChild;
+  if(first) container.insertBefore(card,first); else container.appendChild(card);
+}
+
+
 
 function fulfilOrder(ordId){
   var ord=orders.find(function(o){return o.id===ordId;}); if(!ord)return;
-  var shortItems=ord.items.filter(function(it){return qty(it.brand,it.flavor)<it.qty;});
-  var msg="Fulfil order "+ordId+"?";
-  if(shortItems.length){msg+="\n\n\u26a0 "+shortItems.length+" item(s) have insufficient stock:\n"+shortItems.slice(0,5).map(function(it){return it.brand+" - "+it.flavor+": need "+it.qty+", have "+qty(it.brand,it.flavor);}).join("\n")+(shortItems.length>5?"\n...":"")+"\n\nThis will deduct available stock and create an estimate.";}
-  if(!confirm(msg))return;
+  // Final stock gate
+  var short=ord.items.filter(function(it){return (stock[skey(it.brand,it.flavor)]||0)<it.qty;});
+  if(short.length){toast("Stock changed — "+short.length+" item(s) now short. Please review.","err");renderOpenOrders();return;}
   var custId=ord.custId; var custName=ord.custName||"Walk-in";
-  var saleDate=ord.date; var rawDate=ord.rawDate||"";
-  var estId="EST-"+Date.now().toString().slice(-5);
-  var estItems=[];
-  ord.items.forEach(function(it){
-    var k=it.brand+"~~"+it.flavor;
-    var avail=stock[k]||0; var deduct=Math.min(it.qty,avail);
-    stock[k]=Math.max(0,avail-it.qty);
-    estItems.push({brand:it.brand,flavor:it.flavor,qty:it.qty,unitPrice:it.unitPrice,total:it.total,category:it.category||""});
-    txLog.unshift({type:"sale",category:it.category,brand:it.brand,flavor:it.flavor,qty:deduct,custId:custId,custName:custName,unitPrice:it.unitPrice,total:it.total,date:saleDate,estId:estId});
+  var saleDate=new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+  var rawDate=(function(){var t=new Date();return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");})();
+  var suggestedId="EST-"+String(nextEstimateNum).padStart(3,"0");
+  showConfirm(
+    "Fulfil "+ordId,
+    "Convert to estimate and deduct stock?\n\nCustomer: "+custName+"\nItems: "+ord.items.length+"\nUnits: "+ord.items.reduce(function(s,it){return s+it.qty;},0)+(ord.total>0?"\nTotal: $"+ord.total.toFixed(2):"")+("\n\nEstimate: "+suggestedId),
+    [{label:"Fulfil → "+suggestedId,style:"bsuc",value:true},{label:"Cancel",style:"bsec",value:false}]
+  ).then(function(confirmed){
+    if(!confirmed)return;
+    var still=ord.items.filter(function(it){return (stock[skey(it.brand,it.flavor)]||0)<it.qty;});
+    if(still.length){toast("Stock changed — cannot fulfil. Re-check order.","err");renderOpenOrders();return;}
+    var estId=suggestedId; var attempt=nextEstimateNum;
+    while(estimates.some(function(e){return e.id===estId;})){attempt++;estId="EST-"+String(attempt).padStart(3,"0");}
+    var estItems=[];
+    ord.items.forEach(function(it){
+      var k=skey(it.brand,it.flavor);
+      stock[k]=Math.max(0,(stock[k]||0)-it.qty);
+      var lt=(it.unitPrice||0)*it.qty;
+      estItems.push({brand:it.brand,flavor:it.flavor,qty:it.qty,unitPrice:it.unitPrice||0,total:lt,category:it.category||""});
+      txLog.unshift({type:"sale",category:it.category,brand:it.brand,flavor:it.flavor,qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice||0,total:lt,date:saleDate,estId:estId});
+    });
+    var grandTotal=estItems.reduce(function(s,it){return s+it.total;},0);
+    var estRec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:true,total:grandTotal,locked:false,fromOrderId:ordId,createdAt:Date.now(),updatedAt:Date.now()};
+    estimates.unshift(estRec);
+    ord.status="fulfilled"; ord.estId=estId; ord.updatedAt=Date.now();
+    afterChange(); savePricing();
+    if(gdConnected){gdSave(function(){toast(ordId+" → "+estId+" saved to Drive ✓","ok");});}
+    else{saveLocal();toast(ordId+" → "+estId+" ✓","ok");}
+    renderOpenOrders();
   });
-  var estRec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:true,total:ord.total,locked:false,fromOrderId:ordId};
-  estimates.unshift(estRec);
-  // Mark order fulfilled
-  ord.status="fulfilled"; ord.estId=estId; ord.updatedAt=Date.now();
-  afterChange(); savePricing();
-  // Auto-save to Drive after fulfil
-  if(gdConnected) { gdSave(function(){ toast(ordId+" fulfilled \u2192 "+estId+" \u2014 saved to Drive \u2713","ok"); }); }
-  else { saveLocal(); toast(ordId+" fulfilled \u2192 "+estId+" created \u2713","ok"); }
-  renderOpenOrders();
 }
 
 // ── SHORTAGE REVIEW ──
@@ -6864,6 +7290,192 @@ window.addEventListener("beforeunload", function(e) {
     return e.returnValue;
   }
 });
+function resetSellCart(){
+  sellCart={};
+  var ni=document.getElementById("est-num-inp"); if(ni)ni.value="";
+  var di=document.getElementById("est-date-inp"); if(di)di.value="";
+  renderSellFlavors(); renderSellCart();
+}
+
+function showConfirm(title, body, buttons) {
+  return new Promise(function(resolve) {
+    var modal=document.getElementById("cmodal");
+    var titleEl=document.getElementById("cmodal-title");
+    var bodyEl=document.getElementById("cmodal-body");
+    var btnsEl=document.getElementById("cmodal-btns");
+    if(!modal){resolve(null);return;}
+    titleEl.textContent=title; bodyEl.textContent=body; btnsEl.innerHTML="";
+    modal.style.display="flex";
+    buttons.forEach(function(btn){
+      var b=document.createElement("button");
+      b.className="btn "+(btn.style||"bsec")+" bsm";
+      b.textContent=btn.label; b.style.minWidth="80px";
+      b.addEventListener("click",function(){
+        modal.style.display="none";
+        resolve(btn.value!==undefined?btn.value:btn.label);
+      });
+      btnsEl.appendChild(b);
+    });
+    modal.onclick=function(e){
+      if(e.target===modal){
+        modal.style.display="none";
+        var last=buttons[buttons.length-1];
+        resolve(last.value!==undefined?last.value:last.label);
+      }
+    };
+  });
+}
+
+function renderEstimateEditTable(){
+  var el=document.getElementById("sell-cart"); if(!el)return;
+  var wrap=document.getElementById("sell-cart-wrap"); if(wrap)wrap.style.display="block";
+  el.innerHTML="";
+
+  var keys=Object.keys(editingOriginalItems);
+  if(!keys.length){el.innerHTML="<div style='padding:12px;font-size:13px;color:var(--txt3)'>No items in estimate</div>";return;}
+
+  // Table header
+  var hdr=document.createElement("div");
+  hdr.style.cssText="display:grid;grid-template-columns:1fr 60px 60px 90px 60px 80px;gap:6px;padding:5px 0;border-bottom:2px solid var(--brd);margin-bottom:4px";
+  ["Item","Est Qty","Avail","Adjust","Final","Total $"].forEach(function(t,i){
+    var th=document.createElement("div");
+    th.style.cssText="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);text-align:"+(i===0?"left":"center");
+    th.textContent=t; hdr.appendChild(th);
+  });
+  el.appendChild(hdr);
+
+  var anyInvalid=false;
+
+  keys.forEach(function(k){
+    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
+    var estQty=editingOriginalItems[k]||0;       // original qty in estimate (read-only)
+    var avail=editingOpenedStock[k]||0;           // real stock at edit-open (read-only)
+    var adj=editingAdjustments[k]||0;             // current adjustment (editable)
+    var finalQty=estQty+adj;                      // what estimate will become
+    var balanceStock=avail-adj;                   // stock remaining after adjustment
+
+    var row=document.createElement("div");
+    row.style.cssText="display:grid;grid-template-columns:1fr 60px 60px 90px 60px 80px;gap:6px;padding:7px 0;border-bottom:1px solid var(--brd);align-items:center";
+
+    // Col 1: Item name
+    var nameDiv=document.createElement("div");
+    nameDiv.innerHTML="<div style='font-size:13px;font-weight:600;color:var(--txt)'>"+fl+"</div><div style='font-size:10px;color:var(--txt3)'>"+br+"</div>";
+
+    // Col 2: Est Qty (read-only, greyed)
+    var estDiv=document.createElement("div");
+    estDiv.style.cssText="text-align:center;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--txt3)";
+    estDiv.textContent=estQty;
+
+    // Col 3: Available Stock (read-only, shows real stock)
+    var availDiv=document.createElement("div");
+    availDiv.style.cssText="text-align:center;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:"+(avail>0?"#00a870":"#c0392b");
+    availDiv.textContent=avail;
+
+    // Col 4: Adjustment input (+/- stepper)
+    var adjDiv=document.createElement("div");
+    adjDiv.style.cssText="display:flex;align-items:center;justify-content:center;gap:3px";
+    var minBtn=document.createElement("button");
+    minBtn.textContent="−"; minBtn.style.cssText="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--brd);background:var(--sur2);font-size:14px;cursor:pointer;line-height:1;padding:0;color:var(--txt)";
+    var adjInp=document.createElement("input");
+    adjInp.type="number"; adjInp.value=String(adj);
+    adjInp.style.cssText="width:44px;text-align:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:700;border:1.5px solid var(--brd);border-radius:6px;padding:2px 4px;background:var(--sur);color:var(--txt)";
+    // Min adjustment = -estQty (can reduce to 0), max = +avail (can add up to all available stock)
+    adjInp.min=String(-estQty);
+    adjInp.max=String(avail);
+    var plusBtn=document.createElement("button");
+    plusBtn.textContent="+"; plusBtn.style.cssText="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--brd);background:var(--sur2);font-size:14px;cursor:pointer;line-height:1;padding:0;color:var(--txt)";
+
+    // Col 5: Balance Stock (live calculated)
+    var balDiv=document.createElement("div");
+    balDiv.style.cssText="text-align:center;font-family:'DM Mono',monospace;font-size:14px;font-weight:700";
+
+    // Col 5b: Final qty (est qty + adj)
+    var finalQtyDiv=document.createElement("div");
+    finalQtyDiv.style.cssText="text-align:center;font-family:'DM Mono',monospace;font-size:14px;font-weight:800";
+
+    // Col 6: Total price (finalQty * unitPrice)
+    var totalPriceDiv=document.createElement("div");
+    totalPriceDiv.style.cssText="text-align:right;font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--acc)";
+
+    // Final qty indicator (small, below balance)
+    var finalDiv=document.createElement("div");
+    finalDiv.style.cssText="font-size:10px;text-align:center;color:var(--txt3);margin-top:1px";
+
+    function updateRow(newAdj){
+      newAdj=Math.max(-estQty, Math.min(avail, newAdj||0));
+      editingAdjustments[k]=newAdj;
+      adjInp.value=String(newAdj);
+      adjInp.style.color=newAdj>0?"#1a6b3a":newAdj<0?"#c0392b":"var(--txt)";
+      adjInp.style.borderColor=newAdj>0?"#1a6b3a":newAdj<0?"#c0392b":"var(--brd)";
+      var bal=avail-newAdj;
+      var fq=estQty+newAdj;
+      balDiv.textContent=bal;
+      balDiv.style.color=bal<0?"#c0392b":"var(--txt)";
+      // Final qty column
+      if(fq===0){
+        finalQtyDiv.textContent="0"; finalQtyDiv.style.color="#c0392b";
+      } else {
+        finalQtyDiv.textContent=String(fq);
+        finalQtyDiv.style.color=newAdj>0?"#1a6b3a":newAdj<0?"#c87c00":"var(--txt)";
+      }
+      // Total price column
+      var up=parseFloat((sellCart[k]||{}).price)||0;
+      var lineTotal=fq*up;
+      totalPriceDiv.textContent=lineTotal>0?"$"+lineTotal.toFixed(2):"—";
+      // Small label below balance
+      if(fq===0){
+        finalDiv.textContent="(removed)"; finalDiv.style.color="#c0392b";
+      } else { finalDiv.textContent=""; }
+      // Also update sellCart qty for save logic
+      if(fq>0) sellCart[k]={qty:fq,price:(sellCart[k]||{}).price||(editingOriginalItems[k]?((sellCart[k]||{}).price||""):"")||""};
+      else delete sellCart[k];
+    }
+
+    updateRow(adj);
+
+    (function(key,estQ,av){
+      minBtn.addEventListener("click",function(){
+        var cur=editingAdjustments[key]||0;
+        updateRow(cur-1);
+      });
+      plusBtn.addEventListener("click",function(){
+        var cur=editingAdjustments[key]||0;
+        updateRow(cur+1);
+      });
+      adjInp.addEventListener("change",function(){
+        updateRow(parseInt(this.value,10)||0);
+      });
+    })(k,estQty,avail);
+
+    adjDiv.appendChild(minBtn); adjDiv.appendChild(adjInp); adjDiv.appendChild(plusBtn);
+
+    // Balance column (standalone)
+    var balWrap=document.createElement("div"); balWrap.style.textAlign="center";
+    balWrap.appendChild(balDiv); balWrap.appendChild(finalDiv);
+
+    row.appendChild(nameDiv); row.appendChild(estDiv); row.appendChild(availDiv);
+    row.appendChild(adjDiv); row.appendChild(finalQtyDiv); row.appendChild(totalPriceDiv);
+    el.appendChild(row);
+  });
+
+  // Grand total row
+  var totalItems=keys.filter(function(k){return (editingOriginalItems[k]||0)+(editingAdjustments[k]||0)>0;}).length;
+  var removedLines=keys.filter(function(k){return (editingOriginalItems[k]||0)+(editingAdjustments[k]||0)<=0;});
+  var grandTot=0;
+  keys.forEach(function(k){
+    var fq=(editingOriginalItems[k]||0)+(editingAdjustments[k]||0);
+    var up=parseFloat((sellCart[k]||{}).price)||0;
+    if(fq>0) grandTot+=fq*up;
+  });
+  var summary=document.createElement("div");
+  summary.style.cssText="margin-top:10px;padding:8px 12px;background:var(--sur2);border-radius:8px;display:flex;justify-content:space-between;align-items:center";
+  var leftTxt=document.createElement("div"); leftTxt.style.cssText="font-size:12px;color:var(--txt3)";
+  leftTxt.textContent=totalItems+" line(s) remain"+(removedLines.length?" · "+removedLines.length+" to remove":"");
+  var rightTxt=document.createElement("div"); rightTxt.style.cssText="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--acc)";
+  rightTxt.textContent=grandTot>0?"$"+grandTot.toFixed(2):"";
+  summary.appendChild(leftTxt); summary.appendChild(rightTxt);
+  el.appendChild(summary);
+}
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -6884,6 +7496,17 @@ if(gdUrl){
     toast("Connected. Auto-load is OFF","warn");
   }
 } else { setSyncDot("","local"); }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
