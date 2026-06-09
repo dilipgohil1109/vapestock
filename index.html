@@ -6726,7 +6726,7 @@ function generateCatalog() {
   var base64Map = {};
   var pending = brandKeys.length;
 
-  function done(){ pending--; if(pending<=0) _doGenerateCatalog(filterCat,filterBrand,showMin,showPrice,catsToPrint,base64Map); }
+  function done(){ pending--; if(pending<=0) _doGenerateCatalog(filterCat,filterBrand,showMin,showPrice,catsToPrint,base64Map,catFormat); }
 
   function getDriveImgUrl(url) {
     // Convert drive.google.com/uc?id=FILE_ID to thumbnail URL (CORS-friendly)
