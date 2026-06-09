@@ -964,6 +964,21 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
       </label>
       <div style="font-size:11px;color:var(--txt3);margin-top:4px">Uncheck for enquiry-only catalog.</div>
     </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px">Catalog Format</div>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:var(--sur2);border-radius:8px;padding:10px 6px;border:2px solid var(--brd)" id="fmt-b-label">
+          <input type="radio" name="cat-format" id="cat-fmt-b" value="b" checked style="accent-color:var(--acc)">
+          <span style="font-size:11px;font-weight:700;color:var(--txt)">&#128203; List</span>
+          <span style="font-size:10px;color:var(--txt3);text-align:center">Clean rows with description</span>
+        </label>
+        <label style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:var(--sur2);border-radius:8px;padding:10px 6px;border:2px solid var(--brd)" id="fmt-a-label">
+          <input type="radio" name="cat-format" id="cat-fmt-a" value="a" style="accent-color:var(--acc)">
+          <span style="font-size:11px;font-weight:700;color:var(--txt)">&#128247; Cards</span>
+          <span style="font-size:10px;color:var(--txt3);text-align:center">3-column card grid</span>
+        </label>
+      </div>
+    </div>
     <button class="btn bpri" id="btn-gen-catalog" style="width:100%">&#128438; Generate B2B Catalog</button>
   </div>
 </div>
@@ -1143,6 +1158,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   </div>
 </div>
 <script>
+
 
 
 
@@ -6686,6 +6702,8 @@ function generateCatalog() {
   var showMin     = (document.getElementById("cat-show-min")||{}).checked!==false;
   var showPrice   = (document.getElementById("cat-show-price")||{}).checked!==false;
   var catsToPrint = filterCat ? [filterCat] : CATEGORY_NAMES.slice();
+  var formatSel = document.querySelector('input[name="cat-format"]:checked');
+  var catFormat = formatSel ? formatSel.value : 'b'; // 'a' = card grid, 'b' = list
 
   // ── Collect all unique image URLs ──
   var imageUrls = {};
@@ -6700,7 +6718,7 @@ function generateCatalog() {
 
   var brandKeys = Object.keys(imageUrls);
   if(!brandKeys.length){
-    _doGenerateCatalog(filterCat, filterBrand, showMin, showPrice, catsToPrint, {});
+    _doGenerateCatalog(filterCat, filterBrand, showMin, showPrice, catsToPrint, {}, catFormat);
     return;
   }
 
@@ -6753,7 +6771,9 @@ function generateCatalog() {
   });
 }
 
-function _doGenerateCatalog(filterCat, filterBrand, showMin, showPrice, catsToPrint, base64Map) {
+function _doGenerateCatalog(filterCat, filterBrand, showMin, showPrice, catsToPrint, base64Map, catFormat) {
+  catFormat = catFormat || 'b';
+  if(catFormat === 'a') { _doGenerateCatalogCardGrid(filterCat, filterBrand, showMin, showPrice, catsToPrint, base64Map); return; }
   var cols = showMin ? "110px 1fr 120px 100px" : "110px 1fr 120px";
   var css = "*{box-sizing:border-box;margin:0;padding:0}:root{--cols:"+cols+"}body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff}@page{margin:14mm 12mm;size:A4}.page{max-width:190mm;margin:0 auto;padding:8mm 0}.hdr{background:#0f172a;padding:20px 24px 16px;margin-bottom:0}.logo{font-size:20px;font-weight:700;color:#fff}.logo span{color:#60a5fa}.hdr-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.pill{font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}.clbl{font-size:9px;text-transform:uppercase;letter-spacing:3px;color:#94a3b8;font-weight:700;padding:12px 0 6px;border-bottom:1px solid #e2e8f0}.chr{display:grid;grid-template-columns:var(--cols);padding:6px 0;background:#f8fafc;border-bottom:1px solid #e2e8f0}.ch{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;font-weight:600;padding:0 8px}.br{display:grid;grid-template-columns:var(--cols);border-bottom:1px solid #f1f5f9;page-break-inside:avoid}.ic{padding:12px 12px 12px 0;display:flex;align-items:center}.th{width:90px;height:90px;border-radius:8px;object-fit:cover;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;text-align:center;overflow:hidden;flex-shrink:0}.th img{width:100%;height:100%;object-fit:cover;border-radius:8px}.ifc{padding:12px 14px 12px 0;display:flex;flex-direction:column;justify-content:center}.bn{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:4px}.bd{font-size:11px;color:#64748b;line-height:1.6;margin-bottom:7px}.sr{display:flex;gap:5px;flex-wrap:wrap}.st{font-size:9px;padding:3px 6px;background:#f1f5f9;color:#64748b;border-radius:3px;font-family:monospace}.pc{padding:12px 10px;display:flex;flex-direction:column;justify-content:center;text-align:right}.pv{font-size:20px;font-weight:700;color:#0f172a;font-family:monospace}.ps{font-size:10px;color:#94a3b8;margin-top:3px}.mc{padding:12px 10px;display:flex;flex-direction:column;justify-content:center;text-align:right}.mv{font-size:16px;color:#64748b;font-family:monospace}.ms{font-size:10px;color:#94a3b8;margin-top:3px}.ft{margin-top:20px;padding-top:12px;border-top:2px solid #0f172a;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#94a3b8}.ftb{font-size:13px;font-weight:700;color:#0f172a}";
   var h="<div class='page'><div class='hdr'><div class='logo'>Krazy<span>Stock</span> Wholesale</div><div class='hdr-sub'>B2B Product Catalog &middot; "+new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"})+" &middot; Confidential &middot; Wholesale Only</div><div class='pills'><span class='pill'>MOQ 10 units/brand</span><span class='pill'>All prices USD</span><span class='pill'>Subject to availability</span>"+(showMin?"":"<span class='pill'>Pricing on request</span>")+"</div></div>";
@@ -7857,6 +7877,100 @@ function cleanBrandMetaForSync() {
   });
   return clean;
 }
+
+(function(){
+  ['cat-fmt-b','cat-fmt-a'].forEach(function(id){
+    var el=document.getElementById(id); if(!el)return;
+    el.addEventListener('change',function(){
+      ['fmt-b-label','fmt-a-label'].forEach(function(lid){
+        var lbl=document.getElementById(lid); if(!lbl)return;
+        lbl.style.borderColor='var(--brd)'; lbl.style.background='var(--sur2)';
+      });
+      var lbl=document.getElementById('fmt-'+(this.value==='a'?'a':'b')+'-label');
+      if(lbl){lbl.style.borderColor='var(--acc)';lbl.style.background='rgba(91,79,232,.08)';}
+    });
+  });
+  // Set initial highlight
+  var defLbl=document.getElementById('fmt-b-label');
+  if(defLbl){defLbl.style.borderColor='var(--acc)';defLbl.style.background='rgba(91,79,232,.08)';}
+})();
+
+function _doGenerateCatalogCardGrid(filterCat, filterBrand, showMin, showPrice, catsToPrint, base64Map) {
+  var css = [
+    "*{box-sizing:border-box;margin:0;padding:0}",
+    "body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff}",
+    "@page{margin:12mm 10mm;size:A4}",
+    ".page{max-width:190mm;margin:0 auto;padding:6mm 0}",
+    ".hdr{background:#0f172a;padding:18px 22px 14px;margin-bottom:16px}",
+    ".logo{font-size:19px;font-weight:700;color:#fff}.logo span{color:#60a5fa}",
+    ".hdr-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}",
+    ".pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}",
+    ".pill{font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}",
+    ".clbl{font-size:9px;text-transform:uppercase;letter-spacing:3px;color:#94a3b8;font-weight:700;padding:10px 0 8px;border-bottom:1px solid #e2e8f0;margin-bottom:12px}",
+    ".grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}",
+    ".card{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid}",
+    ".card-img{width:100%;height:100px;object-fit:cover;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:1px}",
+    ".card-img img{width:100%;height:100%;object-fit:cover}",
+    ".card-body{padding:10px}",
+    ".card-name{font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px}",
+    ".card-desc{font-size:9px;color:#64748b;line-height:1.5;margin-bottom:6px;min-height:28px}",
+    ".card-specs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px}",
+    ".spec{font-size:8px;padding:2px 5px;background:#f1f5f9;color:#64748b;border-radius:3px;font-family:monospace}",
+    ".card-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;padding-top:8px;margin-top:4px}",
+    ".card-price{font-size:15px;font-weight:800;color:#0f172a;font-family:monospace}",
+    ".card-min{font-size:10px;color:#94a3b8;text-align:right}",
+    ".card-flavours{font-size:9px;color:#94a3b8}",
+    ".ft{margin-top:14px;padding-top:10px;border-top:2px solid #0f172a;display:flex;justify-content:space-between;font-size:10px;color:#94a3b8}",
+    ".ftb{font-size:12px;font-weight:700;color:#0f172a}"
+  ].join("");
+
+  var h="<div class='page'><div class='hdr'><div class='logo'>Krazy<span>Stock</span> Wholesale</div><div class='hdr-sub'>B2B Product Catalog &middot; "+new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"})+" &middot; Confidential &middot; Wholesale Only</div><div class='pills'><span class='pill'>MOQ 10 units/brand</span><span class='pill'>All prices USD</span><span class='pill'>Subject to availability</span>"+(showMin?"":"<span class='pill'>Pricing on request</span>")+"</div></div>";
+
+  catsToPrint.forEach(function(cat){
+    var brands=filterBrand?[filterBrand]:(CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
+    if(!brands.length)return;
+    h+="<div class='clbl'>"+cat+"</div><div class='grid'>";
+    brands.forEach(function(br){
+      var meta=brandMeta[br]||{};
+      var defP=defaultPrices[br];
+      var minP=minPrices[br];
+      var imgSrc=base64Map[br]||"";
+      var flav=(CATALOG[br]||[]).length;
+      h+="<div class='card'>";
+      // Image
+      h+="<div class='card-img'>";
+      if(imgSrc) h+="<img src='"+imgSrc+"'>";
+      else h+=br.substring(0,8);
+      h+="</div>";
+      // Body
+      h+="<div class='card-body'>";
+      h+="<div class='card-name'>"+br+"</div>";
+      if(meta.desc) h+="<div class='card-desc'>"+meta.desc.substring(0,90)+(meta.desc.length>90?"...":"")+"</div>";
+      h+="<div class='card-specs'>";
+      if(meta.puffs&&meta.puffs!=="—") h+="<span class='spec'>"+meta.puffs+"</span>";
+      if(meta.nic&&meta.nic!=="—")     h+="<span class='spec'>"+meta.nic+"</span>";
+      if(meta.ml&&meta.ml!=="—")       h+="<span class='spec'>"+meta.ml+"</span>";
+      h+="</div>";
+      h+="<div class='card-footer'>";
+      h+="<div>";
+      if(showPrice&&defP!==undefined) h+="<div class='card-price'>$"+defP.toFixed(2)+"</div>";
+      else h+="<div class='card-price' style='font-size:11px;color:#94a3b8'>Enquire</div>";
+      if(flav>0) h+="<div class='card-flavours'>"+flav+" flavours</div>";
+      h+="</div>";
+      if(showMin&&minP!==undefined) h+="<div class='card-min'>Floor<br>$"+minP.toFixed(2)+"</div>";
+      h+="</div></div></div>";
+    });
+    h+="</div>";
+  });
+
+  h+="<div class='ft'><div class='ftb'>Krazy Wholesale</div><div>Prices valid "+new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"})+" &middot; Subject to change &middot; Not for redistribution</div></div></div>";
+
+  var w=window.open("","_blank","width=920,height=700");
+  if(!w){toast("Pop-up blocked","err");return;}
+  w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Krazy Wholesale Catalog — Cards</title><style>"+css+"</style></head><body>"+h+"</body></html>");
+  w.document.close(); w.focus(); setTimeout(function(){w.print();},600);
+  toast("Card grid catalog opened — Print > Save as PDF","ok");
+}
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -7877,6 +7991,7 @@ if(gdUrl){
     toast("Connected. Auto-load is OFF","warn");
   }
 } else { setSyncDot("","local"); }
+
 
 
 
