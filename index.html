@@ -633,7 +633,8 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
       <button class="btn bpri bsm" id="btn-cat-add-brand">+ Brand</button>
     </div>
   </div>
-  <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">All brands and flavors available in Stock, Buy and Sell. Add new brands or flavors here — they appear across the whole app instantly.</p>
+  <p style="font-size:12px;color:var(--txt3);margin-bottom:8px">All brands and flavors available in Stock, Buy and Sell. Add new brands or flavors here — they appear across the whole app instantly.</p>
+  <div id="cat-inactive-banner" style="display:none;background:rgba(200,124,0,.1);color:#c87c00;font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;margin-bottom:10px"></div>
 
   <!-- Import panel (hidden by default) -->
   <div id="cat-import-panel" style="display:none;background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:14px">
@@ -1091,6 +1092,45 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div class="scard-s">Clears all stock and history from this device. Drive data is NOT affected.</div>
     <button class="btn bdgr" id="btn-reset">Reset Everything</button>
   </div>
+
+
+  <!-- Catalog Image Upload Instructions -->
+  <div class="scard">
+    <div class="scard-t">&#128247; Catalog Images — Setup Guide</div>
+    <div class="scard-s">Follow these steps once to set up product images for the B2B catalog. Images appear in the catalog PDF when you add their Drive URL in the brand settings.</div>
+    
+    <div style="margin-top:12px;background:var(--sur2);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px">Step 1 — Create the images folder in Google Drive</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;background:var(--sur);border:1px solid var(--brd);border-radius:6px;padding:8px 10px;line-height:1.9;color:var(--txt2)">
+        My Drive/<br>
+        &nbsp;&nbsp;KrazyStock_Data/ &nbsp;<span style="color:var(--txt3)">(already exists)</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;catalog_images/ &nbsp;<span style="color:var(--txt3)">(create this folder)</span>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;background:var(--sur2);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px">Step 2 — Upload images with exact filenames</div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:8px">Each image must be named exactly as shown below. Format: JPG or PNG. Recommended size: 400×400px or larger, square crop.</div>
+      <div id="catalog-img-list" style="font-family:'DM Mono',monospace;font-size:11px;line-height:2;max-height:300px;overflow-y:auto;background:var(--sur);border:1px solid var(--brd);border-radius:6px;padding:8px 10px"></div>
+    </div>
+
+    <div style="margin-top:10px;background:var(--sur2);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px">Step 3 — Get the direct image URL</div>
+      <div style="font-size:11px;color:var(--txt3);line-height:1.7">
+        1. Right-click the image in Drive → <b>Share</b> → set to <b>Anyone with the link</b><br>
+        2. Copy the link — it looks like:<br>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--acc)">https://drive.google.com/file/d/<b>FILE_ID</b>/view</span><br>
+        3. Convert to direct URL by replacing the end:<br>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--acc)">https://drive.google.com/uc?id=<b>FILE_ID</b></span><br>
+        4. Paste this URL into the brand's Image URL field (coming soon in Catalog tab)
+      </div>
+    </div>
+
+    <div style="margin-top:10px;background:var(--sur2);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px">Step 4 — Test it</div>
+      <div style="font-size:11px;color:var(--txt3);line-height:1.7">Go to <b>Export tab → Generate B2B Catalog</b>. If the image URL is correct and publicly shared, the brand photo will appear in the catalog PDF.</div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1135,6 +1175,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
+
 var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
 var BRANDS = Object.keys(CATALOG);
 
@@ -1142,7 +1186,13 @@ var CATEGORIES = { "Vape": Object.keys(CATALOG).slice() };
 var CATEGORY_NAMES = Object.keys(CATEGORIES);
 
 // Helper: get brands for a category
-function brandsForCat(cat) { return cat === "all" ? BRANDS : (CATEGORIES[cat] || []); }
+function brandsForCat(cat) {
+  var all = cat === "all" ? BRANDS : (CATEGORIES[cat] || []);
+  return all.filter(function(br){ return !inactiveBrands[br]; });
+}
+function brandsForCatAll(cat) { // includes inactive — used by Catalog tab and Excel export
+  return cat === "all" ? BRANDS : (CATEGORIES[cat] || []);
+}
 // Helper: get category of a brand
 function catOfBrand(br) {
   var found = "Vape";
@@ -1186,7 +1236,8 @@ var stockSearch = "";
 var editingOriginalItems = {}; // snapshot of original estimate qtys — NEVER changes during edit
 var editingOpenedStock    = {}; // snapshot of stock AFTER restore at edit-open — NEVER changes during edit
 var editingAdjustments    = {}; // {key: adjustment_qty} — the delta user sets per item
-var deletedEstimateIds    = {}; // {id: timestamp} — tombstones for deleted estimates // stock snapshot when edit opens
+var deletedEstimateIds    = {}; // {id: timestamp} — tombstones for deleted estimates
+var inactiveBrands        = {}; // {brandName: true} — hidden from all display but NOT from export/backup // stock snapshot when edit opens
 var gdPollTimer = null;
 var gdPushTimer = null;
 var gdLastTs = 0;
@@ -1412,6 +1463,7 @@ function saveMasterToDrive() {
       estimates: estimates,
       nextEstimateNum: nextEstimateNum,
       deletedEstimateIds: deletedEstimateIds,
+      inactiveBrands: inactiveBrands,
       payments: payments,
       brandMeta: brandMeta,
       minPrices: minPrices,
@@ -1456,6 +1508,7 @@ function gdSave(onDone) {
       payments:payments,brandMeta:brandMeta,minPrices:minPrices,
       orders:orders,nextOrderNum:nextOrderNum,
       deletedEstimateIds:deletedEstimateIds,
+      inactiveBrands:inactiveBrands,
       distributors:distributors,distributorPrices:distributorPrices,
       ts:saveTs,label:"Backup "+backupTs
     });
@@ -3436,7 +3489,10 @@ var catSearchQ = "";
 var catActiveCategory = "Vape";
 
 function renderCatalogPage() {
-  var brsInCat = brandsForCat(catActiveCategory);
+  var brsInCat = brandsForCatAll(catActiveCategory); // Catalog always shows all
+  var inactCount = Object.keys(inactiveBrands).length;
+  var inactBanner = document.getElementById("cat-inactive-banner");
+  if(inactBanner) { inactBanner.style.display=inactCount>0?"block":"none"; inactBanner.textContent=inactCount+" brand(s) deactivated — hidden from app but visible here for management."; }
   // Always reset active brand to first brand in the current category
   // (prevents showing flavors from a brand in a different category)
   if(!catActiveBrand || brsInCat.indexOf(catActiveBrand) === -1) {
@@ -3483,11 +3539,14 @@ function renderCatBrandScroll() {
   var wrap = document.getElementById("cat-brand-scroll");
   if (!wrap) return;
   wrap.innerHTML = "";
-  var brs = brandsForCat(catActiveCategory);
+  var brs = brandsForCatAll(catActiveCategory); // Catalog shows ALL including inactive
   brs.forEach(function(br) {
     var d = document.createElement("div");
+    var isInact = !!inactiveBrands[br];
     d.className = "chip" + (br === catActiveBrand ? " on" : "");
-    d.textContent = br;
+    d.textContent = br + (isInact ? " ●" : "");
+    d.style.opacity = isInact ? "0.5" : "1";
+    d.title = isInact ? br + " (inactive — hidden from app)" : br;
     d.addEventListener("click", function() { catActiveBrand = br; renderCatBrandScroll(); renderCatFlavorList(); });
     wrap.appendChild(d);
   });
@@ -3516,6 +3575,46 @@ function renderCatFlavorList() {
   block.className = "cat-brand-block";
 
   // Header
+
+  // ── BRAND MANAGEMENT: Image URL + Deactivate/Reactivate ──
+  var brandMgmt=document.createElement("div");
+  brandMgmt.style.cssText="background:var(--sur2);border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px";
+  // Image URL row
+  var imgRow=document.createElement("div"); imgRow.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap";
+  var imgLbl=document.createElement("span"); imgLbl.style.cssText="font-size:11px;color:var(--txt3);white-space:nowrap;min-width:72px"; imgLbl.textContent="Image URL:";
+  var imgInp=document.createElement("input"); imgInp.type="text"; imgInp.className="ifield"; imgInp.style.cssText="flex:1;margin:0;font-size:11px;min-width:0";
+  imgInp.placeholder="https://drive.google.com/uc?id=FILE_ID (paste Google Drive direct link)";
+  imgInp.value=(brandMeta[catActiveBrand]&&brandMeta[catActiveBrand].img)||"";
+  (function(br){imgInp.addEventListener("change",function(){
+    if(!brandMeta[br])brandMeta[br]={};
+    brandMeta[br].img=this.value.trim();
+    savePricing(); toast("Image URL saved for "+br,"ok");
+  });})(catActiveBrand);
+  var prevBtn=document.createElement("button"); prevBtn.className="btn bsec bsm"; prevBtn.textContent="👁 Test";
+  (function(br){prevBtn.addEventListener("click",function(){
+    var url=(brandMeta[br]&&brandMeta[br].img)||"";
+    if(!url){toast("No image URL set yet","err");return;}
+    window.open(url,"_blank");
+  });})(catActiveBrand);
+  imgRow.appendChild(imgLbl); imgRow.appendChild(imgInp); imgRow.appendChild(prevBtn);
+  // Deactivate row
+  var deactRow=document.createElement("div"); deactRow.style.cssText="display:flex;align-items:center;gap:8px";
+  var isInactNow=!!inactiveBrands[catActiveBrand];
+  var deactBtn=document.createElement("button");
+  deactBtn.className=isInactNow?"btn bsuc bsm":"btn bdgr bsm";
+  deactBtn.textContent=isInactNow?"✓ Reactivate Brand":"✕ Deactivate Brand";
+  (function(br){deactBtn.addEventListener("click",function(){
+    if(inactiveBrands[br]){delete inactiveBrands[br];toast(br+" reactivated ✓","ok");}
+    else{inactiveBrands[br]=true;toast(br+" deactivated — hidden from app","warn");}
+    savePricing(); renderCatBrandScroll(); renderCatFlavorList();
+  });})(catActiveBrand);
+  var deactInfo=document.createElement("span"); deactInfo.style.cssText="font-size:11px;font-weight:700;";
+  if(isInactNow){deactInfo.style.color="#c87c00";deactInfo.textContent="⚠ INACTIVE — hidden from Stock, Buy, Sell, Orders, Generate List, B2B Catalog. Still in Excel export & backups.";}
+  else{deactInfo.style.color="var(--txt3)";deactInfo.textContent="Active — visible everywhere.";}
+  deactRow.appendChild(deactBtn); deactRow.appendChild(deactInfo);
+  brandMgmt.appendChild(imgRow); brandMgmt.appendChild(deactRow);
+  container.appendChild(brandMgmt);
+
   var header = document.createElement("div");
   header.className = "cat-brand-header";
   var nameWrap = document.createElement("div");
@@ -3794,6 +3893,7 @@ function savePricing() {
     localStorage.setItem("vs5_orders",    JSON.stringify(orders));
     localStorage.setItem("vs5_ordernum",  String(nextOrderNum));
     localStorage.setItem("vs5_delestids", JSON.stringify(deletedEstimateIds));
+    localStorage.setItem("vs5_inactive",  JSON.stringify(inactiveBrands));
   } catch(e) {}
   saveMasterToDrive(); // Auto-save master on pricing/customer change
 }
@@ -3812,6 +3912,7 @@ function loadPricing() {
     var or2 = localStorage.getItem("vs5_orders");    if(or2) try{orders=JSON.parse(or2);}catch(x){}
     var on2 = localStorage.getItem("vs5_ordernum");  if(on2) nextOrderNum=parseInt(on2)||1;
     var de2 = localStorage.getItem("vs5_delestids"); if(de2) try{deletedEstimateIds=JSON.parse(de2);}catch(x){}
+    var ib2 = localStorage.getItem("vs5_inactive");   if(ib2) try{inactiveBrands=JSON.parse(ib2);}catch(x){}
     // Apply tombstones to locally loaded estimates
     if(Object.keys(deletedEstimateIds).length) estimates=estimates.filter(function(e){return !deletedEstimateIds[e.id];});
   } catch(e) {}
@@ -6489,7 +6590,7 @@ function populateCatalogFilters() {
 function populateCatalogBrandFilter(cat) {
   var sel=document.getElementById("cat-brand-filter-sel"); if(!sel)return;
   sel.innerHTML='<option value="">All Brands</option>';
-  var brands = cat ? (CATEGORIES[cat]||[]) : BRANDS;
+  var brands = (cat ? (CATEGORIES[cat]||[]) : BRANDS).filter(function(br){return !inactiveBrands[br];});
   brands.forEach(function(br){
     var o=document.createElement("option");o.value=br;o.textContent=br;sel.appendChild(o);
   });
@@ -6505,7 +6606,7 @@ function generateCatalog() {
   var css = "*{box-sizing:border-box;margin:0;padding:0}:root{--cols:"+cols+"}body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff}@page{margin:14mm 12mm;size:A4}.page{max-width:190mm;margin:0 auto;padding:8mm 0}.hdr{background:#0f172a;padding:20px 24px 16px;margin-bottom:0}.logo{font-size:20px;font-weight:700;color:#fff}.logo span{color:#60a5fa}.hdr-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.pill{font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}.clbl{font-size:9px;text-transform:uppercase;letter-spacing:3px;color:#94a3b8;font-weight:700;padding:12px 0 6px;border-bottom:1px solid #e2e8f0}.chr{display:grid;grid-template-columns:var(--cols);padding:6px 0;background:#f8fafc;border-bottom:1px solid #e2e8f0}.ch{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;font-weight:600;padding:0 8px}.br{display:grid;grid-template-columns:var(--cols);border-bottom:1px solid #f1f5f9;page-break-inside:avoid}.ic{padding:12px 12px 12px 0;display:flex;align-items:center}.th{width:90px;height:90px;border-radius:8px;object-fit:cover;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;text-align:center;overflow:hidden;flex-shrink:0}.th img{width:100%;height:100%;object-fit:cover;border-radius:8px}.ifc{padding:12px 14px 12px 0;display:flex;flex-direction:column;justify-content:center}.bn{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:4px}.bd{font-size:11px;color:#64748b;line-height:1.6;margin-bottom:7px}.sr{display:flex;gap:5px;flex-wrap:wrap}.st{font-size:9px;padding:3px 6px;background:#f1f5f9;color:#64748b;border-radius:3px;font-family:monospace}.pc{padding:12px 10px;display:flex;flex-direction:column;justify-content:center;text-align:right}.pv{font-size:20px;font-weight:700;color:#0f172a;font-family:monospace}.ps{font-size:10px;color:#94a3b8;margin-top:3px}.mc{padding:12px 10px;display:flex;flex-direction:column;justify-content:center;text-align:right}.mv{font-size:16px;color:#64748b;font-family:monospace}.ms{font-size:10px;color:#94a3b8;margin-top:3px}.ft{margin-top:20px;padding-top:12px;border-top:2px solid #0f172a;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#94a3b8}.ftb{font-size:13px;font-weight:700;color:#0f172a}";
   var h="<div class='page'><div class='hdr'><div class='logo'>Krazy<span>Stock</span> Wholesale</div><div class='hdr-sub'>B2B Product Catalog &middot; "+new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"})+" &middot; Confidential &middot; Wholesale Only</div><div class='pills'><span class='pill'>MOQ 10 units/brand</span><span class='pill'>All prices USD</span><span class='pill'>Subject to availability</span>"+(showMin?"":"<span class='pill'>Pricing on request</span>")+"</div></div>";
   catsToPrint.forEach(function(cat){
-    var brands=filterBrand?[filterBrand]:(CATEGORIES[cat]||[]);
+    var brands=filterBrand?[filterBrand]:(CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
     if(!brands.length)return;
     h+="<div class='clbl'>"+cat+"</div><div class='chr'><div class='ch'></div><div class='ch'>Brand &amp; Description</div>";
     if(showPrice)h+="<div class='ch' style='text-align:right'>Wholesale</div>";
@@ -7559,6 +7660,37 @@ function renderEstimateEditTable(){
   summary.appendChild(leftTxt); summary.appendChild(rightTxt);
   el.appendChild(summary);
 }
+
+// ── Populate catalog image filename list in Sync tab ──
+(function(){
+  var el=document.getElementById("catalog-img-list"); if(!el)return;
+  var categories={
+    "Vape":["Geek Bar 15K","Geek Bar 25K","Lava Plus","Crown Bar","Foggers","Tyson 2.0","Bloody Mary","Tyson Legend 30K","RIPS Vape","Raz 25K","Lava Monster","Lava Big Boy","Crown Bar 60K","Lost Mary 30K","RIPS 25K 5%","RIPS 2800 0%","RIPS 2800 5%","OxBar Mini","OxBar 30K","OxBar 35K","OxBar 50K","OxBar 75K","Foger Pod 30K","Foger Kit 30K"],
+    "CBD":["Sivan"],
+    "7-Hydroxy":["Double OH","Kama 500","Kama 1000","Opia 80 MG","Opia 120 MG","Opia 240 MG","Dopium","Kama 2000","Limitless 500","Limitless 1000"],
+    "Cats Claw":["Black"],
+    "Mushroom Chocolate":["Road Trip","Magic Trip","Micro Dot","Polka Dot","Zour Dream","Silly Farms"],
+    "Mushroom Gummies":["Road Trip- Gummies","Magic Trip- Gummies","Bitez","Zour Dream Gummies","Bitez Gummies"],
+    "E-Liquid":["Redz","Cloudz"],
+    "Blue Lotus":["Psyched Gummies","Psyched prerolls bottle","Psyched Preroll box"],
+    "Squishy Toys":["5 CM Dumplings","8.5 CM Dumplings"]
+  };
+  function toFile(br){return br.toLowerCase().replace(/[^a-z0-9\s]/g,"").replace(/\s+/g,"_").trim()+".jpg";}
+  var html2="";
+  Object.keys(categories).forEach(function(cat){
+    html2+="<div style='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--acc);margin:8px 0 2px'>"+cat+"</div>";
+    categories[cat].forEach(function(br){
+      var fn=toFile(br);
+      var hasImg=brandMeta[br]&&brandMeta[br].img;
+      html2+="<div style='display:flex;align-items:center;gap:8px;padding:1px 0'>"
+        +"<span style='color:"+(hasImg?"#00a870":"var(--txt3)")+"'>"+(hasImg?"✓":"○")+"</span>"
+        +"<span style='color:var(--txt);min-width:160px'>"+br+"</span>"
+        +"<span style='color:var(--txt3)'>→ catalog_images/"+fn+"</span>"
+        +"</div>";
+    });
+  });
+  el.innerHTML=html2;
+})();
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -7579,6 +7711,10 @@ if(gdUrl){
     toast("Connected. Auto-load is OFF","warn");
   }
 } else { setSyncDot("","local"); }
+
+
+
+
 
 
 
