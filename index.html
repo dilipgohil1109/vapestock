@@ -6604,60 +6604,64 @@ function generateCatalog() {
   var showPrice   = (document.getElementById("cat-show-price")||{}).checked!==false;
   var catsToPrint = filterCat ? [filterCat] : CATEGORY_NAMES.slice();
 
-  // ── Collect all unique image URLs to preload as base64 ──
+  // ── Collect all unique image URLs ──
   var imageUrls = {};
   catsToPrint.forEach(function(cat){
-    var brands2 = filterBrand ? [filterBrand] : (CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
-    brands2.forEach(function(br){
-      var meta2 = brandMeta[br]||{};
-      if(meta2.img) imageUrls[br] = meta2.img;
+    var brs = filterBrand ? [filterBrand] : (CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
+    brs.forEach(function(br){
+      var m = brandMeta[br]||{};
+      if(m.img && m.img.trim()) imageUrls[br] = m.img.trim();
     });
   });
 
-  var brandList = Object.keys(imageUrls);
-  if(!brandList.length){
-    // No images to preload — generate immediately
+  var brandKeys = Object.keys(imageUrls);
+  if(!brandKeys.length){
     _doGenerateCatalog(filterCat, filterBrand, showMin, showPrice, catsToPrint, {});
     return;
   }
 
-  // Preload each image via canvas → base64
-  toast("Loading images for catalog...","ok");
+  toast("Loading "+brandKeys.length+" image(s)...","ok");
   var base64Map = {};
-  var pending = brandList.length;
+  var pending = brandKeys.length;
 
-  function onImageDone(){
-    pending--;
-    if(pending <= 0){
-      _doGenerateCatalog(filterCat, filterBrand, showMin, showPrice, catsToPrint, base64Map);
-    }
+  function done(){ pending--; if(pending<=0) _doGenerateCatalog(filterCat,filterBrand,showMin,showPrice,catsToPrint,base64Map); }
+
+  function getDriveImgUrl(url) {
+    // Convert drive.google.com/uc?id=FILE_ID to thumbnail URL (CORS-friendly)
+    var idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if(idMatch) return "https://drive.google.com/thumbnail?id="+idMatch[1]+"&sz=w400";
+    // Also handle /file/d/FILE_ID/view format
+    var fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)\//);
+    if(fileMatch) return "https://drive.google.com/thumbnail?id="+fileMatch[1]+"&sz=w400";
+    return url; // non-Drive URL — use as-is
   }
 
-  brandList.forEach(function(br){
-    var url = imageUrls[br];
-    var img2 = new Image();
-    img2.crossOrigin = "anonymous";
-    img2.onload = function(){
-      try {
-        var canvas = document.createElement("canvas");
-        canvas.width = img2.naturalWidth || 200;
-        canvas.height = img2.naturalHeight || 200;
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img2, 0, 0);
-        base64Map[br] = canvas.toDataURL("image/jpeg", 0.85);
-      } catch(ex) {
-        // CORS blocked canvas — use URL directly as fallback
+  brandKeys.forEach(function(br){
+    var rawUrl = imageUrls[br];
+    var url = getDriveImgUrl(rawUrl); // convert to thumbnail format
+    // Use fetch+blob — avoids canvas CORS taint entirely
+    fetch(url)
+      .then(function(resp){
+        if(!resp.ok) throw new Error("HTTP "+resp.status);
+        return resp.blob();
+      })
+      .then(function(blob){
+        return new Promise(function(resolve,reject){
+          var reader = new FileReader();
+          reader.onload  = function(){ resolve(reader.result); };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      })
+      .then(function(dataUrl){
+        base64Map[br] = dataUrl;
+        done();
+      })
+      .catch(function(){
+        // Fetch failed (CORS/network) — embed as direct URL, accept risk
         base64Map[br] = url;
-      }
-      onImageDone();
-    };
-    img2.onerror = function(){
-      // Image failed — use URL directly as fallback
-      base64Map[br] = url;
-      onImageDone();
-    };
-    // Add cache-bust to help with CORS
-    img2.src = url + (url.indexOf('?') > -1 ? '&' : '?') + '_cb=' + Date.now();
+        done();
+      });
   });
 }
 
