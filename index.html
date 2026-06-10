@@ -891,6 +891,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div class="fc on" data-at="brand">By Brand</div>
     <div class="fc" data-at="distributor">By Distributor</div>
     <div class="fc" data-at="margin">Customer Margin</div>
+    <div class="fc" data-at="buysell">Buy vs Sell</div>
   </div>
   <div id="analysis-content"></div>
 </div>
@@ -1156,8 +1157,42 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div id="cmodal-body" style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:18px;white-space:pre-line"></div>
     <div id="cmodal-btns" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"></div>
   </div>
+
 </div>
+
+<!-- Distributor Add/Edit Modal -->
+<div class="modal-overlay" id="dist-modal">
+  <div class="modal-sheet" style="position:relative;padding-bottom:28px">
+    <div class="modal-close" id="dist-modal-close">&#10005;</div>
+    <div class="modal-title" id="dist-modal-title">Add Distributor</div>
+    <div class="modal-sub">Fill in the distributor details</div>
+    <input type="hidden" id="dist-edit-id">
+    <div class="igrp"><div class="ilbl">Company Name *</div><input class="ifield" id="dist-name-inp" placeholder="e.g. ABC Wholesale Ltd"></div>
+    <div class="igrp"><div class="ilbl">Contact Person</div><input class="ifield" id="dist-contact-inp" placeholder="e.g. John Smith"></div>
+    <div class="igrp"><div class="ilbl">Phone</div><input class="ifield" id="dist-phone-inp" type="tel" placeholder="e.g. +1 555 000 0000"></div>
+    <div class="igrp"><div class="ilbl">Address Line 1</div><input class="ifield" id="dist-addr1-inp" placeholder="Street address"></div>
+    <div class="igrp"><div class="ilbl">Address Line 2</div><input class="ifield" id="dist-addr2-inp" placeholder="Suite / Unit (optional)"></div>
+    <div style="display:grid;grid-template-columns:1fr 80px 90px;gap:8px;margin-bottom:14px">
+      <div><div class="ilbl">City</div><input class="ifield" id="dist-city-inp" placeholder="City" style="margin:0"></div>
+      <div><div class="ilbl">State</div><select class="ifield" id="dist-state-inp" style="margin:0"><option value="">-</option><option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option></select></div>
+      <div><div class="ilbl">ZIP</div><input class="ifield" id="dist-zip-inp" placeholder="ZIP" style="margin:0"></div>
+    </div>
+    <div class="igrp"><div class="ilbl">Notes</div><textarea class="ota" id="dist-notes-inp" rows="2" placeholder="Terms, payment info, etc."></textarea></div>
+    <button class="btn bpri" id="dist-save-btn">Save Distributor</button>
+  </div>
+</div>
+
 <script>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3694,7 +3729,7 @@ function renderCatFlavorList() {
   (function(br){deactBtn.addEventListener("click",function(){
     if(inactiveBrands[br]){delete inactiveBrands[br];toast(br+" reactivated ✓","ok");}
     else{inactiveBrands[br]=true;toast(br+" deactivated — hidden from app","warn");}
-    savePricing(); renderCatBrandScroll(); renderCatFlavorList();
+    savePricing(); populateCatalogFilters(); renderCatBrandScroll(); renderCatFlavorList();
   });})(catActiveBrand);
   var deactInfo=document.createElement("span"); deactInfo.style.cssText="font-size:11px;font-weight:700;";
   if(isInactNow){deactInfo.style.color="#c87c00";deactInfo.textContent="⚠ INACTIVE — hidden from Stock, Buy, Sell, Orders, Generate List, B2B Catalog. Still in Excel export & backups.";}
@@ -4266,7 +4301,11 @@ function renderPricingTable() {
           var v = parseFloat(this.value);
           if (!isNaN(v) && v >= 0) customerPrices[custKey(custId,brand)] = v;
           else delete customerPrices[custKey(custId,brand)];
-          savePricing(); gdPricingPush();
+          savePricing();
+          // Show unsaved indicator
+          var sb=document.getElementById("cust-price-save-btn");
+          if(sb){sb.style.background="var(--amb)";sb.textContent="⚠ Save Prices";}
+ gdPricingPush();
           renderPricingTable();
         }); })(activePricingCust, br);
         cpTd.appendChild(cpInp); tr.appendChild(cpTd);
@@ -4681,71 +4720,37 @@ function getDistPrice(distId, brand) {
 
 // ── DISTRIBUTOR MODAL ──
 function openDistModal(id) {
-  var m = document.getElementById("dist-modal"); if(!m) return;
+  var m = document.getElementById("dist-modal");
+  if(!m){ toast("Distributor form not found","err"); return; }
+  m.style.zIndex = "9000"; // ensure above everything
   m.classList.add("open");
   var title = document.getElementById("dist-modal-title");
   var editId = document.getElementById("dist-edit-id");
+  var fields = ["name","contact","phone","addr1","addr2","city","zip","notes"];
   if(id) {
     var dist = distributors.find(function(d){ return d.id===id; });
     if(!dist) return;
     if(title) title.textContent = "Edit Distributor";
     if(editId) editId.value = id;
-    var fields = ["name","contact","phone","addr1","addr2","city","state","zip","notes"];
     fields.forEach(function(f){
       var el=document.getElementById("dist-"+f+"-inp"); if(el) el.value=dist[f]||"";
     });
+    var sel=document.getElementById("dist-state-inp"); if(sel) sel.value=dist.state||"";
   } else {
     if(title) title.textContent = "Add Distributor";
     if(editId) editId.value = "";
-    ["name","contact","phone","addr1","addr2","city","state","zip","notes"].forEach(function(f){
+    fields.forEach(function(f){
       var el=document.getElementById("dist-"+f+"-inp"); if(el) el.value="";
     });
-    var inp=document.getElementById("dist-name-inp"); if(inp) inp.focus();
+    var sel2=document.getElementById("dist-state-inp"); if(sel2) sel2.value="";
+    setTimeout(function(){var inp=document.getElementById("dist-name-inp");if(inp)inp.focus();},150);
   }
 }
 // closeDistModal handled by listener
 
-// ── DISTRIBUTOR MODAL LISTENERS ──
-(function(){var el=document.getElementById("dist-modal-close");if(!el)return;el.addEventListener("click",function(){var m=document.getElementById("dist-modal");if(m)m.classList.remove("open");});})();
-(function(){var el=document.getElementById("btn-dist-cancel");if(!el)return;el.addEventListener("click",function(){var m=document.getElementById("dist-modal");if(m)m.classList.remove("open");});})();
-(function(){var el=document.getElementById("dist-modal");if(!el)return;el.addEventListener("click",function(e){if(e.target===el){el.classList.remove("open");}});})();
+
 (function(){var el=document.getElementById("btn-add-distributor");if(!el)return;el.addEventListener("click",function(){
-  var m=document.getElementById("dist-modal"); if(!m) return;
-  document.getElementById("dist-modal-title").textContent="Add Distributor";
-  document.getElementById("dist-edit-id").value="";
-  ["name","contact","phone","addr1","addr2","city","zip","notes"].forEach(function(f){
-    var el2=document.getElementById("dist-"+f+"-inp"); if(el2) el2.value="";
-  });
-  var sel=document.getElementById("dist-state-inp"); if(sel) sel.value="";
-  m.classList.add("open");
-  setTimeout(function(){var inp=document.getElementById("dist-name-inp");if(inp)inp.focus();},100);
-});})();
-(function(){var el=document.getElementById("btn-dist-save");if(!el)return;el.addEventListener("click",function(){
-  var nameEl=document.getElementById("dist-name-inp");
-  var name=nameEl?nameEl.value.trim():"";
-  if(!name){toast("Enter company name","err");return;}
-  var id=document.getElementById("dist-edit-id").value.trim();
-  function gf(f){var x=document.getElementById("dist-"+f+"-inp");return x?x.value.trim():"";}
-  var sel=document.getElementById("dist-state-inp");
-  var _distNow=Date.now();
-  var data={
-    id:id||("d"+_distNow), name:name,
-    contact:gf("contact"), phone:gf("phone"),
-    addr1:gf("addr1"), addr2:gf("addr2"),
-    city:gf("city"), state:sel?sel.value:"", zip:gf("zip"), notes:gf("notes"),
-    createdAt:id?(distributors.find(function(x){return x.id===id;})||{}).createdAt||_distNow:_distNow,
-    updatedAt:_distNow
-  };
-  if(id){
-    var idx=distributors.findIndex(function(x){return x.id===id;});
-    if(idx>-1) distributors[idx]=data; else distributors.push(data);
-  } else {
-    distributors.push(data);
-  }
-  savePricing();
-  var m=document.getElementById("dist-modal"); if(m) m.classList.remove("open");
-  renderDistributors();
-  toast((id?"Distributor updated":"Distributor added")+"!","ok");
+  openDistModal(null);
 });})();
 
 (function(){
@@ -4846,6 +4851,9 @@ function renderDistPricingPanel(distId) {
         if(!isNaN(v)&&v>=0) distributorPrices[distKey(dId,brand)]=v;
         else delete distributorPrices[distKey(dId,brand)];
         savePricing();
+        // Show unsaved indicator
+        var sb2=document.getElementById("dist-price-save-btn-"+dId);
+        if(sb2){sb2.style.background="var(--amb)";sb2.textContent="⚠ Save Prices";}
       });})(distId,br);
       row.appendChild(brLabel); row.appendChild(inp);
       panel.appendChild(row);
@@ -4859,6 +4867,7 @@ function renderAnalysisPage() {
   if(activeAnalysisTab==="brand") renderAnalysisByBrand(content);
   else if(activeAnalysisTab==="distributor") renderAnalysisByDistributor(content);
   else if(activeAnalysisTab==="margin") renderAnalysisMargin(content);
+  else if(activeAnalysisTab==="buysell") renderBuySellAnalysis(content);
 }
 
 function renderAnalysisByBrand(container) {
@@ -6780,7 +6789,10 @@ function _doGenerateCatalog(filterCat, filterBrand, showMin, showPrice, catsToPr
   var monthYear = new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"});
   var h="<div class='page'><div class='hdr'><div class='hdr-title'>Krazy Wholesale</div><div class='hdr-sub'>Product Catalog &middot; "+monthYear+"</div><div class='hdr-note'>Subject to availability &middot; Wholesale only &middot; Confidential</div></div>";
   catsToPrint.forEach(function(cat){
-    var brands=filterBrand?[filterBrand]:(CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
+    var brands=filterBrand?(inactiveBrands[filterBrand]?[]:([filterBrand])):(CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
+    if(!brands.length)return;
+    // Hard guard: skip entire category if no active brands
+    brands = brands.filter(function(br){ return !inactiveBrands[br]; });
     if(!brands.length)return;
     h+="<div class='clbl'>"+cat+"</div><div class='chr'><div class='ch'></div><div class='ch'>Brand &amp; Description</div>";
     h+="<div class='ch' style='text-align:right'>"+(showPrice?"Wholesale":"On Request")+"</div>";
@@ -7901,12 +7913,16 @@ function cleanBrandMetaForSync() {
   if(defLbl){defLbl.style.borderColor='var(--acc)';defLbl.style.background='rgba(91,79,232,.08)';}
 })();
 
+
 function _doGenerateCatalogCardGrid(filterCat, filterBrand, showMin, showPrice, catsToPrint, base64Map) {
   var css = "*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff}@page{margin:14mm 12mm;size:A4}.page{max-width:190mm;margin:0 auto;padding:6mm 0}.hdr{padding:0 0 14px 0;margin-bottom:12px;border-bottom:3px solid #000}.hdr-title{font-size:28px;font-weight:900;color:#000;letter-spacing:-0.5px;line-height:1.1}.hdr-sub{font-size:16px;font-weight:500;color:#000;margin-top:4px}.hdr-note{font-size:13px;color:#000;margin-top:4px}.clbl{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:#555;font-weight:700;padding:14px 0 8px;border-bottom:2px solid #000;margin-top:4px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px;margin-bottom:16px}.card{border:1.5px solid #ddd;border-radius:10px;overflow:hidden;page-break-inside:avoid;break-inside:avoid}.card-img{width:100%;height:110px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#aaa;letter-spacing:1px;overflow:hidden}.card-img img{width:100%;height:110px;object-fit:cover;display:block}.card-body{padding:10px 11px 11px}.card-name{font-size:13px;font-weight:800;color:#000;margin-bottom:3px;line-height:1.2}.card-desc{font-size:10px;color:#444;line-height:1.5;margin-bottom:7px;min-height:30px}.card-specs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:9px}.spec{font-size:9px;padding:3px 6px;background:#f0f0f0;color:#333;border-radius:3px;font-family:monospace}.card-footer{display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #eee;padding-top:9px}.card-price{font-size:18px;font-weight:900;color:#000;font-family:monospace;line-height:1}.card-price-label{font-size:10px;color:#666;margin-top:2px}.card-min{text-align:right}.card-min-val{font-size:13px;font-weight:700;color:#333;font-family:monospace}.card-flavours{font-size:10px;color:#888;margin-top:3px}.card-min-lbl{font-size:10px;color:#666}.ft{margin-top:14px;padding-top:10px;border-top:2px solid #000;display:flex;justify-content:space-between;font-size:11px;color:#555}.ftb{font-size:13px;font-weight:700;color:#000}";
   var monthYear = new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"});
   var h="<div class='page'><div class='hdr'><div class='hdr-title'>Krazy Wholesale</div><div class='hdr-sub'>Product Catalog &middot; "+monthYear+"</div><div class='hdr-note'>Subject to availability &middot; Wholesale only &middot; Confidential</div></div>";
   catsToPrint.forEach(function(cat){
-    var brands=filterBrand?[filterBrand]:(CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
+    var brands=filterBrand?(inactiveBrands[filterBrand]?[]:([filterBrand])):(CATEGORIES[cat]||[]).filter(function(br){return !inactiveBrands[br];});
+    if(!brands.length)return;
+    // Hard guard: skip inactive brands
+    brands = brands.filter(function(br){ return !inactiveBrands[br]; });
     if(!brands.length)return;
     h+="<div class='clbl'>"+cat+"</div><div class='grid'>";
     brands.forEach(function(br){
@@ -7951,6 +7967,160 @@ function _doGenerateCatalogCardGrid(filterCat, filterBrand, showMin, showPrice, 
   w.document.close();w.focus();setTimeout(function(){w.print();},600);
   toast("Card grid catalog opened — Print > Save as PDF","ok");
 }
+
+function renderBuySellAnalysis(container) {
+  var now=Date.now();
+  var ranges=[
+    {label:"This Month", ms:30*24*60*60*1000},
+    {label:"3 Months",   ms:90*24*60*60*1000},
+    {label:"6 Months",   ms:180*24*60*60*1000},
+    {label:"All Time",   ms:0}
+  ];
+  var activeRange=container._bsRange||0;
+  // Date range chips
+  var filterRow=document.createElement("div"); filterRow.style.cssText="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px";
+  ranges.forEach(function(r,idx){
+    var chip=document.createElement("div"); chip.className="fc"+(idx===activeRange?" on":""); chip.textContent=r.label;
+    chip.addEventListener("click",function(){container._bsRange=idx;container.innerHTML="";renderBuySellAnalysis(container);});
+    filterRow.appendChild(chip);
+  });
+  container.appendChild(filterRow);
+  var cutoff=ranges[activeRange].ms?(now-ranges[activeRange].ms):0;
+  // Aggregate txLog
+  var byBrand={};
+  txLog.forEach(function(e){
+    if(!e.brand) return;
+    var br=e.brand;
+    var dateMs=0; try{dateMs=new Date(e.date).getTime();}catch(x){}
+    if(cutoff&&dateMs<cutoff) return;
+    if(!byBrand[br]) byBrand[br]={cat:e.category||catOfBrand(br)||"Other",buyQty:0,buyCost:0,sellQty:0,sellRevenue:0};
+    if(e.type==="purchase"){byBrand[br].buyQty+=(e.qty||0);byBrand[br].buyCost+=(e.total||0);}
+    else if(e.type==="sale"){byBrand[br].sellQty+=(e.qty||0);byBrand[br].sellRevenue+=(e.total||0);}
+  });
+  // Compute metrics per brand
+  Object.keys(byBrand).forEach(function(br){
+    var b=byBrand[br];
+    b.avgBuyPrice=b.buyQty>0?b.buyCost/b.buyQty:0;
+    b.sellCost=b.avgBuyPrice*b.sellQty;
+    b.grossProfit=b.sellRevenue-b.sellCost;
+    b.margin=b.sellRevenue>0?(b.grossProfit/b.sellRevenue)*100:null;
+    b.stockQty=(function(){var t=0;(CATALOG[br]||[]).forEach(function(fl){t+=stock[skey(br,fl)]||0;});return t;})();
+  });
+  var brands=Object.keys(byBrand);
+  if(!brands.length){
+    container.innerHTML+="<div class='empty'><div class='ei'>📊</div><div class='et'>No transactions in this period.<br>Buy and sell stock to see analysis here.</div></div>";
+    return;
+  }
+  // Summary totals
+  var tBuyCost=0,tSellRev=0,tBuyQty=0,tSellQty=0;
+  brands.forEach(function(br){tBuyCost+=byBrand[br].buyCost;tSellRev+=byBrand[br].sellRevenue;tBuyQty+=byBrand[br].buyQty;tSellQty+=byBrand[br].sellQty;});
+  var avgBuyAll=tBuyQty>0?tBuyCost/tBuyQty:0;
+  var tCOGS=avgBuyAll*tSellQty;
+  var tProfit=tSellRev-tCOGS;
+  var tMargin=tSellRev>0?(tProfit/tSellRev)*100:null;
+  var summary=document.createElement("div"); summary.style.cssText="background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center";
+  [{l:"Bought",v:"$"+tBuyCost.toFixed(2),s:tBuyQty+" units",c:"var(--txt)"},
+   {l:"Sold",  v:"$"+tSellRev.toFixed(2), s:tSellQty+" units",c:"var(--grn)"},
+   {l:"Profit",v:"$"+tProfit.toFixed(2),  s:"gross est.",     c:tProfit>=0?"var(--grn)":"var(--red)"},
+   {l:"Margin",v:tMargin!==null?tMargin.toFixed(1)+"%":"—",  s:"on sold",       c:tMargin===null?"var(--txt3)":tMargin>=20?"var(--grn)":tMargin>=0?"var(--amb)":"var(--red)"}
+  ].forEach(function(item){
+    var cell=document.createElement("div");
+    var vEl=document.createElement("div"); vEl.style.cssText="font-size:17px;font-weight:800;font-family:'DM Mono',monospace;color:"+item.c; vEl.textContent=item.v;
+    var lEl=document.createElement("div"); lEl.style.cssText="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-top:2px"; lEl.textContent=item.l;
+    var sEl=document.createElement("div"); sEl.style.cssText="font-size:10px;color:var(--txt3)"; sEl.textContent=item.s;
+    cell.appendChild(vEl); cell.appendChild(lEl); cell.appendChild(sEl); summary.appendChild(cell);
+  });
+  container.appendChild(summary);
+  // Group by category
+  var byCat={};
+  brands.forEach(function(br){var cat=byBrand[br].cat||"Other";if(!byCat[cat])byCat[cat]=[];byCat[cat].push(br);});
+  // Sort brands in each cat by gross profit desc
+  Object.keys(byCat).forEach(function(cat){
+    byCat[cat].sort(function(a,b){return byBrand[b].grossProfit-byBrand[a].grossProfit;});
+  });
+  Object.keys(byCat).forEach(function(cat){
+    var catLbl=document.createElement("div"); catLbl.style.cssText="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--txt3);padding:10px 0 6px;border-bottom:2px solid var(--brd);margin-bottom:8px"; catLbl.textContent=cat;
+    container.appendChild(catLbl);
+    byCat[cat].forEach(function(br){
+      var b=byBrand[br];
+      var card=document.createElement("div"); card.style.cssText="background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:11px 13px;margin-bottom:8px";
+      var hdr=document.createElement("div"); hdr.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px";
+      var brName=document.createElement("div"); brName.style.cssText="font-size:14px;font-weight:700"; brName.textContent=br;
+      var badge=document.createElement("div");
+      if(b.margin!==null){
+        var mc=b.margin>=20?"#00a870":b.margin>=0?"var(--amb)":"var(--red)";
+        badge.style.cssText="font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;background:"+mc+"20;color:"+mc;
+        badge.textContent=b.margin.toFixed(1)+"% margin";
+      } else {
+        badge.style.cssText="font-size:11px;color:var(--txt3)"; badge.textContent="no sales";
+      }
+      hdr.appendChild(brName); hdr.appendChild(badge); card.appendChild(hdr);
+      var grid=document.createElement("div"); grid.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:6px";
+      [
+        {l:"Bought",  v:b.buyQty+" units",               s:"$"+b.buyCost.toFixed(2),       c:"var(--txt)"},
+        {l:"Sold",    v:b.sellQty+" units",               s:"$"+b.sellRevenue.toFixed(2),   c:b.sellQty>0?"var(--grn)":"var(--txt3)"},
+        {l:"In Stock",v:b.stockQty+" units",              s:"",                              c:b.stockQty>0?"var(--txt)":"var(--red)"},
+        {l:"Profit",  v:"$"+b.grossProfit.toFixed(2),    s:b.avgBuyPrice>0?"@$"+b.avgBuyPrice.toFixed(2)+"/u":"est.", c:b.grossProfit>=0?"var(--grn)":"var(--red)"}
+      ].forEach(function(col){
+        var cell=document.createElement("div"); cell.style.cssText="background:var(--sur2);border-radius:8px;padding:7px 8px;text-align:center";
+        var cv=document.createElement("div"); cv.style.cssText="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:"+col.c; cv.textContent=col.v;
+        var cl=document.createElement("div"); cl.style.cssText="font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt3);margin-top:2px"; cl.textContent=col.l;
+        var cs=document.createElement("div"); cs.style.cssText="font-size:10px;color:var(--txt3)"; cs.textContent=col.s;
+        cell.appendChild(cv); cell.appendChild(cl); cell.appendChild(cs); grid.appendChild(cell);
+      });
+      card.appendChild(grid); container.appendChild(card);
+    });
+  });
+}
+
+// ── DISTRIBUTOR MODAL — event delegation ──
+document.addEventListener("DOMContentLoaded", function(){
+  // Verify modal exists
+  var _dm=document.getElementById("dist-modal");
+  if(_dm) console.log("dist-modal found in DOM ✓");
+  else console.warn("dist-modal NOT found");
+});
+document.addEventListener("click", function(e) {
+  var t = e.target;
+  // Close button X
+  if(t.id === "dist-modal-close" || t.closest && t.closest("#dist-modal-close")) {
+    var m = document.getElementById("dist-modal");
+    if(m) m.classList.remove("open");
+    return;
+  }
+  // Click on overlay background (not on the sheet)
+  if(t.id === "dist-modal") {
+    t.classList.remove("open");
+    return;
+  }
+  // Save button
+  if(t.id === "dist-save-btn" || t.closest && t.closest("#dist-save-btn")) {
+    var id = (document.getElementById("dist-edit-id")||{}).value||"";
+    id = id.trim();
+    function gf(f){var el=document.getElementById("dist-"+f+"-inp");return el?el.value.trim():"";}
+    var name = gf("name");
+    if(!name){toast("Company name is required","err");return;}
+    var sel = document.getElementById("dist-state-inp");
+    var _now = Date.now();
+    var data = {
+      id: id||("d"+_now), name: name,
+      contact: gf("contact"), phone: gf("phone"),
+      addr1: gf("addr1"), addr2: gf("addr2"),
+      city: gf("city"), state: sel?sel.value:"", zip: gf("zip"), notes: gf("notes"),
+      createdAt: id?(distributors.find(function(x){return x.id===id;})||{}).createdAt||_now:_now,
+      updatedAt: _now
+    };
+    var idx = distributors.findIndex(function(x){return x.id===data.id;});
+    if(idx>-1) distributors[idx]=data; else distributors.push(data);
+    savePricing();
+    if(gdConnected) gdSave(null);
+    var m2 = document.getElementById("dist-modal");
+    if(m2) m2.classList.remove("open");
+    renderDistributors();
+    toast(id?"Distributor updated ✓":"Distributor added ✓","ok");
+  }
+});
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -8050,7 +8220,18 @@ if(gdUrl){
 
 
 
+
+
+
+
+
+
+
+
+
+
 </script>
+
 
 <!-- ADD FLAVOR MODAL -->
 <div class="modal-overlay" id="add-flavor-modal">
