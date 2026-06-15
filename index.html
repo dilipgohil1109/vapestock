@@ -1182,7 +1182,51 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   </div>
 </div>
 
+
+<!-- MEMO MODAL (Credit/Debit) -->
+<div class="modal-overlay" id="memo-modal">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <span class="modal-close" id="memo-modal-close">&#10005;</span>
+    <div class="modal-title" id="memo-modal-title">Add Memo</div>
+    <input type="hidden" id="memo-edit-id">
+    <div class="igrp">
+      <div class="ilbl">Customer</div>
+      <select class="ifield" id="memo-cust-sel"><option value="">— Select Customer —</option></select>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Memo Type</div>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--sur2);border-radius:8px;padding:10px;cursor:pointer;border:2px solid var(--brd)" id="memo-type-credit-label">
+          <input type="radio" name="memo-type" id="memo-type-credit" value="credit" checked style="accent-color:#00a870">
+          <span style="font-size:13px;font-weight:600">Credit (reduces balance)</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--sur2);border-radius:8px;padding:10px;cursor:pointer;border:2px solid var(--brd)" id="memo-type-debit-label">
+          <input type="radio" name="memo-type" id="memo-type-debit" value="debit" style="accent-color:#c0392b">
+          <span style="font-size:13px;font-weight:600">Debit (increases balance)</span>
+        </label>
+      </div>
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Amount ($)</div>
+      <input class="ifield" id="memo-amount" type="number" min="0" step="0.01" placeholder="0.00">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Date</div>
+      <input class="ifield" id="memo-date" type="date">
+    </div>
+    <div class="igrp">
+      <div class="ilbl">Reason / Note</div>
+      <textarea class="ota" id="memo-note" rows="2" placeholder="e.g. Damaged goods credit, price adjustment, etc."></textarea>
+    </div>
+    <div class="brow">
+      <button class="btn bpri" id="btn-memo-save">Save Memo</button>
+      <button class="btn bsec" id="btn-memo-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
+
 
 
 
@@ -1294,6 +1338,7 @@ var editingOriginalItems = {}; // snapshot of original estimate qtys — NEVER c
 var editingOpenedStock    = {}; // snapshot of stock AFTER restore at edit-open — NEVER changes during edit
 var editingAdjustments    = {}; // {key: adjustment_qty} — the delta user sets per item
 var deletedEstimateIds    = {}; // {id: timestamp} — tombstones for deleted estimates
+var memos = []; // [{id, custId, custName, date, amount, memoType:"credit"|"debit", note, createdAt, updatedAt}]
 var inactiveBrands        = {}; // {brandName: true} — hidden from all display but NOT from export/backup
 var brandImages           = {}; // {brandName: base64DataURL} — stored separately from brandMeta to keep main data lean // stock snapshot when edit opens
 var gdPollTimer = null;
@@ -1522,6 +1567,7 @@ function saveMasterToDrive() {
       nextEstimateNum: nextEstimateNum,
       deletedEstimateIds: deletedEstimateIds,
       inactiveBrands: inactiveBrands,
+      memos: memos,
       payments: payments,
       brandMeta: cleanBrandMetaForSync(), // base64 images excluded from master payload
       minPrices: minPrices,
@@ -1567,6 +1613,7 @@ function gdSave(onDone) {
       orders:orders,nextOrderNum:nextOrderNum,
       deletedEstimateIds:deletedEstimateIds,
       inactiveBrands:inactiveBrands,
+      memos:memos,
       brandImages:brandImages,
       distributors:distributors,distributorPrices:distributorPrices,
       ts:saveTs,label:"Backup "+backupTs
@@ -4017,6 +4064,7 @@ function savePricing() {
     localStorage.setItem("vs5_ordernum",  String(nextOrderNum));
     localStorage.setItem("vs5_delestids", JSON.stringify(deletedEstimateIds));
     localStorage.setItem("vs5_inactive",  JSON.stringify(inactiveBrands));
+    localStorage.setItem("vs5_memos",     JSON.stringify(memos));
     // brandImages stored separately — large base64 data, kept out of main payload
     try { localStorage.setItem("vs5_brandimages", JSON.stringify(brandImages)); } catch(imgEx) {
       console.warn("brandImages localStorage save failed (quota?):", imgEx.message);
@@ -4040,6 +4088,7 @@ function loadPricing() {
     var on2 = localStorage.getItem("vs5_ordernum");  if(on2) nextOrderNum=parseInt(on2)||1;
     var de2 = localStorage.getItem("vs5_delestids"); if(de2) try{deletedEstimateIds=JSON.parse(de2);}catch(x){}
     var ib2 = localStorage.getItem("vs5_inactive");   if(ib2) try{inactiveBrands=JSON.parse(ib2);}catch(x){}
+    var mm2 = localStorage.getItem("vs5_memos");      if(mm2) try{memos=JSON.parse(mm2);}catch(x){}
     var bi2 = localStorage.getItem("vs5_brandimages"); if(bi2) try{brandImages=JSON.parse(bi2);}catch(x){}
     // Migrate: move any base64 from brandMeta.img into brandImages
     Object.keys(brandMeta).forEach(function(br){
@@ -5085,6 +5134,7 @@ function renderSyncToggles(){
             if(d.nextOrderNum)         nextOrderNum       = d.nextOrderNum;
             if(d.deletedEstimateIds)   Object.assign(deletedEstimateIds, d.deletedEstimateIds);
             if(d.brandImages)          Object.assign(brandImages, d.brandImages);
+            if(d.memos)                memos = d.memos;
             if(d.distributors)         distributors       = d.distributors;
             if(d.distributorPrices)    distributorPrices  = d.distributorPrices;
             saveLocal(); savePricing();
@@ -5305,6 +5355,11 @@ function renderEstimatesList(){
             gdSave(function(){ toast("Estimate "+id+" deleted & Drive updated","warn"); });
           }
           renderEstimatesList();
+          // Refresh account views so deleted estimate's amount disappears immediately
+          renderBalances();
+          if(currentStmtCustId) renderCustomerStatement(currentStmtCustId);
+          var sumPane=document.getElementById("acc-summary-pane");
+          if(sumPane && sumPane.style.display!=="none") renderPurchaseSummary();
           toast("Estimate "+id+" deleted"+(restoreStock?" — stock restored":""),"warn");
         });
       });
@@ -5551,7 +5606,12 @@ function getCustBalance(custId) {
   payments.forEach(function(p) {
     if(p.custId === custId && !p.received) pending += (p.amount||0);
   });
-  return { billed: billed, received: received, pending: pending, balance: billed - received };
+  // Memos: credit reduces balance, debit increases balance
+  var memoNet = 0;
+  memos.forEach(function(m){
+    if(m.custId === custId) memoNet += (m.memoType==="credit" ? -(m.amount||0) : (m.amount||0));
+  });
+  return { billed: billed, received: received, pending: pending, memoNet: memoNet, balance: billed - received + memoNet };
 }
 
 function renderAccountsPage() {
@@ -5841,18 +5901,35 @@ function renderCustomerStatement(custId){
   var bal=getCustBalance(custId);
   var custEsts=estimates.filter(function(e){return e.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
   var custPays=payments.filter(function(p){return p.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var custMemos=memos.filter(function(m){return m.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
   var ledger=[];
   custEsts.forEach(function(e){ledger.push({type:"est",date:e.rawDate||e.date,estId:e.id,amount:e.total||0,obj:e});});
   custPays.forEach(function(p){ledger.push({type:"pay",date:p.date,obj:p,amount:p.amount,received:p.received});});
+  custMemos.forEach(function(m){ledger.push({type:"memo",date:m.date,obj:m,amount:m.amount});});
   ledger.sort(function(a,b){
     // Use rawDate for estimates (YYYY-MM-DD), date for payments (YYYY-MM-DD)
     var da = a.type==="est" ? (a.obj&&a.obj.rawDate ? a.obj.rawDate : a.date||"") : (a.date||"");
     var db = b.type==="est" ? (b.obj&&b.obj.rawDate ? b.obj.rawDate : b.date||"") : (b.date||"");
-    // Oldest first (ascending)
-    if(da < db) return -1;
-    if(da > db) return 1;
-    return 0;
+    // Newest first (descending) — latest date on top
+    if(da < db) return 1;
+    if(da > db) return -1;
+    // Tiebreak by createdAt/updatedAt if same date
+    var ca=(a.obj&&(a.obj.updatedAt||a.obj.createdAt))||0;
+    var cb=(b.obj&&(b.obj.updatedAt||b.obj.createdAt))||0;
+    return cb-ca;
   });
+  // Pre-compute running balance walking OLDEST→NEWEST, then we'll display newest first with correct running values
+  var ledgerAsc=ledger.slice().reverse(); // oldest first for calc
+  var runningMap={}; // index in ledger (newest-first) -> running balance at that point
+  (function(){
+    var run=0;
+    ledgerAsc.forEach(function(row){
+      if(row.type==="est") run+=row.amount;
+      else if(row.type==="memo") run += (row.obj.memoType==="credit"?-row.amount:row.amount);
+      else if(row.received) run-=row.amount;
+      row._runningAfter=run;
+    });
+  })();
   var h="";
   h+="<div class='scard' style='margin-bottom:10px'>";
   h+="<div style='font-size:16px;font-weight:800'>"+cust.name+"</div>";
@@ -5868,19 +5945,23 @@ function renderCustomerStatement(custId){
   h+="<div style='font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px'>Ledger</div>";
   if(!ledger.length){h+="<div style='color:var(--txt3);font-size:12px'>No transactions yet.</div>";}
   else {
-    var running=0;
     h+="<table style='width:100%;border-collapse:collapse;font-size:11px'>";
     h+="<thead><tr style='border-bottom:2px solid var(--brd)'><th style='padding:4px 3px;font-size:10px;color:var(--txt3)'>Date</th><th style='padding:4px 3px;font-size:10px;color:var(--txt3)'>Description</th><th style='text-align:right;padding:4px 3px;font-size:10px;color:var(--txt3)'>Debit</th><th style='text-align:right;padding:4px 3px;font-size:10px;color:var(--txt3)'>Credit</th><th style='text-align:right;padding:4px 3px;font-size:10px;color:var(--txt3)'>Balance</th></tr></thead><tbody>";
     ledger.forEach(function(row,idx){
       var bg=idx%2?"background:var(--sur2)":"";
+      var running=row._runningAfter||0;
       h+="<tr style='"+bg+";border-bottom:1px solid var(--brd)'>";
       if(row.type==="est"){
-        running+=row.amount;
         h+="<td style='padding:5px 3px;font-size:10px;color:var(--txt3)'>"+row.date+"</td>";
         h+="<td style='padding:5px 3px'><span style='font-family:monospace;font-size:10px;color:var(--acc)'>"+row.estId+"</span> Estimate</td>";
         h+="<td style='padding:5px 3px;text-align:right;font-family:monospace;color:#c0392b'>$"+row.amount.toFixed(2)+"</td><td></td>";
+      } else if(row.type==="memo"){
+        var isCredit=row.obj.memoType==="credit";
+        h+="<td style='padding:5px 3px;font-size:10px;color:var(--txt3)'>"+row.date+"</td>";
+        h+="<td style='padding:5px 3px;font-size:11px'>"+(isCredit?"Credit Memo":"Debit Memo")+(row.obj.note?" \u2013 "+row.obj.note:"")+"</td>";
+        if(isCredit){h+="<td></td><td style='padding:5px 3px;text-align:right;font-family:monospace;color:#00a870'>$"+row.amount.toFixed(2)+"</td>";}
+        else{h+="<td style='padding:5px 3px;text-align:right;font-family:monospace;color:#c0392b'>$"+row.amount.toFixed(2)+"</td><td></td>";}
       } else {
-        var credit=row.received?row.amount:0; running-=credit;
         var md={cash:"Cash",cheque:"Cheque",bank:"Bank Transfer",other:"Other"}[row.obj.method]||"";
         var desc="Payment"+(md?" ("+md+")":"")+(row.obj.chequeNo?" #"+row.obj.chequeNo:"")+(!row.received?" [Pending]":"")+(row.obj.note?" \u2013 "+row.obj.note:"");
         h+="<td style='padding:5px 3px;font-size:10px;color:var(--txt3)'>"+row.date+"</td>";
@@ -5896,7 +5977,8 @@ function renderCustomerStatement(custId){
   h+="<div class='scard'>";
   h+="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'>";
   h+="<div style='font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px'>Payments</div>";
-  h+="<button class='btn bpri bsm' onclick='openPayModal(null,\""+custId+"\")'>+ Add</button></div>";
+  h+="<button class='btn bpri bsm' onclick='openPayModal(null,\""+custId+"\")'>+ Payment</button> ";
+  h+="<button class='btn bsec bsm' onclick='openMemoModal(null,\""+custId+"\")'>+ Memo</button></div>";
   if(!custPays.length){h+="<div style='color:var(--txt3);font-size:12px;padding:8px 0'>No payments recorded.</div>";}
   else{
     custPays.slice().reverse().forEach(function(p){
@@ -8121,6 +8203,80 @@ document.addEventListener("click", function(e) {
   }
 });
 
+
+// ── MEMO (Credit/Debit) functions ──
+function getPayNextId(){ return "M"+Date.now(); }
+function openMemoModal(memo, prefillCustId) {
+  var today=new Date(); var td=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
+  var csel=document.getElementById("memo-cust-sel"); if(!csel)return;
+  csel.innerHTML='<option value="">— Select Customer —</option>';
+  customers.forEach(function(c){var o=document.createElement("option");o.value=c.id;o.textContent=c.name;csel.appendChild(o);});
+  if(memo){
+    document.getElementById("memo-modal-title").textContent="Edit Memo";
+    document.getElementById("memo-edit-id").value=memo.id;
+    csel.value=memo.custId||"";
+    document.getElementById("memo-amount").value=memo.amount||"";
+    document.getElementById("memo-date").value=memo.date||td;
+    document.getElementById("memo-note").value=memo.note||"";
+    var radio=document.getElementById(memo.memoType==="debit"?"memo-type-debit":"memo-type-credit");
+    if(radio)radio.checked=true;
+  } else {
+    document.getElementById("memo-modal-title").textContent="Add Memo";
+    document.getElementById("memo-edit-id").value="";
+    csel.value=prefillCustId||"";
+    document.getElementById("memo-amount").value="";
+    document.getElementById("memo-date").value=td;
+    document.getElementById("memo-note").value="";
+    document.getElementById("memo-type-credit").checked=true;
+  }
+  updateMemoTypeHighlight();
+  var m=document.getElementById("memo-modal"); if(m)m.classList.add("open");
+}
+function closeMemoModal(){ var m=document.getElementById("memo-modal"); if(m)m.classList.remove("open"); }
+function updateMemoTypeHighlight(){
+  var cLbl=document.getElementById("memo-type-credit-label");
+  var dLbl=document.getElementById("memo-type-debit-label");
+  var cR=document.getElementById("memo-type-credit");
+  if(cLbl&&dLbl&&cR){
+    if(cR.checked){cLbl.style.borderColor="#00a870";cLbl.style.background="rgba(0,168,112,.08)";dLbl.style.borderColor="var(--brd)";dLbl.style.background="var(--sur2)";}
+    else{dLbl.style.borderColor="#c0392b";dLbl.style.background="rgba(192,57,43,.08)";cLbl.style.borderColor="var(--brd)";cLbl.style.background="var(--sur2)";}
+  }
+}
+document.addEventListener("change",function(e){
+  if(e.target&&e.target.name==="memo-type") updateMemoTypeHighlight();
+});
+document.addEventListener("click",function(e){
+  var t=e.target;
+  if(t.id==="memo-modal-close"||t.id==="btn-memo-cancel"){closeMemoModal();return;}
+  if(t.id==="memo-modal"){closeMemoModal();return;}
+  if(t.id==="btn-memo-save"){
+    var custId=(document.getElementById("memo-cust-sel")||{}).value||"";
+    var amtStr=(document.getElementById("memo-amount")||{}).value||"";
+    var amount=parseFloat(amtStr);
+    if(!custId){toast("Select a customer","err");return;}
+    if(!amtStr||isNaN(amount)||amount<=0){toast("Enter a valid amount","err");return;}
+    var custObj=customers.find(function(c){return c.id===custId;})||{};
+    var editId=(document.getElementById("memo-edit-id")||{}).value||"";
+    var memoType=(document.querySelector('input[name="memo-type"]:checked')||{}).value||"credit";
+    var _now=Date.now();
+    var memo={
+      id:editId||getPayNextId(),
+      custId:custId, custName:custObj.name||"",
+      amount:amount, memoType:memoType,
+      date:(document.getElementById("memo-date")||{}).value||"",
+      note:(document.getElementById("memo-note")||{}).value||"",
+      createdAt:editId?(memos.find(function(m){return m.id===editId;})||{}).createdAt||_now:_now,
+      updatedAt:_now
+    };
+    var idx=memos.findIndex(function(m){return m.id===memo.id;});
+    if(idx>-1)memos[idx]=memo; else memos.unshift(memo);
+    savePricing(); if(gdConnected)gdSave(null);
+    closeMemoModal();
+    if(currentStmtCustId)renderCustomerStatement(currentStmtCustId);
+    renderBalances();
+    toast((editId?"Memo updated":"Memo added")+" ✓","ok");
+  }
+});
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -8141,6 +8297,7 @@ if(gdUrl){
     toast("Connected. Auto-load is OFF","warn");
   }
 } else { setSyncDot("","local"); }
+
 
 
 
