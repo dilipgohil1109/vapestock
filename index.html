@@ -1185,7 +1185,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <!-- MEMO MODAL (Credit/Debit) -->
 <div class="modal-overlay" id="memo-modal">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-sheet">
     <span class="modal-close" id="memo-modal-close">&#10005;</span>
     <div class="modal-title" id="memo-modal-title">Add Memo</div>
     <input type="hidden" id="memo-edit-id">
@@ -6002,18 +6002,33 @@ function printCustomerStatement(custId){
   var bal=getCustBalance(custId);
   var custEsts=estimates.filter(function(e){return e.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
   var custPays=payments.filter(function(p){return p.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var custMemos=memos.filter(function(m){return m.custId===custId;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
   var ledger=[];
   custEsts.forEach(function(e){ledger.push({type:"est",date:e.rawDate||e.date,estId:e.id,amount:e.total||0,obj:e});});
   custPays.forEach(function(p){ledger.push({type:"pay",date:p.date,obj:p,amount:p.amount,received:p.received});});
+  custMemos.forEach(function(m){ledger.push({type:"memo",date:m.date,obj:m,amount:m.amount});});
   ledger.sort(function(a,b){
     // Use rawDate for estimates (YYYY-MM-DD), date for payments (YYYY-MM-DD)
     var da = a.type==="est" ? (a.obj&&a.obj.rawDate ? a.obj.rawDate : a.date||"") : (a.date||"");
     var db = b.type==="est" ? (b.obj&&b.obj.rawDate ? b.obj.rawDate : b.date||"") : (b.date||"");
-    // Oldest first (ascending)
-    if(da < db) return -1;
-    if(da > db) return 1;
-    return 0;
+    // Newest first (descending)
+    if(da < db) return 1;
+    if(da > db) return -1;
+    var ca=(a.obj&&(a.obj.updatedAt||a.obj.createdAt))||0;
+    var cb=(b.obj&&(b.obj.updatedAt||b.obj.createdAt))||0;
+    return cb-ca;
   });
+  // Pre-calc running balance walking oldest->newest, then display newest-first
+  var ledgerAsc=ledger.slice().reverse();
+  (function(){
+    var run=0;
+    ledgerAsc.forEach(function(row){
+      if(row.type==="est") run+=row.amount;
+      else if(row.type==="memo") run += (row.obj.memoType==="credit"?-row.amount:row.amount);
+      else if(row.received) run-=row.amount;
+      row._runningAfter=run;
+    });
+  })();
   var css="*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#f0f0f0;padding:5px 6px;text-align:left;border:1px solid #ccc;font-size:10px}td{padding:5px 6px;border:1px solid #ddd}.srow{background:#f9f9f9}.tot{font-weight:800}";
   var h="<h1 style='font-size:20px;margin:0'>Krazy Wholesale</h1><h2 style='color:#555;margin:4px 0 4px'>Account Statement</h2><hr style='border:none;border-top:2px solid #000;margin:8px 0'>";
   h+="<div style='display:flex;justify-content:space-between;margin-bottom:12px'><div><strong style='font-size:15px'>"+cust.name+"</strong>";
@@ -6027,16 +6042,19 @@ function printCustomerStatement(custId){
   h+="<div style='flex:1;border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center'><div style='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888'>Balance Due</div><div style='font-size:16px;font-weight:800;color:"+(bal.balance>0?"#c0392b":"#1a6b3a")+"'>$"+bal.balance.toFixed(2)+"</div></div>";
   h+="</div>";
   h+="<table><thead><tr><th>Date</th><th>Description</th><th style='text-align:right'>Debit</th><th style='text-align:right'>Credit</th><th style='text-align:right'>Balance</th></tr></thead><tbody>";
-  var running2=0;
   ledger.forEach(function(row,idx){
     var bg=idx%2?"class='srow'":"";
+    var running2=row._runningAfter||0;
     h+="<tr "+bg+">";
     if(row.type==="est"){
-      running2+=row.amount;
       h+="<td>"+row.date+"</td><td>"+row.estId+" Estimate ("+(row.obj.items||[]).length+" items)</td>";
       h+="<td style='text-align:right;color:#c0392b'>$"+row.amount.toFixed(2)+"</td><td></td>";
+    }else if(row.type==="memo"){
+      var isCredit2=row.obj.memoType==="credit";
+      h+="<td>"+row.date+"</td><td>"+(isCredit2?"Credit Memo":"Debit Memo")+(row.obj.note?" - "+row.obj.note:"")+"</td>";
+      if(isCredit2){h+="<td></td><td style='text-align:right;color:#1a6b3a'>$"+row.amount.toFixed(2)+"</td>";}
+      else{h+="<td style='text-align:right;color:#c0392b'>$"+row.amount.toFixed(2)+"</td><td></td>";}
     }else{
-      var credit2=row.received?row.amount:0; running2-=credit2;
       var md3={cash:"Cash",cheque:"Cheque",bank:"Bank Transfer",other:"Other"}[row.obj.method]||"";
       var desc2="Payment"+(md3?" ("+md3+")":"")+(row.obj.chequeNo?" #"+row.obj.chequeNo:"")+(!row.received?" [PENDING]":"")+(row.obj.note?" - "+row.obj.note:"");
       h+="<td>"+row.date+"</td><td>"+desc2+"</td><td></td>";
