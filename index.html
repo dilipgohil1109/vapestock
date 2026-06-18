@@ -319,6 +319,12 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 </div>
 
 <div class="pg" id="pg-purchase">
+  <div style="display:flex;gap:6px;margin-bottom:10px" id="buy-subnav">
+    <div class="fc on" data-buytab="buy" id="buy-tab-buy">&#128722; Buy Stock</div>
+    <div class="fc" data-buytab="history" id="buy-tab-history">&#128230; Purchase History</div>
+  </div>
+  <div id="buy-history-pane" style="display:none"></div>
+  <div id="buy-stock-pane">
   <div class="tabs" id="ptabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
     <div class="tab on" data-pt="upload" style="border-radius:6px">Upload Text</div>
     <div class="tab" data-pt="manual" style="border-radius:6px">Manual Pick</div>
@@ -341,6 +347,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
         <div class="leg"><div class="legdot" style="background:var(--amb)"></div> Suggested match</div>
         <div class="leg"><div class="legdot" style="background:var(--acc)"></div> Manual selected</div>
         <div class="leg"><div class="legdot" style="background:var(--red)"></div> Skipped</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div class="ilbl">Supplier Ref # (optional)</div><input class="ifield" id="pur-upload-refno" placeholder="e.g. INV-2025-001" style="margin:0"></div>
+        <div><div class="ilbl">Purchase Date</div><input class="ifield" id="pur-upload-date" type="date" style="margin:0"></div>
       </div>
       <button class="btn bsuc" id="btn-pur-confirm">&#10003; Confirm &amp; Add to Stock</button>
       <div id="pur-unmatched-wrap" style="display:none;margin-top:14px">
@@ -371,10 +381,17 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
     <div id="pcart-wrap" style="display:none">
       <div class="stitle" style="margin-top:12px">Cart</div>
       <div id="pcart"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div class="ilbl">Supplier Ref # (optional)</div><input class="ifield" id="pur-refno" placeholder="e.g. INV-2025-001" style="margin:0"></div>
+        <div><div class="ilbl">Purchase Date</div><input class="ifield" id="pur-date" type="date" style="margin:0"></div>
+      </div>
       <button class="btn bsuc" id="btn-confirm-pur">Confirm Purchase</button>
     </div>
   </div>
 </div>
+
+  </div><!-- end buy-stock-pane -->
+</div><!-- end pg-purchase -->
 
 <div class="pg" id="pg-sell">
   <div class="tabs" id="stabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
@@ -1248,6 +1265,9 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 </div>
 
 <script>
+
+
+
 
 
 
@@ -2335,12 +2355,17 @@ function renderUploadPreview(parsedItems, containerId, confirmWrapId, mode){
     }
     var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
     stock[k] = (stock[k] || 0) + item.qty;
-    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: fl, qty: item.qty, date: new Date().toLocaleString() });
+    var _upRefNo=(document.getElementById("pur-upload-refno")||{}).value||"";
+    var _upDateVal=(document.getElementById("pur-upload-date")||{}).value||"";
+    var _upDateIso=_upDateVal?localDateFromInput(_upDateVal).toISOString():new Date().toISOString();
+    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: fl, qty: item.qty, unitPrice: 0, total: 0, refNo:_upRefNo, date:_upDateIso });
     count++;
   });
   afterChange();
   // clear preview
   document.getElementById("pur-preview").innerHTML = "";
+  var _urf=document.getElementById("pur-upload-refno"); if(_urf)_urf.value="";
+  var _udt=document.getElementById("pur-upload-date"); if(_udt){var _tt=new Date();_udt.value=_tt.getFullYear()+"-"+String(_tt.getMonth()+1).padStart(2,"0")+"-"+String(_tt.getDate()).padStart(2,"0");}
   document.getElementById("pur-text").value = "";
   purItems = [];
   // show unmatched list if any
@@ -2479,6 +2504,9 @@ function renderCart(){
   var now=new Date().toLocaleString();
   var distId=getPurDistId();
   var dName=distEl&&distEl.selectedIndex>0?distEl.options[distEl.selectedIndex].text:"";
+  var purRefNo=(document.getElementById("pur-refno")||{}).value||"";
+  var purDateVal=(document.getElementById("pur-date")||{}).value||new Date().toISOString().split("T")[0];
+  var purDateIso=purDateVal?localDateFromInput(purDateVal).toISOString():new Date().toISOString();
   keys.forEach(function(k){
     var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
     var entry=cart[k];
@@ -2486,9 +2514,12 @@ function renderCart(){
     var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
     stock[k]=(stock[k]||0)+q;
     txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,
-      distId:distId,distName:dName,unitPrice:up,total:up*q,date:now});
+      distId:distId,distName:dName,unitPrice:up,total:up*q,refNo:purRefNo,date:purDateIso});
   });
-  afterChange(); cart={}; renderCart(); renderPurFlavors();
+  afterChange(); cart={};
+  var rfEl=document.getElementById("pur-refno"); if(rfEl)rfEl.value="";
+  var rdEl=document.getElementById("pur-date"); if(rdEl){var _t=new Date();rdEl.value=_t.getFullYear()+"-"+String(_t.getMonth()+1).padStart(2,"0")+"-"+String(_t.getDate()).padStart(2,"0");}
+  renderCart(); renderPurFlavors();
   toast(totalUnits+" units added to stock \u2014 saving...","ok");
   if(gdConnected) { gdSave(function(){ toast(totalUnits+" units purchased & saved to Drive \u2713","ok"); }); } else { saveLocal(); }
 })})();
@@ -2519,7 +2550,7 @@ function renderCart(){
     var deduct=Math.min(item.qty,cur);
     stock[k]=Math.max(0,cur-item.qty);
     if(item.qty>cur) warn++;
-    txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:deduct,date:new Date().toLocaleString()});
+    txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:deduct,date:new Date().toISOString()});
     count++;
   });
   afterChange();
@@ -2987,7 +3018,7 @@ function renderCustomFlavorList() {
   // set stock
   if (qtyVal > 0) {
     stock[skey(br, name)] = qtyVal;
-    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+    txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, unitPrice: 0, total: 0, date: new Date().toISOString() });
   }
   saveCustomFlavors(); saveLocal(); updateStats();
   renderStock();
@@ -3267,7 +3298,7 @@ function renderSellCart() {
     var niVal = (document.getElementById("est-num-inp")||{}).value||"";
     var diVal = (document.getElementById("est-date-inp")||{}).value||"";
     var estId = niVal.trim() || ("EST-"+String(nextEstimateNum).padStart(3,"0"));
-    var saleDate = diVal ? new Date(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}) : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    var saleDate = diVal ? localDateFromInput(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}) : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
     // ── STEP 1: Build items list WITHOUT touching stock yet ──
     var grandTotal=0, estItems=[], count=0, warn=0;
     keys.forEach(function(k){
@@ -3834,8 +3865,22 @@ function renderCatFlavorList() {
   var deactInfo=document.createElement("span"); deactInfo.style.cssText="font-size:11px;font-weight:700;";
   if(isInactNow){deactInfo.style.color="#c87c00";deactInfo.textContent="⚠ INACTIVE — hidden from Stock, Buy, Sell, Orders, Generate List, B2B Catalog. Still in Excel export & backups.";}
   else{deactInfo.style.color="var(--txt3)";deactInfo.textContent="Active — visible everywhere.";}
+  // Cost Price field (used as fallback in analysis when no purchase price available)
+  var costRow=document.createElement("div"); costRow.style.cssText="display:flex;align-items:center;gap:8px";
+  var costLbl=document.createElement("span"); costLbl.style.cssText="font-size:11px;color:var(--txt3);white-space:nowrap;min-width:72px"; costLbl.textContent="Cost Price:";
+  var costInp=document.createElement("input"); costInp.type="number"; costInp.className="ifield"; costInp.style.cssText="width:100px;margin:0;font-size:12px"; costInp.placeholder="$0.00"; costInp.step="0.01"; costInp.min="0";
+  costInp.value=(brandMeta[catActiveBrand]&&brandMeta[catActiveBrand].costPrice)?brandMeta[catActiveBrand].costPrice:"";
+  (function(br){costInp.addEventListener("change",function(){
+    var v=parseFloat(this.value);
+    if(!brandMeta[br])brandMeta[br]={};
+    if(!isNaN(v)&&v>0){brandMeta[br].costPrice=v;toast("Cost price saved for "+br,"ok");}
+    else{delete brandMeta[br].costPrice;toast("Cost price cleared","warn");}
+    savePricing();
+  });})(catActiveBrand);
+  var costNote=document.createElement("span"); costNote.style.cssText="font-size:10px;color:var(--txt3)"; costNote.textContent="avg cost/unit — used in analysis when no purchase price recorded";
+  costRow.appendChild(costLbl); costRow.appendChild(costInp); costRow.appendChild(costNote);
   deactRow.appendChild(deactBtn); deactRow.appendChild(deactInfo);
-  brandMgmt.appendChild(imgRow); brandMgmt.appendChild(deactRow);
+  brandMgmt.appendChild(imgRow); brandMgmt.appendChild(costRow); brandMgmt.appendChild(deactRow);
   container.appendChild(brandMgmt);
 
   var header = document.createElement("div");
@@ -4044,7 +4089,7 @@ function closeCatFlavorModal() {
     customFlavors[br].push(name);
     if (qtyVal > 0) {
       stock[skey(br, name)] = qtyVal;
-      txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, date: new Date().toLocaleString() });
+      txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, unitPrice: 0, total: 0, date: new Date().toISOString() });
     }
     saveCustomFlavors(); saveLocal(); updateStats();
     closeCatFlavorModal();
@@ -6358,7 +6403,7 @@ function handleManualEstSave() {
   var custObj = custId ? customers.find(function(c){return c.id===custId;}) : null;
   var custName = custObj ? custObj.name : "Walk-in";
   var dateStr = dateVal
-    ? new Date(dateVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
+    ? localDateFromInput(dateVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
     : new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
   var rawDateMe = dateVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
   var manualEst = {
@@ -7154,7 +7199,7 @@ function renderOrdCart(){
     var diVal=(document.getElementById("ord-date-inp")||{}).value||"";
     var noteVal=(document.getElementById("ord-note-inp")||{}).value||"";
     var ordId=niVal.trim()||getOrdNextId();
-    var dateStr=diVal?new Date(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    var dateStr=diVal?localDateFromInput(diVal).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
     var rawDate=diVal||(function(){var t=new Date();return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");})();
     var ordItems=[]; var grandTotal=0;
     keys.forEach(function(k){
@@ -8162,24 +8207,39 @@ function renderBuySellAnalysis(container) {
   });
   container.appendChild(filterRow);
   var cutoff=ranges[activeRange].ms?(now-ranges[activeRange].ms):0;
-  // Aggregate txLog
+  // Aggregate txLog — ALL TIME for purchase cost (to build avg price), filtered range for sales
+  var byBrandAllTime={};
+  txLog.forEach(function(e){
+    if(!e.brand||e.type!=="purchase"||!(e.total>0)) return;
+    if(!byBrandAllTime[e.brand])byBrandAllTime[e.brand]={buyQty:0,buyCost:0};
+    byBrandAllTime[e.brand].buyQty+=(e.qty||0);
+    byBrandAllTime[e.brand].buyCost+=(e.total||0);
+  });
   var byBrand={};
   txLog.forEach(function(e){
     if(!e.brand) return;
     var br=e.brand;
-    var dateMs=0; try{dateMs=new Date(e.date).getTime();}catch(x){}
+    var dateMs=txDate(e);
     if(cutoff&&dateMs<cutoff) return;
     if(!byBrand[br]) byBrand[br]={cat:e.category||catOfBrand(br)||"Other",buyQty:0,buyCost:0,sellQty:0,sellRevenue:0};
     if(e.type==="purchase"){byBrand[br].buyQty+=(e.qty||0);byBrand[br].buyCost+=(e.total||0);}
     else if(e.type==="sale"){byBrand[br].sellQty+=(e.qty||0);byBrand[br].sellRevenue+=(e.total||0);}
   });
-  // Compute metrics per brand
+  // Compute metrics — Option C: derived avg, Option B: manual costPrice fallback
   Object.keys(byBrand).forEach(function(br){
     var b=byBrand[br];
-    b.avgBuyPrice=b.buyQty>0?b.buyCost/b.buyQty:0;
+    // Option C: weighted avg from ALL priced purchases (all time for accuracy)
+    var allTimeBuy=byBrandAllTime[br]||{buyQty:0,buyCost:0};
+    var derivedAvg=allTimeBuy.buyQty>0?allTimeBuy.buyCost/allTimeBuy.buyQty:0;
+    // Option B: manual cost price from Catalog
+    var manualCost=(brandMeta[br]&&brandMeta[br].costPrice>0)?brandMeta[br].costPrice:0;
+    // Priority: derived avg > manual > 0
+    if(derivedAvg>0){b.avgBuyPrice=derivedAvg;b.costSource="derived";b.costNote="~$"+derivedAvg.toFixed(2)+"/u avg ("+allTimeBuy.buyQty+" units)";}
+    else if(manualCost>0){b.avgBuyPrice=manualCost;b.costSource="manual";b.costNote="$"+manualCost.toFixed(2)+"/u (manual)";}
+    else{b.avgBuyPrice=0;b.costSource="none";b.costNote=null;}
     b.sellCost=b.avgBuyPrice*b.sellQty;
     b.grossProfit=b.sellRevenue-b.sellCost;
-    b.margin=b.sellRevenue>0?(b.grossProfit/b.sellRevenue)*100:null;
+    b.margin=(b.sellRevenue>0&&b.costSource!=="none")?(b.grossProfit/b.sellRevenue)*100:null;
     b.stockQty=(function(){var t=0;(CATALOG[br]||[]).forEach(function(fl){t+=stock[skey(br,fl)]||0;});return t;})();
   });
   var brands=Object.keys(byBrand);
@@ -8227,8 +8287,21 @@ function renderBuySellAnalysis(container) {
         var mc=b.margin>=20?"#00a870":b.margin>=0?"var(--amb)":"var(--red)";
         badge.style.cssText="font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;background:"+mc+"20;color:"+mc;
         badge.textContent=b.margin.toFixed(1)+"% margin";
+      } else if(b.sellQty>0&&b.costSource==="none"){
+        badge.style.cssText="font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;background:rgba(138,138,170,.15);color:var(--txt3)";
+        badge.textContent="⚠ No cost data";
       } else {
         badge.style.cssText="font-size:11px;color:var(--txt3)"; badge.textContent="no sales";
+      }
+      // Cost source note
+      if(b.costNote){
+        var costTag=document.createElement("div"); costTag.style.cssText="font-size:10px;margin-top:4px;padding:2px 8px;border-radius:50px;display:inline-block;background:"+(b.costSource==="derived"?"rgba(0,168,112,.1)":"rgba(196,125,0,.1)")+";color:"+(b.costSource==="derived"?"var(--grn)":"var(--amb)");
+        costTag.textContent=(b.costSource==="derived"?"✓ ":"⚙ ")+b.costNote;
+        hdr.appendChild(costTag);
+      } else if(b.sellQty>0){
+        var noTag=document.createElement("div"); noTag.style.cssText="font-size:10px;margin-top:4px;color:var(--txt3)";
+        noTag.textContent="⚠ Set cost price in Catalog → brand panel";
+        hdr.appendChild(noTag);
       }
       hdr.appendChild(brName); hdr.appendChild(badge); card.appendChild(hdr);
       var grid=document.createElement("div"); grid.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:6px";
@@ -8251,10 +8324,6 @@ function renderBuySellAnalysis(container) {
 
 // ── DISTRIBUTOR MODAL — event delegation ──
 document.addEventListener("DOMContentLoaded", function(){
-  // Verify modal exists
-  var _dm=document.getElementById("dist-modal");
-  if(_dm) console.log("dist-modal found in DOM ✓");
-  else console.warn("dist-modal NOT found");
 });
 document.addEventListener("click", function(e) {
   var t = e.target;
@@ -8990,6 +9059,199 @@ document.addEventListener("click", function(e) {
     if(repPane) repPane.style.display = "block";
   }
 });
+
+// Convert any txLog date field to a reliable ms timestamp
+function txDate(entry) {
+  var d = entry.date;
+  if(!d) return 0;
+  if(typeof d === "number") return d; // already ms timestamp (purchase entries)
+  var parsed = Date.parse(d);
+  if(!isNaN(parsed)) return parsed;  // ISO / locale string
+  return 0;
+}
+
+// ── BUY TAB SUB-NAV (Buy Stock / Purchase History) ──
+document.addEventListener("click", function(e) {
+  var t = e.target;
+  if(!t.dataset || !t.dataset.buytab) return;
+  var subnav = document.getElementById("buy-subnav");
+  if(!subnav || !subnav.contains(t)) return;
+  subnav.querySelectorAll(".fc[data-buytab]").forEach(function(c){ c.classList.toggle("on", c===t); });
+  var histPane  = document.getElementById("buy-history-pane");
+  var stockPane = document.getElementById("buy-stock-pane");
+  if(t.dataset.buytab === "history") {
+    if(histPane)  histPane.style.display  = "block";
+    if(stockPane) stockPane.style.display = "none";
+    renderPurchaseHistory();
+  } else {
+    if(histPane)  histPane.style.display  = "none";
+    if(stockPane) stockPane.style.display = "block";
+  }
+});
+
+function renderPurchaseHistory() {
+  var el = document.getElementById("buy-history-pane"); if(!el) return;
+
+  // Date range filter
+  var ranges = [
+    {label:"Today",    ms:24*60*60*1000},
+    {label:"7 Days",   ms:7*24*60*60*1000},
+    {label:"1 Month",  ms:30*24*60*60*1000},
+    {label:"3 Months", ms:90*24*60*60*1000},
+    {label:"All Time", ms:0}
+  ];
+  var activeRange = el._phRange || 0;
+  var now = Date.now();
+
+  var wrap = document.createElement("div");
+  // Range chips
+  var chipRow = document.createElement("div"); chipRow.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px";
+  ranges.forEach(function(r,idx){
+    var chip = document.createElement("div");
+    chip.className = "fc" + (idx===activeRange?" on":"");
+    chip.textContent = r.label;
+    chip.addEventListener("click", function(){ el._phRange=idx; el.innerHTML=""; renderPurchaseHistory(); });
+    chipRow.appendChild(chip);
+  });
+  wrap.appendChild(chipRow);
+
+  var cutoff = ranges[activeRange].ms ? (now - ranges[activeRange].ms) : 0;
+
+  // Filter txLog for purchases in range
+  var purchases = txLog.filter(function(e){
+    if(e.type !== "purchase") return false;
+    if(!e.brand) return false;
+    var dt = txDate(e);
+    if(cutoff && dt < cutoff) return false;
+    return true;
+  });
+
+  if(!purchases.length){
+    var empty = document.createElement("div"); empty.className="empty";
+    empty.innerHTML="<div class='ei'>&#128230;</div><div class='et'>No purchases in this period.<br>Buy stock to see history here.</div>";
+    wrap.appendChild(empty);
+    el.innerHTML=""; el.appendChild(wrap); return;
+  }
+
+  // Summary row
+  var totalUnits = purchases.reduce(function(s,e){return s+(e.qty||0);},0);
+  var totalCost  = purchases.reduce(function(s,e){return s+(e.total||0);},0);
+  var summary = document.createElement("div");
+  summary.style.cssText = "display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px";
+  [
+    {l:"Purchases",  v:purchases.length+" orders",     c:"var(--txt)"},
+    {l:"Units Bought",v:totalUnits+" units",           c:"var(--grn)"},
+    {l:"Total Cost", v:"$"+totalCost.toFixed(2),       c:"var(--amb)"}
+  ].forEach(function(item){
+    var cell=document.createElement("div"); cell.style.cssText="background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:10px;text-align:center";
+    var val=document.createElement("div"); val.style.cssText="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:"+item.c; val.textContent=item.v;
+    var lbl=document.createElement("div"); lbl.style.cssText="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-top:3px"; lbl.textContent=item.l;
+    cell.appendChild(val); cell.appendChild(lbl); summary.appendChild(cell);
+  });
+  wrap.appendChild(summary);
+
+  // Group by Distributor → Ref# → Items (newest first overall)
+  var byDist2 = {};
+  purchases.forEach(function(e){
+    var distKey2 = e.distName || "Direct / Unknown";
+    var refKey = e.refNo && e.refNo.trim() ? e.refNo.trim() : "__no_ref__";
+    var dt = txDate(e);
+    if(!byDist2[distKey2]) byDist2[distKey2]={entries:[],refs:{},ts:0};
+    if(dt>byDist2[distKey2].ts) byDist2[distKey2].ts=dt;
+    if(!byDist2[distKey2].refs[refKey]) byDist2[distKey2].refs[refKey]={entries:[],ts:dt,date:dt};
+    if(dt>byDist2[distKey2].refs[refKey].ts) byDist2[distKey2].refs[refKey].ts=dt;
+    byDist2[distKey2].refs[refKey].entries.push(e);
+  });
+  // Sort distributors by most recent purchase
+  var sortedDists = Object.keys(byDist2).sort(function(a,b){return byDist2[b].ts-byDist2[a].ts;});
+
+  sortedDists.forEach(function(distName){
+    var distData = byDist2[distName];
+    var distCost = Object.keys(distData.refs).reduce(function(s,rk){return s+distData.refs[rk].entries.reduce(function(s2,e){return s2+(e.total||0);},0);},0);
+    var distUnits = Object.keys(distData.refs).reduce(function(s,rk){return s+distData.refs[rk].entries.reduce(function(s2,e){return s2+(e.qty||0);},0);},0);
+
+    // Distributor header card
+    var distCard = document.createElement("div");
+    distCard.style.cssText = "margin-bottom:14px";
+    var distHdr = document.createElement("div");
+    distHdr.style.cssText = "font-size:13px;font-weight:800;color:var(--txt);padding:8px 12px;background:var(--sur);border:1px solid var(--brd);border-radius:var(--r) var(--r) 0 0;border-bottom:2px solid var(--acc);display:flex;justify-content:space-between;align-items:center";
+    distHdr.innerHTML = "<span>&#128666; "+distName+"</span><span style='font-size:11px;font-weight:400;color:var(--txt3)'>"+distUnits+" units &nbsp;·&nbsp; $"+distCost.toFixed(2)+"</span>";
+    distCard.appendChild(distHdr);
+
+    // Sort refs by most recent date
+    var sortedRefs = Object.keys(distData.refs).sort(function(a,b){return distData.refs[b].ts-distData.refs[a].ts;});
+
+    sortedRefs.forEach(function(refKey,ri){
+      var refData = distData.refs[refKey];
+      var refEntries = refData.entries;
+      var refTotal = refEntries.reduce(function(s,e){return s+(e.total||0);},0);
+      var refUnits = refEntries.reduce(function(s,e){return s+(e.qty||0);},0);
+      var refLabel = refKey==="__no_ref__" ? "Direct Purchase" : refKey;
+      var refDate = refData.ts ? new Date(refData.ts).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}) : "";
+      var isLast = ri===sortedRefs.length-1;
+
+      // Reference row (accordion header)
+      var refRow = document.createElement("div");
+      var refRowId = "ref-row-"+distName.replace(/s/g,"_")+"-"+ri;
+      refRow.style.cssText = "background:var(--sur2);border-left:1px solid var(--brd);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd)"+(isLast&&true?"":"")+";padding:9px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none";
+      refRow.innerHTML =
+        "<div><div style='font-size:12px;font-weight:700;color:var(--acc)'>&#128203; "+refLabel+"</div>"+
+        "<div style='font-size:11px;color:var(--txt3);margin-top:2px'>"+refDate+(refDate?" &nbsp;&middot;&nbsp; ":"")+refUnits+" units &nbsp;&middot;&nbsp; "+(refTotal>0?"$"+refTotal.toFixed(2):"no price")+"</div></div>"+
+        "<span id='arr-"+refRowId+"' style='font-size:12px;color:var(--txt3)'>&#9660;</span>";
+      distCard.appendChild(refRow);
+
+      // Items panel (collapsed by default)
+      var itemsPanel = document.createElement("div");
+      itemsPanel.id = refRowId;
+      itemsPanel.style.cssText = "display:none;background:var(--sur);border-left:1px solid var(--brd);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);"+(isLast?"border-radius:0 0 var(--r) var(--r)":"");
+      var table = document.createElement("table"); table.style.cssText="width:100%;border-collapse:collapse;font-size:12px;padding:4px 0";
+      refEntries.forEach(function(e,idx){
+        var tr=document.createElement("tr"); tr.style.cssText=(idx%2?"background:var(--sur2)":"")+";border-bottom:1px solid rgba(0,0,0,.04)";
+        var hasPrice=e.total>0;
+        tr.innerHTML=
+          "<td style='padding:6px 12px;font-weight:600'>"+e.brand+"</td>"+
+          "<td style='padding:6px 6px;color:var(--txt3);font-size:11px'>"+( e.flavor||"")+"</td>"+
+          "<td style='padding:6px 6px;text-align:center;font-family:monospace;font-weight:700;min-width:40px'>×"+e.qty+"</td>"+
+          "<td style='padding:6px 6px;text-align:right;font-family:monospace;color:var(--txt2)'>"+
+            (hasPrice?"$"+(e.unitPrice||0).toFixed(2)+"/u":"<span style='color:var(--txt3)'>—</span>")+"</td>"+
+          "<td style='padding:6px 12px;text-align:right;font-family:monospace;font-weight:700;color:"+(hasPrice?"var(--acc)":"var(--txt3)")+"'>"+
+            (hasPrice?"$"+(e.total||0).toFixed(2):"no price")+"</td>";
+        table.appendChild(tr);
+      });
+      itemsPanel.appendChild(table);
+      distCard.appendChild(itemsPanel);
+
+      // Toggle accordion
+      refRow.addEventListener("click",function(){
+        var panel=document.getElementById(refRowId);
+        var arr=document.getElementById("arr-"+refRowId);
+        if(panel){var open=panel.style.display!=="none";panel.style.display=open?"none":"block";if(arr)arr.innerHTML=open?"&#9660;":"&#9650;";}
+      });
+    });
+
+    wrap.appendChild(distCard);
+  });
+
+  el.innerHTML = ""; el.appendChild(wrap);
+}
+
+// ── Set today's date in buy cart date fields ──
+(function(){
+  var today=new Date(); var td=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
+  var d1=document.getElementById("pur-date"); if(d1)d1.value=td;
+  var d2=document.getElementById("pur-upload-date"); if(d2)d2.value=td;
+})();
+
+// Parse a YYYY-MM-DD date input string as LOCAL time (not UTC)
+// new Date("2026-06-17") = UTC midnight = previous day in US timezones
+// new Date("2026-06-17T12:00:00") = local noon = correct date everywhere
+function localDateFromInput(str) {
+  if(!str) return new Date();
+  // If already has time component, use as-is
+  if(str.length > 10) return new Date(str);
+  // YYYY-MM-DD → parse as local noon to avoid UTC offset shifting the date
+  return new Date(str + "T12:00:00");
+}
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -9010,6 +9272,9 @@ if(gdUrl){
     toast("Connected. Auto-load is OFF","warn");
   }
 } else { setSyncDot("","local"); }
+
+
+
 
 
 
