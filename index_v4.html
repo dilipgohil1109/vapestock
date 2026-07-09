@@ -195,6 +195,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 <div id="toast"></div>
 
 <script>
+
 // ════════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════════
@@ -291,11 +292,17 @@ function loadLocal() {
 function gasCall(payload) {
   return fetch(GAS_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    redirect: "follow",
+    headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload)
   })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
+  .then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.text();
+  })
+  .then(function(text) {
+    var data;
+    try { data = JSON.parse(text); } catch(e) { throw new Error("Bad response: " + text.substring(0,100)); }
     if (data.error) throw new Error(data.error);
     return data;
   });
@@ -346,9 +353,9 @@ function objectToRow(headers, obj) {
 var _syncBusy = false;
 
 function doSync() {
-  if (_syncBusy) { toast("Sync already running..."); return; }
+  if (_syncBusy) { toast("Sync already running — please wait..."); return; }
   _syncBusy = true;
-  setSyncStatus("busy", "Syncing...");
+  setSyncStatus("busy", "Step 1/4 — Loading catalog...");
 
   // Load catalog first (needed for everything else)
   gasReadMultiple(["categories","brands","flavors","default_prices","min_prices","item_master"])
@@ -361,13 +368,14 @@ function doSync() {
     if (r.min_prices)    state.minPrices     = rowsToObjects(r.min_prices.headers,    r.min_prices.rows);
     if (r.item_master)   state.itemMaster    = rowsToObjects(r.item_master.headers,   r.item_master.rows);
     // Load stock + txlog
+    setSyncStatus("busy", "Step 2/4 — Loading stock...");
     return gasReadMultiple(["stock","txlog"]);
   })
   .then(function(res) {
     var r = res.results;
     if (r.stock) state.stock   = rowsToObjects(r.stock.headers,  r.stock.rows);
     if (r.txlog) state.txlog   = rowsToObjects(r.txlog.headers,  r.txlog.rows);
-    // Load customers + config
+    setSyncStatus("busy", "Step 3/4 — Loading customers...");
     return gasReadMultiple(["customers","customer_prices","distributors","distributor_prices","settings"]);
   })
   .then(function(res) {
@@ -379,7 +387,7 @@ function doSync() {
     if (r.settings && r.settings.rows && r.settings.rows.length) {
       state.settings = rowsToObjects(r.settings.headers, r.settings.rows)[0] || {};
     }
-    // Load sales data
+    setSyncStatus("busy", "Step 4/4 — Loading sales...");
     return gasReadMultiple(["estimates","estimate_items","payments","memos","alt_invoices","alt_invoice_items"]);
   })
   .then(function(res) {
@@ -409,10 +417,11 @@ function doSync() {
   })
   .catch(function(err) {
     state.connected = false;
-    setSyncStatus("err", "Sync failed");
     _syncBusy = false;
+    setSyncStatus("err", "Sync failed — tap to retry");
     toast("Sync failed: " + err.message, "err");
     console.error("Sync error:", err);
+    renderCurrentPage(); // Show what we have locally
   });
 }
 
@@ -510,9 +519,9 @@ function renderStock() {
   var cats = state.categories.filter(function(c){return c.name;})
     .sort(function(a,b){return (parseInt(a.sortOrder)||0)-(parseInt(b.sortOrder)||0);});
 
-  if (!cats.length && !state.connected) {
-    el.innerHTML = '<div class="loading-screen"><div class="spinner"></div><div>Loading...</div></div>';
-    return;
+  if (!cats.length) {
+    h += '<div class="empty"><div class="ei">📦</div><div class="et">No catalog data yet.<br><button class="btn bpri" onclick="doSync()" style="margin-top:12px">⟳ Sync from Google Sheets</button></div></div>';
+    el.innerHTML = h; return;
   }
 
   var totalUnits = state.stock.reduce(function(s,r){return s+(parseInt(r.qty,10)||0);},0);
@@ -757,22 +766,34 @@ function downloadBackup() {
 (function init() {
   loadLocal();
   renderCurrentPage();
-  // Auto-sync on startup if we have a connection
+  // Check connection in background — do NOT block UI
+  setSyncStatus("", "Tap Sync to load data");
   setTimeout(function() {
-    setSyncStatus("busy", "Connecting...");
     gasCall({ action: "ping" })
-    .then(function() {
+    .then(function(res) {
       state.connected = true;
-      setSyncStatus("ok", "Connected");
-      doSync();
+      setSyncStatus("ok", "Ready — tap Sync");
+      // Auto-sync only if we have no local data yet
+      var hasData = state.categories.length > 0 || state.customers.length > 0;
+      if (!hasData) {
+        toast("Connected! Tap Sync to load your data");
+      } else {
+        setSyncStatus("ok", "Local data loaded");
+        toast("Local data ready. Tap Sync to refresh");
+      }
     })
     .catch(function() {
       state.connected = false;
-      setSyncStatus("err", "Offline — using local data");
-      toast("Working offline — tap Sync when connected");
+      setSyncStatus("err", "Cannot reach Sheets");
+      if (state.categories.length > 0) {
+        toast("Using saved local data");
+      } else {
+        toast("Not connected. Check internet and tap Sync");
+      }
     });
-  }, 500);
+  }, 800);
 })();
+
 </script>
 </body>
 </html>
