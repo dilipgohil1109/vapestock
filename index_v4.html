@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KrazyStock v4.0</title>
+<style>
+/* ── RESET & ROOT ─────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f5f7;--sur:#ffffff;--sur2:#eeeef0;--brd:#d1d1d6;
+  --txt:#1c1c1e;--txt2:#3a3a3c;--txt3:#8e8e93;
+  --acc:#5b4fe8;--grn:#00a870;--red:#e0394a;--amb:#c47c00;
+  --r:12px;--rs:10px;--nav:56px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg);color:var(--txt);font-size:14px;
+  min-height:100vh;padding-bottom:calc(var(--nav) + 16px)}
+/* ── BOTTOM NAV ──────────────────────────────────── */
+#nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav);
+  background:var(--sur);border-top:1px solid var(--brd);
+  display:flex;align-items:stretch;z-index:100;
+  box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;cursor:pointer;border:none;
+  background:none;color:var(--txt3);font-size:9px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;transition:color .15s}
+.nav-btn.on{color:var(--acc)}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;
+  fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* ── PAGES ───────────────────────────────────────── */
+.pg{display:none;padding:16px;max-width:600px;margin:0 auto}
+.pg.on{display:block}
+/* ── CARDS & SURFACES ────────────────────────────── */
+.card{background:var(--sur);border:1px solid var(--brd);
+  border-radius:var(--r);padding:14px;margin-bottom:10px}
+.stitle{font-size:20px;font-weight:800;margin-bottom:14px}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.5px;color:var(--txt3);margin:16px 0 8px}
+/* ── INPUTS ──────────────────────────────────────── */
+.ifield{width:100%;padding:11px 13px;border:1.5px solid var(--brd);
+  border-radius:var(--rs);background:var(--sur);color:var(--txt);
+  font-size:14px;outline:none;transition:border-color .2s;margin-bottom:8px}
+.ifield:focus{border-color:var(--acc)}
+.ilbl{font-size:11px;font-weight:600;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.igrp{margin-bottom:10px}
+/* ── BUTTONS ─────────────────────────────────────── */
+.btn{padding:11px 18px;border-radius:var(--rs);border:none;
+  font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:active{opacity:.75}
+.bpri{background:var(--acc);color:#fff}
+.bsec{background:var(--sur2);color:var(--txt)}
+.bsuc{background:var(--grn);color:#fff}
+.bdgr{background:var(--red);color:#fff}
+.bamb{background:var(--amb);color:#fff}
+.bsm{font-size:12px;padding:7px 13px}
+.brow{display:flex;gap:8px;margin-top:12px}
+.brow .btn{flex:1}
+/* ── CHIPS ───────────────────────────────────────── */
+.fc{padding:6px 14px;border-radius:50px;border:1.5px solid var(--brd);
+  background:var(--sur);font-size:12px;font-weight:700;cursor:pointer;
+  color:var(--txt3);transition:all .15s;user-select:none;white-space:nowrap}
+.fc.on{border-color:var(--acc);color:var(--acc);background:rgba(91,79,232,.08)}
+.chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+/* ── EMPTY STATE ─────────────────────────────────── */
+.empty{text-align:center;padding:40px 20px;color:var(--txt3)}
+.empty .ei{font-size:48px;margin-bottom:12px}
+.empty .et{font-size:14px;line-height:1.5}
+/* ── TOAST ───────────────────────────────────────── */
+#toast{position:fixed;bottom:calc(var(--nav) + 12px);left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:50px;
+  font-size:13px;font-weight:600;opacity:0;transition:all .3s;
+  z-index:9999;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ── MODAL ───────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:500;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--sur);border-radius:20px 20px 0 0;
+  padding:24px 20px 40px;width:100%;max-width:600px;
+  max-height:85vh;overflow-y:auto;position:relative}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:16px}
+.modal-close{position:absolute;top:16px;right:16px;font-size:20px;
+  cursor:pointer;color:var(--txt3);background:var(--sur2);
+  border-radius:50%;width:32px;height:32px;display:flex;
+  align-items:center;justify-content:center;line-height:1}
+/* ── SYNC STATUS ─────────────────────────────────── */
+#sync-bar{background:var(--sur);border-bottom:1px solid var(--brd);
+  padding:6px 16px;display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--txt3)}
+#sync-dot{width:8px;height:8px;border-radius:50%;background:var(--txt3)}
+#sync-dot.ok{background:var(--grn)}
+#sync-dot.err{background:var(--red)}
+#sync-dot.busy{background:var(--amb);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* ── TABLE ───────────────────────────────────────── */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{padding:8px 10px;text-align:left;font-size:10px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--txt3);border-bottom:2px solid var(--brd)}
+.data-table td{padding:10px;border-bottom:1px solid var(--brd);vertical-align:top}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:nth-child(even){background:var(--sur2)}
+/* ── STAT GRID ───────────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.stat-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+.stat-card{background:var(--sur);border:1px solid var(--brd);
+  border-radius:var(--r);padding:12px;text-align:center}
+.stat-val{font-size:20px;font-weight:800;font-family:monospace}
+.stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--txt3);margin-top:3px}
+/* ── HEADER ──────────────────────────────────────── */
+#app-header{background:var(--sur);border-bottom:1px solid var(--brd);
+  padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50}
+.app-logo{font-size:16px;font-weight:900;color:var(--txt)}
+.app-logo span{color:var(--acc)}
+/* ── BADGE ───────────────────────────────────────── */
+.badge{display:inline-block;padding:2px 8px;border-radius:50px;
+  font-size:10px;font-weight:700}
+.badge-grn{background:rgba(0,168,112,.12);color:var(--grn)}
+.badge-red{background:rgba(224,57,74,.12);color:var(--red)}
+.badge-amb{background:rgba(196,124,0,.12);color:var(--amb)}
+.badge-acc{background:rgba(91,79,232,.12);color:var(--acc)}
+/* ── SEARCH ──────────────────────────────────────── */
+.search-box{position:relative;margin-bottom:12px}
+.search-box input{padding-left:36px}
+.search-box::before{content:"🔍";position:absolute;left:12px;top:50%;
+  transform:translateY(-50%);font-size:14px;pointer-events:none}
+/* ── LOADING ─────────────────────────────────────── */
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--brd);
+  border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-screen{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:60vh;gap:16px;color:var(--txt3)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="app-header">
+  <div class="app-logo">Krazy<span>Stock</span> <span style="font-size:10px;font-weight:400;color:var(--txt3)">v4.0</span></div>
+  <div id="sync-bar" style="background:none;border:none;padding:0">
+    <div id="sync-dot"></div>
+    <span id="sync-lbl">Not connected</span>
+    <button class="btn bsec bsm" id="btn-sync" style="margin-left:8px" onclick="doSync()">⟳ Sync</button>
+  </div>
+</div>
+
+<!-- PAGES -->
+<div class="pg on" id="pg-stock"></div>
+<div class="pg" id="pg-buy"></div>
+<div class="pg" id="pg-sell"></div>
+<div class="pg" id="pg-orders"></div>
+<div class="pg" id="pg-accounts"></div>
+<div class="pg" id="pg-catalog"></div>
+<div class="pg" id="pg-analysis"></div>
+<div class="pg" id="pg-settings"></div>
+
+<!-- BOTTOM NAV -->
+<nav id="nav">
+  <button class="nav-btn on" data-pg="stock" onclick="switchPage('stock')">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    Stock
+  </button>
+  <button class="nav-btn" data-pg="buy" onclick="switchPage('buy')">
+    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    Buy
+  </button>
+  <button class="nav-btn" data-pg="sell" onclick="switchPage('sell')">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+    Sell
+  </button>
+  <button class="nav-btn" data-pg="accounts" onclick="switchPage('accounts')">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    Accounts
+  </button>
+  <button class="nav-btn" data-pg="catalog" onclick="switchPage('catalog')">
+    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    Catalog
+  </button>
+  <button class="nav-btn" data-pg="analysis" onclick="switchPage('analysis')">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Analysis
+  </button>
+  <button class="nav-btn" data-pg="settings" onclick="switchPage('settings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════════
+var GAS_URL = "https://script.google.com/macros/s/AKfycbzuH99s94q5C4oB01JFppec7mNYlLvQ3FROtb33yaKu4gIDo1D_5kf9q570eTeXYRtnYA/exec";
+
+// ════════════════════════════════════════════════════════════
+// APP STATE — all data lives here in memory + localStorage
+// ════════════════════════════════════════════════════════════
+var state = {
+  // Catalog
+  categories:        [],  // [{name, sortOrder}]
+  brands:            [],  // [{brand, category, puffs, nic, ml, costPrice, active, isBuiltIn}]
+  flavors:           [],  // [{brand, flavor, active, isBuiltIn}]
+  brandImages:       [],  // [{brand, imageUrl}]
+  defaultPrices:     [],  // [{brand, price}]
+  minPrices:         [],  // [{brand, minPrice}]
+  itemMaster:        [],  // [{id, name, category, unitPrice, active}]
+  // Stock & transactions
+  stock:             [],  // [{brand, flavor, qty}]
+  txlog:             [],  // [{id, type, date_iso, brand, flavor, qty, ...}]
+  // Sales
+  estimates:         [],  // [{id, num, date_display, rawDate, custId, custName, total, manual, description, ...}]
+  estimateItems:     [],  // [{estId, brand, flavor, category, qty, unitPrice, total}]
+  payments:          [],  // [{id, estId, custId, custName, date, amount, method, received, ...}]
+  memos:             [],  // [{id, custId, custName, date, amount, memoType, note}]
+  altInvoices:       [],  // [{id, estId, custId, custName, targetTotal, rawDate}]
+  altInvoiceItems:   [],  // [{altId, itemMasterId, name, qty, masterPrice, adjustedPrice}]
+  // Purchases
+  purchases:         [],  // [{id, date_iso, brand, flavor, qty, unitPrice, total, distId, distName, refNo}]
+  orders:            [],  // [{id, num, date_display, custId, custName, total, status}]
+  orderItems:        [],  // [{ordId, brand, flavor, category, qty, unitPrice, total}]
+  // Customers
+  customers:         [],  // [{id, name, contact, addr1, city, state, zip, phone}]
+  customerPrices:    [],  // [{custId, custName, brand, price}]
+  // Config
+  distributors:      [],  // [{id, name, contact, phone, email}]
+  distributorPrices: [],  // [{distId, distName, brand, price}]
+  settings:          {},  // {nextEstNum, nextOrderNum}
+  deletedEstimates:  [],  // [{estId, deletedAt}]
+  // App state
+  lastSync:          0,
+  connected:         false,
+  activePage:        "stock"
+};
+
+// ════════════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ════════════════════════════════════════════════════════════
+function saveLocal() {
+  try {
+    localStorage.setItem("ks4_state", JSON.stringify({
+      categories: state.categories,
+      brands: state.brands,
+      flavors: state.flavors,
+      defaultPrices: state.defaultPrices,
+      minPrices: state.minPrices,
+      itemMaster: state.itemMaster,
+      stock: state.stock,
+      txlog: state.txlog.slice(0,2000),
+      estimates: state.estimates,
+      estimateItems: state.estimateItems,
+      payments: state.payments,
+      memos: state.memos,
+      altInvoices: state.altInvoices,
+      altInvoiceItems: state.altInvoiceItems,
+      purchases: state.purchases,
+      orders: state.orders,
+      orderItems: state.orderItems,
+      customers: state.customers,
+      customerPrices: state.customerPrices,
+      distributors: state.distributors,
+      distributorPrices: state.distributorPrices,
+      settings: state.settings,
+      deletedEstimates: state.deletedEstimates,
+      lastSync: state.lastSync
+    }));
+  } catch(e) { console.warn("saveLocal failed:", e.message); }
+}
+
+function loadLocal() {
+  try {
+    var raw = localStorage.getItem("ks4_state");
+    if (!raw) return;
+    var saved = JSON.parse(raw);
+    Object.keys(saved).forEach(function(k) {
+      if (k in state) state[k] = saved[k];
+    });
+  } catch(e) { console.warn("loadLocal failed:", e.message); }
+}
+
+// ════════════════════════════════════════════════════════════
+// GAS API CALLS
+// ════════════════════════════════════════════════════════════
+function gasCall(payload) {
+  return fetch(GAS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    return data;
+  });
+}
+
+function gasRead(tab) {
+  return gasCall({ action: "readAll", tab: tab });
+}
+
+function gasReadMultiple(tabs) {
+  return gasCall({ action: "readMultiple", tabs: tabs });
+}
+
+function gasAppend(tab, rows) {
+  return gasCall({ action: "appendRows", tab: tab, rows: rows });
+}
+
+function gasUpsert(tab, rows, keyCol) {
+  return gasCall({ action: "upsertRows", tab: tab, rows: rows, keyCol: keyCol });
+}
+
+function gasDelete(tab, keyCol, keyVal) {
+  return gasCall({ action: "deleteRow", tab: tab, keyCol: keyCol, keyVal: keyVal });
+}
+
+// ════════════════════════════════════════════════════════════
+// SHEET → STATE CONVERSION
+// Convert array of arrays (from Sheets) to array of objects
+// ════════════════════════════════════════════════════════════
+function rowsToObjects(headers, rows) {
+  return rows.map(function(row) {
+    var obj = {};
+    headers.forEach(function(h, i) { obj[h] = row[i]; });
+    return obj;
+  });
+}
+
+function objectToRow(headers, obj) {
+  return headers.map(function(h) {
+    var v = obj[h];
+    return (v === undefined || v === null) ? "" : v;
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// SYNC — Load all data from Sheets
+// ════════════════════════════════════════════════════════════
+var _syncBusy = false;
+
+function doSync() {
+  if (_syncBusy) { toast("Sync already running..."); return; }
+  _syncBusy = true;
+  setSyncStatus("busy", "Syncing...");
+
+  // Load catalog first (needed for everything else)
+  gasReadMultiple(["categories","brands","flavors","default_prices","min_prices","item_master"])
+  .then(function(res) {
+    var r = res.results;
+    if (r.categories)    state.categories    = rowsToObjects(r.categories.headers,    r.categories.rows);
+    if (r.brands)        state.brands        = rowsToObjects(r.brands.headers,        r.brands.rows);
+    if (r.flavors)       state.flavors       = rowsToObjects(r.flavors.headers,       r.flavors.rows);
+    if (r.default_prices)state.defaultPrices = rowsToObjects(r.default_prices.headers,r.default_prices.rows);
+    if (r.min_prices)    state.minPrices     = rowsToObjects(r.min_prices.headers,    r.min_prices.rows);
+    if (r.item_master)   state.itemMaster    = rowsToObjects(r.item_master.headers,   r.item_master.rows);
+    // Load stock + txlog
+    return gasReadMultiple(["stock","txlog"]);
+  })
+  .then(function(res) {
+    var r = res.results;
+    if (r.stock) state.stock   = rowsToObjects(r.stock.headers,  r.stock.rows);
+    if (r.txlog) state.txlog   = rowsToObjects(r.txlog.headers,  r.txlog.rows);
+    // Load customers + config
+    return gasReadMultiple(["customers","customer_prices","distributors","distributor_prices","settings"]);
+  })
+  .then(function(res) {
+    var r = res.results;
+    if (r.customers)           state.customers         = rowsToObjects(r.customers.headers,           r.customers.rows);
+    if (r.customer_prices)     state.customerPrices    = rowsToObjects(r.customer_prices.headers,     r.customer_prices.rows);
+    if (r.distributors)        state.distributors      = rowsToObjects(r.distributors.headers,        r.distributors.rows);
+    if (r.distributor_prices)  state.distributorPrices = rowsToObjects(r.distributor_prices.headers,  r.distributor_prices.rows);
+    if (r.settings && r.settings.rows && r.settings.rows.length) {
+      state.settings = rowsToObjects(r.settings.headers, r.settings.rows)[0] || {};
+    }
+    // Load sales data
+    return gasReadMultiple(["estimates","estimate_items","payments","memos","alt_invoices","alt_invoice_items"]);
+  })
+  .then(function(res) {
+    var r = res.results;
+    if (r.estimates)         state.estimates        = rowsToObjects(r.estimates.headers,         r.estimates.rows).filter(function(e){return !e.deletedAt;});
+    if (r.estimate_items)    state.estimateItems    = rowsToObjects(r.estimate_items.headers,    r.estimate_items.rows);
+    if (r.payments)          state.payments         = rowsToObjects(r.payments.headers,          r.payments.rows);
+    if (r.memos)             state.memos            = rowsToObjects(r.memos.headers,             r.memos.rows);
+    if (r.alt_invoices)      state.altInvoices      = rowsToObjects(r.alt_invoices.headers,      r.alt_invoices.rows).filter(function(a){return !a.deletedAt;});
+    if (r.alt_invoice_items) state.altInvoiceItems  = rowsToObjects(r.alt_invoice_items.headers, r.alt_invoice_items.rows);
+    // Load purchases + orders
+    return gasReadMultiple(["purchases","orders","order_items"]);
+  })
+  .then(function(res) {
+    var r = res.results;
+    if (r.purchases)   state.purchases  = rowsToObjects(r.purchases.headers,   r.purchases.rows);
+    if (r.orders)      state.orders     = rowsToObjects(r.orders.headers,      r.orders.rows);
+    if (r.order_items) state.orderItems = rowsToObjects(r.order_items.headers, r.order_items.rows);
+
+    state.connected = true;
+    state.lastSync  = Date.now();
+    saveLocal();
+    setSyncStatus("ok", "Synced " + new Date().toLocaleTimeString());
+    _syncBusy = false;
+    toast("✓ All data loaded", "ok");
+    renderCurrentPage();
+  })
+  .catch(function(err) {
+    state.connected = false;
+    setSyncStatus("err", "Sync failed");
+    _syncBusy = false;
+    toast("Sync failed: " + err.message, "err");
+    console.error("Sync error:", err);
+  });
+}
+
+function setSyncStatus(status, label) {
+  var dot = document.getElementById("sync-dot");
+  var lbl = document.getElementById("sync-lbl");
+  if (dot) { dot.className = ""; dot.classList.add(status); }
+  if (lbl) lbl.textContent = label;
+}
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+function switchPage(pg) {
+  document.querySelectorAll(".pg").forEach(function(el) { el.classList.remove("on"); });
+  document.querySelectorAll(".nav-btn").forEach(function(el) { el.classList.remove("on"); });
+  var pgEl  = document.getElementById("pg-" + pg);
+  var navEl = document.querySelector("[data-pg='" + pg + "']");
+  if (pgEl)  pgEl.classList.add("on");
+  if (navEl) navEl.classList.add("on");
+  state.activePage = pg;
+  renderCurrentPage();
+}
+
+function renderCurrentPage() {
+  var pg = state.activePage;
+  if      (pg === "stock")    renderStock();
+  else if (pg === "buy")      renderBuy();
+  else if (pg === "sell")     renderSell();
+  else if (pg === "accounts") renderAccounts();
+  else if (pg === "catalog")  renderCatalog();
+  else if (pg === "analysis") renderAnalysis();
+  else if (pg === "settings") renderSettings();
+}
+
+// ════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════
+function toast(msg, type) {
+  var el = document.getElementById("toast");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.background = type === "err" ? "#c0392b" : type === "ok" ? "#00a870" : "#1c1c1e";
+  el.classList.add("show");
+  setTimeout(function() { el.classList.remove("show"); }, 2800);
+}
+
+function getStockQty(brand, flavor) {
+  var row = state.stock.find(function(r) { return r.brand === brand && r.flavor === flavor; });
+  return row ? (parseInt(row.qty, 10) || 0) : 0;
+}
+
+function getDefaultPrice(brand) {
+  var row = state.defaultPrices.find(function(r) { return r.brand === brand; });
+  return row ? (parseFloat(row.price) || 0) : 0;
+}
+
+function getCustPrice(custId, brand) {
+  var row = state.customerPrices.find(function(r) { return r.custId === custId && r.brand === brand; });
+  return row ? (parseFloat(row.price) || 0) : getDefaultPrice(brand);
+}
+
+function getBrandsByCategory(cat) {
+  return state.brands.filter(function(b) {
+    return b.category === cat && String(b.active) !== "false";
+  }).map(function(b) { return b.brand; });
+}
+
+function getFlavorsForBrand(brand) {
+  return state.flavors.filter(function(f) {
+    return f.brand === brand && String(f.active) !== "false";
+  }).map(function(f) { return f.flavor; });
+}
+
+function uid() { return "ks4_" + Date.now() + "_" + Math.random().toString(36).substr(2,6); }
+
+function todayISO() {
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function fmtDate(isoStr) {
+  if (!isoStr) return "";
+  var d = new Date(isoStr + "T12:00:00");
+  return d.toLocaleDateString("en-US", {weekday:"short",month:"short",day:"numeric",year:"numeric"});
+}
+
+function fmtMoney(n) { return "$" + (parseFloat(n)||0).toFixed(2); }
+
+// ════════════════════════════════════════════════════════════
+// STOCK PAGE
+// ════════════════════════════════════════════════════════════
+function renderStock() {
+  var el = document.getElementById("pg-stock"); if (!el) return;
+  var cats = state.categories.filter(function(c){return c.name;})
+    .sort(function(a,b){return (parseInt(a.sortOrder)||0)-(parseInt(b.sortOrder)||0);});
+
+  if (!cats.length && !state.connected) {
+    el.innerHTML = '<div class="loading-screen"><div class="spinner"></div><div>Loading...</div></div>';
+    return;
+  }
+
+  var totalUnits = state.stock.reduce(function(s,r){return s+(parseInt(r.qty,10)||0);},0);
+  var brandCount = state.brands.filter(function(b){return String(b.active)!=="false";}).length;
+
+  var h = '<p class="stitle">Stock</p>';
+  h += '<div class="stat-grid">';
+  h += '<div class="stat-card"><div class="stat-val" style="color:var(--acc)">'+totalUnits+'</div><div class="stat-lbl">Total Units</div></div>';
+  h += '<div class="stat-card"><div class="stat-val">'+brandCount+'</div><div class="stat-lbl">Brands</div></div>';
+  h += '</div>';
+
+  if (!cats.length) {
+    h += '<div class="empty"><div class="ei">📦</div><div class="et">No catalog data yet.<br>Tap Sync to load from Google Sheets.</div></div>';
+    el.innerHTML = h; return;
+  }
+
+  cats.forEach(function(cat) {
+    var brands = getBrandsByCategory(cat.name);
+    if (!brands.length) return;
+    h += '<div class="sec-title">' + cat.name + '</div>';
+    brands.forEach(function(brand) {
+      var flavors = getFlavorsForBrand(brand);
+      var brandTotal = flavors.reduce(function(s,fl){return s+getStockQty(brand,fl);},0);
+      h += '<div class="card" style="padding:0;overflow:hidden">';
+      h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--sur2);border-bottom:1px solid var(--brd)">';
+      h += '<div style="font-weight:700;font-size:14px">'+brand+'</div>';
+      h += '<div style="font-family:monospace;font-weight:800;color:'+(brandTotal>0?"var(--grn)":"var(--red)")+'">'+brandTotal+' units</div>';
+      h += '</div>';
+      if (flavors.length) {
+        h += '<table class="data-table"><thead><tr><th>Flavor</th><th style="text-align:right">Qty</th></tr></thead><tbody>';
+        flavors.forEach(function(fl) {
+          var qty = getStockQty(brand, fl);
+          h += '<tr><td>'+fl+'</td><td style="text-align:right;font-family:monospace;font-weight:700;color:'+(qty>0?"var(--txt)":"var(--red)")+'">'+qty+'</td></tr>';
+        });
+        h += '</tbody></table>';
+      }
+      h += '</div>';
+    });
+  });
+
+  el.innerHTML = h;
+}
+
+// ════════════════════════════════════════════════════════════
+// BUY PAGE
+// ════════════════════════════════════════════════════════════
+function renderBuy() {
+  var el = document.getElementById("pg-buy"); if (!el) return;
+  el.innerHTML = '<p class="stitle">Buy Stock</p>' +
+    '<div class="empty"><div class="ei">🛒</div><div class="et">Buy tab — coming in next session.<br>Sync to load your catalog first.</div></div>';
+}
+
+// ════════════════════════════════════════════════════════════
+// SELL PAGE
+// ════════════════════════════════════════════════════════════
+function renderSell() {
+  var el = document.getElementById("pg-sell"); if (!el) return;
+  el.innerHTML = '<p class="stitle">Sell / Estimates</p>' +
+    '<div class="empty"><div class="ei">📋</div><div class="et">Sell tab — coming in next session.</div></div>';
+}
+
+// ════════════════════════════════════════════════════════════
+// ACCOUNTS PAGE
+// ════════════════════════════════════════════════════════════
+function renderAccounts() {
+  var el = document.getElementById("pg-accounts"); if (!el) return;
+  var custs = state.customers.filter(function(c){return c.id&&c.name;});
+  var h = '<p class="stitle">Accounts</p>';
+
+  if (!custs.length) {
+    h += '<div class="empty"><div class="ei">👥</div><div class="et">No customers yet.<br>Sync to load customer data.</div></div>';
+    el.innerHTML = h; return;
+  }
+
+  custs.forEach(function(c) {
+    var custPays   = state.payments.filter(function(p){return p.custId===c.id&&String(p.received)==="true";});
+    var custEsts   = state.estimates.filter(function(e){return e.custId===c.id&&!e.deletedAt;});
+    var custMemos  = state.memos.filter(function(m){return m.custId===c.id;});
+    var billed     = custEsts.reduce(function(s,e){return s+(parseFloat(e.total)||0);},0);
+    var received   = custPays.reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+    var memoNet    = custMemos.reduce(function(s,m){return s+(m.memoType==="credit"?-(parseFloat(m.amount)||0):(parseFloat(m.amount)||0));},0);
+    var balance    = billed - received + memoNet;
+    h += '<div class="card">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    h += '<div style="font-weight:700">'+c.name+'</div>';
+    h += '<span class="badge '+(balance>0.01?"badge-red":balance<-0.01?"badge-grn":"badge-acc")+'">'+(balance>0.01?"Owes "+fmtMoney(balance):balance<-0.01?"Credit "+fmtMoney(Math.abs(balance)):"Settled")+'</span>';
+    h += '</div>';
+    if (c.phone) h += '<div style="font-size:12px;color:var(--txt3);margin-top:4px">'+c.phone+'</div>';
+    h += '<div style="display:flex;gap:12px;margin-top:10px;font-size:12px">';
+    h += '<span style="color:var(--txt3)">Billed: <strong>'+fmtMoney(billed)+'</strong></span>';
+    h += '<span style="color:var(--grn)">Received: <strong>'+fmtMoney(received)+'</strong></span>';
+    h += '</div></div>';
+  });
+
+  el.innerHTML = h;
+}
+
+// ════════════════════════════════════════════════════════════
+// CATALOG PAGE
+// ════════════════════════════════════════════════════════════
+function renderCatalog() {
+  var el = document.getElementById("pg-catalog"); if (!el) return;
+  var cats = state.categories.filter(function(c){return c.name;})
+    .sort(function(a,b){return (parseInt(a.sortOrder)||0)-(parseInt(b.sortOrder)||0);});
+  var h = '<p class="stitle">Catalog</p>';
+
+  if (!cats.length) {
+    h += '<div class="empty"><div class="ei">📚</div><div class="et">No catalog data.<br>Tap Sync to load.</div></div>';
+    el.innerHTML = h; return;
+  }
+
+  h += '<div style="font-size:12px;color:var(--txt3);margin-bottom:12px">';
+  h += state.brands.filter(function(b){return String(b.active)!=="false";}).length + ' brands · ';
+  h += state.flavors.filter(function(f){return String(f.active)!=="false";}).length + ' flavors</div>';
+
+  cats.forEach(function(cat) {
+    var brands = state.brands.filter(function(b){return b.category===cat.name&&String(b.active)!=="false";});
+    if (!brands.length) return;
+    h += '<div class="sec-title">'+cat.name+' ('+brands.length+' brands)</div>';
+    brands.forEach(function(b) {
+      var flavors = state.flavors.filter(function(f){return f.brand===b.brand&&String(f.active)!=="false";});
+      var costPrice = b.costPrice ? fmtMoney(b.costPrice)+"/u" : "—";
+      h += '<div class="card">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+      h += '<div style="font-weight:700">'+b.brand+'</div>';
+      h += '<span style="font-size:11px;color:var(--txt3)">Cost: '+costPrice+'</span>';
+      h += '</div>';
+      if (b.puffs||b.nic) {
+        h += '<div style="font-size:11px;color:var(--txt3);margin-bottom:6px">';
+        if (b.puffs) h += b.puffs+' puffs ';
+        if (b.nic)   h += b.nic+'mg ';
+        if (b.ml)    h += b.ml+'ml';
+        h += '</div>';
+      }
+      h += '<div style="font-size:12px;color:var(--txt3)">'+flavors.length+' flavors: ';
+      h += flavors.slice(0,5).map(function(f){return f.flavor;}).join(", ");
+      if (flavors.length>5) h += '... +' + (flavors.length-5) + ' more';
+      h += '</div></div>';
+    });
+  });
+
+  el.innerHTML = h;
+}
+
+// ════════════════════════════════════════════════════════════
+// ANALYSIS PAGE
+// ════════════════════════════════════════════════════════════
+function renderAnalysis() {
+  var el = document.getElementById("pg-analysis"); if (!el) return;
+  el.innerHTML = '<p class="stitle">Analysis</p>' +
+    '<div class="empty"><div class="ei">📊</div><div class="et">Analysis — coming in next session.</div></div>';
+}
+
+// ════════════════════════════════════════════════════════════
+// SETTINGS PAGE
+// ════════════════════════════════════════════════════════════
+function renderSettings() {
+  var el = document.getElementById("pg-settings"); if (!el) return;
+  var h = '<p class="stitle">Settings & Sync</p>';
+
+  h += '<div class="card">';
+  h += '<div style="font-weight:700;margin-bottom:10px">Google Sheets Connection</div>';
+  h += '<div style="font-size:12px;color:var(--txt3);margin-bottom:4px">GAS Web App URL</div>';
+  h += '<div style="font-size:11px;font-family:monospace;background:var(--sur2);padding:8px;border-radius:8px;word-break:break-all;margin-bottom:10px">'+GAS_URL+'</div>';
+  h += '<div style="display:flex;gap:8px">';
+  h += '<button class="btn bpri" style="flex:1" onclick="doSync()">⟳ Sync Now</button>';
+  h += '<button class="btn bsec" style="flex:1" onclick="testConnection()">🔌 Test Connection</button>';
+  h += '</div></div>';
+
+  h += '<div class="card">';
+  h += '<div style="font-weight:700;margin-bottom:10px">Data Summary</div>';
+  var summary = [
+    {l:"Categories",  v:state.categories.length},
+    {l:"Brands",      v:state.brands.length},
+    {l:"Flavors",     v:state.flavors.length},
+    {l:"Customers",   v:state.customers.length},
+    {l:"Distributors",v:state.distributors.length},
+    {l:"Estimates",   v:state.estimates.length},
+    {l:"Payments",    v:state.payments.length},
+    {l:"Purchases",   v:state.purchases.length},
+    {l:"Orders",      v:state.orders.length},
+    {l:"TxLog",       v:state.txlog.length},
+  ];
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  summary.forEach(function(s) {
+    h += '<div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--sur2);border-radius:8px;font-size:13px">';
+    h += '<span style="color:var(--txt3)">'+s.l+'</span><span style="font-weight:700">'+s.v+'</span></div>';
+  });
+  h += '</div>';
+  if (state.lastSync) {
+    h += '<div style="font-size:11px;color:var(--txt3);margin-top:10px">Last sync: '+new Date(state.lastSync).toLocaleString()+'</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="card">';
+  h += '<div style="font-weight:700;margin-bottom:10px">Backup</div>';
+  h += '<button class="btn bsec" style="width:100%" onclick="downloadBackup()">⬇ Download JSON Backup</button>';
+  h += '<div style="font-size:11px;color:var(--txt3);margin-top:8px">Monthly automatic backups also run on Google Drive (1st of each month)</div>';
+  h += '</div>';
+
+  h += '<div class="card">';
+  h += '<div style="font-weight:700;margin-bottom:4px">v4.0 — KrazyStock</div>';
+  h += '<div style="font-size:12px;color:var(--txt3)">Hosted at github.com/dilipgohil1109/vapestock<br>';
+  h += 'Current app (v3.1): <a href="index.html" style="color:var(--acc)">index.html</a></div>';
+  h += '</div>';
+
+  el.innerHTML = h;
+}
+
+function testConnection() {
+  setSyncStatus("busy", "Testing...");
+  gasCall({ action: "ping" })
+  .then(function(res) {
+    setSyncStatus("ok", "Connected ✓");
+    toast("✓ Connected to Google Sheets", "ok");
+  })
+  .catch(function(err) {
+    setSyncStatus("err", "Connection failed");
+    toast("Connection failed: " + err.message, "err");
+  });
+}
+
+function downloadBackup() {
+  var backup = {
+    version: "4.0",
+    timestamp: new Date().toISOString(),
+    data: state
+  };
+  var blob = new Blob([JSON.stringify(backup, null, 2)], {type:"application/json"});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement("a");
+  a.href   = url;
+  a.download = "krazystock_backup_" + todayISO() + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("✓ Backup downloaded", "ok");
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+(function init() {
+  loadLocal();
+  renderCurrentPage();
+  // Auto-sync on startup if we have a connection
+  setTimeout(function() {
+    setSyncStatus("busy", "Connecting...");
+    gasCall({ action: "ping" })
+    .then(function() {
+      state.connected = true;
+      setSyncStatus("ok", "Connected");
+      doSync();
+    })
+    .catch(function() {
+      state.connected = false;
+      setSyncStatus("err", "Offline — using local data");
+      toast("Working offline — tap Sync when connected");
+    });
+  }, 500);
+})();
+</script>
+</body>
+</html>
