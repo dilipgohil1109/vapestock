@@ -1,3 +1,56 @@
+<div class="modal-overlay" id="pur-summary-modal">
+  <div class="modal-sheet" style="max-height:90vh">
+    <div class="modal-title">&#128722; Purchase Summary</div>
+    <span class="modal-close" onclick="closePurSummary()">&#x2715;</span>
+    <div style="background:var(--sur2);border-radius:var(--r);padding:12px 14px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div class="ilbl">Distributor</div><div id="pur-sum-dist" style="font-weight:700;font-size:14px">—</div></div>
+        <div><div class="ilbl">Ref #</div><input class="ifield" id="pur-sum-refno" placeholder="INV-001" style="margin:0;font-size:13px"></div>
+      </div>
+      <div><div class="ilbl">Purchase Date</div><input class="ifield" id="pur-sum-date" type="date" style="margin:0;font-size:13px"></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:8px">Items</div>
+    <div style="display:grid;grid-template-columns:1fr 55px 80px 80px 24px;gap:4px;padding:6px 0;border-bottom:2px solid var(--brd);margin-bottom:6px">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase">Brand / Flavor</div>
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;text-align:center">Qty</div>
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;text-align:right">Unit $</div>
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;text-align:right">Total</div>
+      <div></div>
+    </div>
+    <div id="pur-sum-items" style="margin-bottom:12px;max-height:30vh;overflow-y:auto"></div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:6px">Add Adhoc Item</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <select class="ifield" id="pur-sum-add-brand" style="margin:0;font-size:13px" onchange="purSumBrandChanged()"><option value="">— Brand —</option></select>
+        <select class="ifield" id="pur-sum-add-flavor" style="margin:0;font-size:13px"><option value="">— Flavor —</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:70px 90px 1fr;gap:6px">
+        <input class="ifield" id="pur-sum-add-qty" type="number" min="1" placeholder="Qty" style="margin:0;font-size:13px">
+        <input class="ifield" id="pur-sum-add-price" type="number" min="0" step="0.01" placeholder="Unit $" style="margin:0;font-size:13px">
+        <button class="btn bsec" onclick="purSumAddItem()" style="margin:0">+ Add</button>
+      </div>
+    </div>
+    <div style="background:var(--sur2);border-radius:var(--r);padding:12px 14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:var(--txt3);font-size:13px">Total Units</span>
+        <span id="pur-sum-total-units" style="font-weight:800;font-family:monospace">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:var(--txt3);font-size:13px">Total Items</span>
+        <span id="pur-sum-total-items" style="font-weight:800;font-family:monospace">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--brd)">
+        <span style="font-size:15px;font-weight:700">Grand Total</span>
+        <span id="pur-sum-grand-total" style="font-size:18px;font-weight:900;font-family:monospace;color:var(--acc)">$0.00</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bsec" style="flex:1" onclick="closePurSummary()">Cancel</button>
+      <button class="btn bsuc" style="flex:2" onclick="confirmPurchaseSummary()">&#10003; Confirm Purchase</button>
+    </div>
+  </div>
+</div>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1351,6 +1404,16 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
+
+
+
+
+
+
+
 var CATALOG = {"Geek Bar 15K": ["Strawberry Banana", "Blow Pop", "Meta Moon", "Pink Lemonade", "White Gummy Ice", "Strawberry Mango", "Fcuking FAB", "California Cherry", "Miami Mint", "Blue Razz Ice", "Mexico Mango", "Juicy Peach Ice", "Sour Apple Ice", "Watermelon Ice", "Tropical Rainbow Blast", "Black Cherry", "Scorpio Blue Mint", "Aries Strawberry Kiwi", "Taurus Peach Mango", "Gemini Blueberry Lemon", "Cancer Watermelon Berry", "Leo Grape Ice", "Virgo Raspberry Lime", "Libra Passion Fruit", "Sagittarius Cool Mint", "Capricorn Tobacco", "Aquarius Blue Razz", "Pisces Pineapple Coconut", "Frozen Strawberry", "Frozen Pina Colada", "Frozen White Grape", "Frozen Cherry Apple", "Frozen Blackberry Fab", "Frozen Watermelon", "Sour Cranapple", "Sour Peach", "Sour Watermelon", "Sour Berry Burst", "Sour Lemon Drop", "Blue Razz Ice 0mg", "Fcuking FAB 0mg", "Miami Mint 0mg", "Strawberry BPop 0mg", "Watermelon Ice 0mg", "Blackmintz", "Creamymintz", "Iceymintz", "Peppermintz", "Stonemintz", "Banana Ice", "Peach Lemonade Punch", "Raspberry", "Watermelon", "Strawberry Kiwi", "Drop Sour Savers", "Orange Mint Savers", "Pineapple Savers", "Strawberry Savers", "Wild Berry Savers"], "Geek Bar 25K": ["Banana Taffy Freeze", "Blackberry BPop", "Blue Rancher", "Blue Razz Ice", "Grapefruit Refresher", "Miami Mint", "Lime Berry Orange", "Lemon Heads", "Orange Fcuking Fab", "Raspberry Peach Lime", "Sour Apple Ice", "Sour Fcuking Fab", "Sour Mango Pineapple", "Strawberry BPop", "Watermelon Ice", "Sour Straws", "Blackberry Blueberry", "Strawberry Colada", "Cool Mint", "White Peach Raspberry", "Blue Razz Ice Patriot", "Miami Mint Patriot", "Watermelon Ice Patriot", "Berry Cherry Lime", "Sour Pink Dust", "Blue Razz Ice Platinum", "Miami Mint Platinum", "Punch Platinum", "Watermelon Ice Platinum", "Galaxy Grape", "Cosmic Cherry", "Nebula Mint", "Stardust Strawberry", "Solar Mango", "Orange Slush", "Peach Blue Slushy", "Peach Perfect Slush", "Grape Slush", "Watermelon Slush", "Strawberry Jam", "Blueberry Jam", "Peach Jam", "Raspberry Jam", "Mixed Berry Jam", "Grape Jam", "Tropical Punch", "Cherry Lime", "Mango Berry", "Citrus Blast", "Pineapple Ice", "Peppermint Candy", "Winter Berry"], "Lava Plus": ["Apple Peach", "Banana", "Banana Milkshake", "Black Ice", "Block Ice", "Bloom", "Blueberry Raspberry Lemon", "Clear Ice", "Coffee Latte", "Cool Mint", "Cuban Tobacco", "Dragon Fume", "Fruit Blast", "Grapefruit Ice", "Guava Ice", "Honey Apple", "Kiwi Strawberry", "Mango Ice", "Miami Mint", "Peach Ice", "Peach Mango Watermelon", "Pineapple Coconut Rum", "Skittlrs", "Solo Mint", "Sour Apple Ice", "Sour Patch", "Spearmint", "Splash Ice", "Strawberry Ice", "Strawberry Lemon Mint", "Strawberry Milkshake", "Strawberry Watermelon Bubblegum", "Watermelon Bubblegum", "Watermelon with Mint"], "Crown Bar": ["Berry Ice", "Berry Mint", "Black Currant Mint", "Blackcurrant Ice", "Blue Razz Lemonade", "Blueberry Bubblegum", "Blueberry Gum", "Blueberry Mint", "Cherry Fiesta", "Grape Mint", "Gum Flavor", "Hubba", "Lush Ice", "Lucid Dream", "Mango Ice", "Mango Pineapple", "Mixed Berry", "Orange Mint", "Peach Ice", "Space Dream", "Strawberry Punch", "Sweet Passion Fruit", "Two Apple", "White Flash", "Watermelon Kiwi", "Blue Razz Blast", "Blueberry Lemonade", "Blueberry Raspberry", "Summer Dream", "Watermelon Cherry", "Watermelon Lime", "Watermelon Pineapple"], "Foggers": ["Miami Mint", "Cool Mint", "Icy Mint", "Gum Mint", "Blue Razz Ice", "Sour Apple Ice", "Watermelon Ice", "Juicy Peach Ice", "Pineapple Coconut Ice", "Grape Slush", "Orange Slush", "Strawberry Watermelon", "Peach Mango", "Mexico Mango", "Kiwi Dragon Berry", "White Peach Raspberry", "Mango Peach", "Strawberry Kiwi", "Watermelon Bubble Gum", "Banana Taffy Freeze", "Blue Rancher BPop", "Strawberry BPop", "OMG BPop", "Gummy Bear", "Strawberry Cupcake", "Strawberry Ice", "Watermelon Bubblegum", "Sour Blue Dust", "Sour Cranapple", "Sour Fcuking Fab", "Sour Gush", "Sour Kiwi Gush", "Sour Raspberry Punch", "Hawaiian Punch", "Triple Berry Punch", "Purple Passion Punch", "Orange Punch", "Tropical Punch", "Classic Tobacco", "Clear Unflavored"], "Tyson 2.0": ["Apple Gummies", "Apple Melonberry", "Blue Razz", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Lush Lime", "Melonhead", "Mint Berry", "Passion Pom", "Peach Mango", "Peach Watermelon", "Pineapple Mango", "Raspberry Watermelon", "Strawberry Banana", "Strawberry Watermelon", "Watermelon", "Banana Nut", "Cherry Banana", "Coconut", "Fuji Apple", "Apple Mango Pear", "Apple Peach", "Lemon Berry", "Menthol", "Mintberry", "Pineapple Melon", "Tobacco", "Watermelon Gummies", "White Gummy Bear", "Pineapple Sour Berry"], "Bloody Mary": ["Banana Ice", "Blackberry Blueberry Raspberry", "Blue Razz Cherry", "Blue Razz Ice", "Blueberry", "Blueberry Bubblegum", "Blueberry Cherry Cranberry", "Blueberry Pomegranate", "Blueberry Raspberry", "Blueberry Sour Raspberry", "Cherry Ice", "Cherry Lime Raspberry", "Cherry Peach Lemonade", "Cola", "Cotton Candy Ice", "Cranberry Lime", "Double Apple", "Fizzy Cherry", "Fresh Menthol Mojito", "Freshmint", "Grape", "Grape Ice", "Gummy Bear", "Hawaii Sunshine", "Juicy Peach", "Kiwi Passion Fruit Guava", "Miami Mint", "Passionfruit Martini", "Pineapple Ice", "Pink Lemonade", "Raspberry Peach", "Strawberry Ice", "Strawberry Kiwi", "Strawberry Raspberry Cherry Ice", "Watermelon Ice"], "Tyson Legend 30K": ["Apple Melonberry", "Blue Razz", "Clear", "Cool Mint", "Frozen Banana", "Frozen Blueberry", "Frozen Grape", "Frozen Mango", "Frozen Peach", "Frozen Strawberry", "Green Apple", "Menthol", "Strawberry Banana", "Strawberry Watermelon", "Tobacco", "Watermelon", "Cherry Bomb", "Miami Mint", "Menthol Gold", "Menthol Green", "Menthol Silver", "B-Burst", "Blackberry B-Burst", "Blueberry Rancher", "California Cherry", "Effin Fab", "Pineapple Kiwi", "Strawberry Kiwi", "Strawberry Mango", "White Gummy", "White Peach Raspberry", "Watermelon Cherry"], "RIPS Vape": ["Mint Lemonade", "Mint", "Passion Fruit Mango", "Double Apple Mint", "Pina Colada", "Sour Patch", "Summer Mango Ice", "Blue Raspberry Lemon", "Frosty Strawberry", "Fuji Grape", "Guava Ice", "Clear Ice", "Blueberry Jolly Rancher", "Watermelon Jolly Rancher", "Frozen Strawberry Kiwi", "Strawberry Watermelon", "Strawberry Mint Lemonade", "Strawberry Moche", "Strawberry Skittles", "Green Apple Jolly Rancher", "Mountain Dew", "Airheads", "Cola Ice", "Sour Nerds", "Blasted Berries", "Luv 69", "White Gummy Ice", "Fruity Pebbles", "Mexico Mango", "Sour Apple Ice"]};
 var BRANDS = Object.keys(CATALOG);
 
@@ -1880,7 +1943,7 @@ function gdSave(onDone) {
     isDirty=false; lastSaveTs=saveTs; updateDirtyIndicator();
     savePricing(); saveLocal();
     setSyncDot("ok","saved ✓");
-    addSyncLog("push","Saved to Sheets · "+estimates.length+" estimates · "+payments.length+" payments · "+new Date(saveTs).toLocaleTimeString());
+    addSyncLog("push","Saved to Sheets ✓ · "+estimates.length+" est · "+payments.length+" pay · "+customers.length+" cust · "+Object.keys(stock).length+" stock items");
     toast("Saved to Google Sheets ✓","ok");
     if(onDone) onDone();
   })
@@ -2189,7 +2252,7 @@ function gdRefresh() {
 
     if(rb){ rb.textContent="⬇ Refresh"; rb.disabled=false; }
     setSyncDot("ok","synced ✓");
-    addSyncLog("pull","Loaded from Sheets · "+estimates.length+" estimates · "+payments.length+" payments · "+orders.filter(function(o){return o.status!=="fulfilled";}).length+" open orders");
+    addSyncLog("pull","Synced from Sheets ✓ · "+estCount+" est · "+payCount+" pay · "+customers.length+" cust · "+Object.keys(CATALOG||{}).length+" brands · "+ordCount+" open orders");
     toast("Synced from Google Sheets ✓","ok");
   })
   .catch(function(err) {
@@ -2735,44 +2798,8 @@ function renderCart(){
 }
 (function(){var __el=document.getElementById("btn-confirm-pur");if(!__el)return;__el.addEventListener("click",function(){
   var keys=Object.keys(cart);
-  if(!keys.length){toast("No items selected","err");return;}
-  // Build summary for confirmation dialog
-  var totalUnits=0, grandTotal=0;
-  var distEl=document.getElementById("pur-dist-select");
-  var distName=distEl&&distEl.selectedIndex>0?distEl.options[distEl.selectedIndex].text:"No distributor";
-  var lines=[];
-  keys.forEach(function(k){
-    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
-    var entry=cart[k];
-    var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
-    var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
-    totalUnits+=q; grandTotal+=up*q;
-    lines.push(br+" \u2013 "+fl+": "+q+(up>0?" @ $"+up.toFixed(2):""));
-  });
-  var msg="PURCHASE CONFIRMATION\n\nDistributor: "+distName+"\nItems: "+keys.length+"\nTotal Units: "+totalUnits+(grandTotal>0?"\nTotal Cost: $"+grandTotal.toFixed(2):"")+"\n\n"+lines.slice(0,8).join("\n")+(lines.length>8?"\n...and "+(lines.length-8)+" more":"")+"\n\nConfirm purchase and add to stock?";
-  if(!confirm(msg)) return;
-  // Commit
-  var now=new Date().toLocaleString();
-  var distId=getPurDistId();
-  var dName=distEl&&distEl.selectedIndex>0?distEl.options[distEl.selectedIndex].text:"";
-  var purRefNo=(document.getElementById("pur-refno")||{}).value||"";
-  var purDateVal=(document.getElementById("pur-date")||{}).value||new Date().toISOString().split("T")[0];
-  var purDateIso=purDateVal?localDateFromInput(purDateVal).toISOString():new Date().toISOString();
-  keys.forEach(function(k){
-    var pts=k.split("~~"),br=pts[0],fl=pts.slice(1).join("~~");
-    var entry=cart[k];
-    var q=entry&&typeof entry==="object"?(entry.qty||1):(parseInt(entry,10)||1);
-    var up=entry&&typeof entry==="object"?(entry.price!==""?parseFloat(entry.price)||0:0):0;
-    stock[k]=(stock[k]||0)+q;
-    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,qty:q,
-      distId:distId,distName:dName,unitPrice:up,total:up*q,refNo:purRefNo,date:purDateIso});
-  });
-  afterChange(); cart={};
-  var rfEl=document.getElementById("pur-refno"); if(rfEl)rfEl.value="";
-  var rdEl=document.getElementById("pur-date"); if(rdEl){var _t=new Date();rdEl.value=_t.getFullYear()+"-"+String(_t.getMonth()+1).padStart(2,"0")+"-"+String(_t.getDate()).padStart(2,"0");}
-  renderCart(); renderPurFlavors();
-  toast(totalUnits+" units added to stock \u2014 saving...","ok");
-  if(gdConnected) { gdSave(function(){ toast(totalUnits+" units purchased & saved to Drive \u2713","ok"); }); } else { saveLocal(); }
+  if(!keys.length){toast("No items in cart","err");return;}
+  openPurSummary();
 })})();
 
 // ── SELL PAGE ──
@@ -2967,8 +2994,8 @@ function renderHistory() {
       // Sync entry — show direction and detail/error
       var isErr = h.isError || h.direction === "error";
       tp.className = "htype " + (isErr ? "sal" : "adj");
-      var dirLabel = h.direction === "push" ? "⬆ Saved to Drive"
-                   : h.direction === "pull" ? "⬇ Refreshed from Drive"
+      var dirLabel = h.direction === "push" ? "⬆ Saved to Sheets"
+                   : h.direction === "pull" ? "⬇ Synced from Sheets"
                    : "⚠ Sync Error";
       tp.textContent = dirLabel;
       item.style.borderLeft = "3px solid " + (isErr ? "rgba(224,57,74,.6)" : "rgba(91,79,232,.5)");
@@ -5597,7 +5624,7 @@ function printEstimate(est){
   var printCSS="*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:15mm 12mm;background:#fff}@page{margin:15mm 12mm;size:A4}.inv-table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px}.inv-table th{background:#f0f0f0;padding:5px 7px;text-align:left;border:1px solid #ccc;font-size:10px;font-weight:700}.inv-table td{padding:5px 7px;border:1px solid #ddd;vertical-align:top}.inv-table tr{page-break-inside:avoid}.inv-total{text-align:right;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}";
   var w=window.open("","_blank","width=800,height=600");
   if(!w){alert("Pop-up blocked. Please allow pop-ups for this page and try again.");return;}
-  w.document.write("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Estimate "+(est.id||"")+"</title><style>"+printCSS+"</style></head><body>"+h+"</body></html>");
+  w.document.write("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Estimate "+(est.id||"")+"</title><style>"+printCSS+"</style></head><body>"+h+"</html>");
   w.document.close(); w.focus(); setTimeout(function(){w.print();},400);
 
 }
@@ -5639,8 +5666,13 @@ function renderEstimatesList(){
     (function(e){invBtn.addEventListener("click",function(){printInvoice(e);});})(est); btns.appendChild(invBtn);
     var plBtn=document.createElement("button");plBtn.className="btn bsec bsm";plBtn.textContent="\uD83D\uDCE6 Packing";
     (function(e){plBtn.addEventListener("click",function(){printPackingList(e);});})(est); btns.appendChild(plBtn);
-    var aiBtn=document.createElement("button");aiBtn.className="btn bsec bsm";aiBtn.textContent="\uD83D\uDD00 Alt Inv";
-    (function(e){aiBtn.addEventListener("click",function(){openAltInvModal(e);});})(est); btns.appendChild(aiBtn);
+    var aiBtn=document.createElement("button");
+    var _hasAlt=altInvoices.some(function(a){return a.estId===est.id&&!a.deletedAt;});
+    aiBtn.className="btn bsm "+(_hasAlt?"bsuc":"bsec");
+    aiBtn.title=_hasAlt?"Alt invoice exists — click to view/print":"Generate alternate invoice";
+    aiBtn.innerHTML="\uD83D\uDD00 Alt"+(_hasAlt?" \u2714":"");
+    (function(e){aiBtn.addEventListener("click",function(){openAltInvModal(e);});})(est);
+    btns.appendChild(aiBtn);
     if(!est.locked){
       var eBtn=document.createElement("button"); eBtn.className="btn bsec bsm"; eBtn.textContent="\u270E Edit";
       (function(id){eBtn.addEventListener("click",function(){openEstimateEdit(id);});})(est.id); btns.appendChild(eBtn);
@@ -9175,6 +9207,7 @@ document.addEventListener("click",function(e){
       savePricing(); if(gdConnected)gdSave(null);
       toast("Alternate invoice saved ✓","ok");
       _renderAltSavedList(_altEst.id);
+      setTimeout(function(){ if(typeof renderEstimates==="function") renderEstimates(); },150);
     }
     printAlternateInvoice(_altEst,_altItems);
     return;
@@ -9528,6 +9561,9 @@ function localDateFromInput(str) {
   return new Date(str + "T12:00:00");
 }
 // Convert Sheets rows (array of arrays) to array of objects
+function state_brands_count(){
+  try{ return Object.keys(CATALOG||{}).length; }catch(e){ return 0; }
+}
 function rowsToObjs(headers, rows) {
   if(!headers || !rows) return [];
   return rows.map(function(row) {
@@ -9535,6 +9571,229 @@ function rowsToObjs(headers, rows) {
     headers.forEach(function(h,i){ obj[h] = row[i] !== undefined ? row[i] : ""; });
     return obj;
   });
+}
+
+
+// ═══════════════════════════════════════════════════
+// PURCHASE SUMMARY MODAL
+// ═══════════════════════════════════════════════════
+var _purSummaryCart = {}; // working copy of cart for summary
+
+function openPurSummary() {
+  // Copy current cart into working copy
+  _purSummaryCart = JSON.parse(JSON.stringify(cart));
+
+  // Set distributor name
+  var distEl = document.getElementById("pur-dist-select");
+  var distName = distEl && distEl.selectedIndex > 0 ? distEl.options[distEl.selectedIndex].text : "No Distributor Selected";
+  var distId = getPurDistId();
+  var sumDist = document.getElementById("pur-sum-dist");
+  if(sumDist) sumDist.textContent = distName;
+
+  // Set ref# and date from main fields
+  var refEl = document.getElementById("pur-refno");
+  var dateEl = document.getElementById("pur-date");
+  var sumRef = document.getElementById("pur-sum-refno");
+  var sumDate = document.getElementById("pur-sum-date");
+  if(sumRef && refEl) sumRef.value = refEl.value || "";
+  if(sumDate && dateEl) sumDate.value = dateEl.value || todayStr_();
+
+  // Populate brand dropdown in add-item row
+  var brandSel = document.getElementById("pur-sum-add-brand");
+  if(brandSel) {
+    brandSel.innerHTML = '<option value="">— Brand —</option>';
+    var allBrands = Object.keys(CATALOG).sort();
+    // Add custom brands
+    Object.keys(customFlavors).forEach(function(k) {
+      if(k.indexOf("__brand__") === 0) {
+        var br = k.replace("__brand__","");
+        if(allBrands.indexOf(br) === -1) allBrands.push(br);
+      }
+    });
+    allBrands.sort().forEach(function(br) {
+      var opt = document.createElement("option");
+      opt.value = br; opt.textContent = br;
+      brandSel.appendChild(opt);
+    });
+  }
+
+  // Render items and open
+  renderPurSummaryItems();
+  var modal = document.getElementById("pur-summary-modal");
+  if(modal) modal.classList.add("open");
+}
+
+function closePurSummary() {
+  var modal = document.getElementById("pur-summary-modal");
+  if(modal) modal.classList.remove("open");
+}
+
+function todayStr_() {
+  var d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function purSumBrandChanged() {
+  var br = (document.getElementById("pur-sum-add-brand")||{}).value;
+  var flSel = document.getElementById("pur-sum-add-flavor");
+  if(!flSel) return;
+  flSel.innerHTML = '<option value="">— Flavor —</option>';
+  if(!br) return;
+  var flavors = (CATALOG[br]||[]).concat(customFlavors[br]||[]);
+  flavors.forEach(function(fl) {
+    var opt = document.createElement("option");
+    opt.value = fl; opt.textContent = fl;
+    flSel.appendChild(opt);
+  });
+  // Auto-fill price from distributor
+  var distId = getPurDistId();
+  var dp = getDistPrice(distId, br);
+  var priceEl = document.getElementById("pur-sum-add-price");
+  if(priceEl && dp !== null) priceEl.value = dp;
+}
+
+function purSumAddItem() {
+  var br  = (document.getElementById("pur-sum-add-brand")||{}).value;
+  var fl  = (document.getElementById("pur-sum-add-flavor")||{}).value;
+  var qty = parseInt((document.getElementById("pur-sum-add-qty")||{}).value,10)||0;
+  var pr  = parseFloat((document.getElementById("pur-sum-add-price")||{}).value)||0;
+  if(!br) { toast("Select a brand","err"); return; }
+  if(!fl) { toast("Select a flavor","err"); return; }
+  if(qty < 1) { toast("Enter quantity","err"); return; }
+  var key = br+"~~"+fl;
+  if(_purSummaryCart[key]) {
+    // Add to existing
+    _purSummaryCart[key].qty = (_purSummaryCart[key].qty||0) + qty;
+    if(pr > 0) _purSummaryCart[key].price = pr;
+  } else {
+    _purSummaryCart[key] = { qty:qty, price:pr||"" };
+  }
+  // Clear add row
+  var bSel = document.getElementById("pur-sum-add-brand");
+  var fSel = document.getElementById("pur-sum-add-flavor");
+  var qEl  = document.getElementById("pur-sum-add-qty");
+  var pEl  = document.getElementById("pur-sum-add-price");
+  if(bSel) bSel.value=""; if(fSel){fSel.innerHTML='<option value="">— Flavor —</option>';}
+  if(qEl)  qEl.value="";  if(pEl)  pEl.value="";
+  renderPurSummaryItems();
+  toast("Added: "+br+" – "+fl,"ok");
+}
+
+function renderPurSummaryItems() {
+  var el = document.getElementById("pur-sum-items"); if(!el) return;
+  el.innerHTML = "";
+  var keys = Object.keys(_purSummaryCart);
+  var totalUnits=0, grandTotal=0, totalItems=keys.length;
+
+  if(!keys.length) {
+    el.innerHTML = '<div style="color:var(--txt3);font-size:13px;padding:8px 0;text-align:center">No items in cart</div>';
+    updatePurSummaryTotals(0,0,0); return;
+  }
+
+  keys.forEach(function(k) {
+    var pts = k.split("~~"), br = pts[0], fl = pts.slice(1).join("~~");
+    var entry = _purSummaryCart[k];
+    var qty = entry.qty||1;
+    var up  = entry.price!==""?parseFloat(entry.price)||0:0;
+    var lineTotal = up*qty;
+    totalUnits += qty; grandTotal += lineTotal;
+
+    var row = document.createElement("div");
+    row.style.cssText = "display:grid;grid-template-columns:1fr 55px 80px 80px 24px;gap:4px;align-items:center;padding:7px 0;border-bottom:1px solid var(--brd)";
+
+    // Brand + Flavor
+    var nameDiv = document.createElement("div");
+    nameDiv.innerHTML = '<div style="font-weight:700;font-size:13px">'+br+'</div>'+
+      '<div style="font-size:11px;color:var(--txt3)">'+fl+'</div>';
+
+    // Qty input
+    var qInp = document.createElement("input");
+    qInp.type="number"; qInp.min="1"; qInp.value=qty;
+    qInp.style.cssText="width:100%;padding:5px 6px;border:1.5px solid var(--brd);border-radius:8px;font-size:13px;font-weight:700;text-align:center;background:var(--sur)";
+    (function(key){ qInp.addEventListener("change",function(){
+      var v=parseInt(this.value,10)||1;
+      _purSummaryCart[key].qty=Math.max(1,v);
+      renderPurSummaryItems();
+    });})(k);
+
+    // Price input
+    var pInp = document.createElement("input");
+    pInp.type="number"; pInp.min="0"; pInp.step="0.01";
+    pInp.value=up>0?up:""; pInp.placeholder="0.00";
+    pInp.style.cssText="width:100%;padding:5px 6px;border:1.5px solid var(--brd);border-radius:8px;font-size:13px;text-align:right;background:var(--sur)";
+    (function(key){ pInp.addEventListener("change",function(){
+      var v=parseFloat(this.value);
+      _purSummaryCart[key].price=isNaN(v)?"":v;
+      renderPurSummaryItems();
+    });})(k);
+
+    // Line total
+    var totDiv = document.createElement("div");
+    totDiv.style.cssText="font-size:12px;font-weight:700;font-family:monospace;color:"+(lineTotal>0?"var(--acc)":"var(--txt3)")+";text-align:right";
+    totDiv.textContent = lineTotal>0?"$"+lineTotal.toFixed(2):"—";
+
+    // Remove button
+    var rmBtn = document.createElement("div");
+    rmBtn.style.cssText="color:var(--red);font-size:18px;cursor:pointer;text-align:center;line-height:1";
+    rmBtn.textContent="×";
+    (function(key){ rmBtn.addEventListener("click",function(){
+      delete _purSummaryCart[key]; renderPurSummaryItems();
+    });})(k);
+
+    row.appendChild(nameDiv); row.appendChild(qInp);
+    row.appendChild(pInp); row.appendChild(totDiv); row.appendChild(rmBtn);
+    el.appendChild(row);
+  });
+
+  updatePurSummaryTotals(totalUnits, totalItems, grandTotal);
+}
+
+function updatePurSummaryTotals(units, items, grand) {
+  var u = document.getElementById("pur-sum-total-units");
+  var i = document.getElementById("pur-sum-total-items");
+  var g = document.getElementById("pur-sum-grand-total");
+  if(u) u.textContent = units + " units";
+  if(i) i.textContent = items + " line items";
+  if(g) g.textContent = "$" + grand.toFixed(2);
+}
+
+function confirmPurchaseSummary() {
+  var keys = Object.keys(_purSummaryCart);
+  if(!keys.length) { toast("No items to purchase","err"); return; }
+
+  var distEl  = document.getElementById("pur-dist-select");
+  var distId  = getPurDistId();
+  var dName   = distEl && distEl.selectedIndex>0 ? distEl.options[distEl.selectedIndex].text : "";
+  var refNo   = (document.getElementById("pur-sum-refno")||{}).value || "";
+  var dateVal = (document.getElementById("pur-sum-date")||{}).value || todayStr_();
+  var dateIso = localDateFromInput(dateVal).toISOString();
+
+  var totalUnits = 0;
+  keys.forEach(function(k) {
+    var pts=k.split("~~"), br=pts[0], fl=pts.slice(1).join("~~");
+    var entry=_purSummaryCart[k];
+    var q=entry.qty||1;
+    var up=entry.price!==""?parseFloat(entry.price)||0:0;
+    // Update stock
+    stock[k]=(stock[k]||0)+q;
+    // Add to txLog
+    txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,
+      qty:q,distId:distId,distName:dName,unitPrice:up,total:up*q,
+      refNo:refNo,date:dateIso});
+    totalUnits+=q;
+  });
+
+  // Update main cart + fields from summary values
+  cart = {};
+  var rfEl=document.getElementById("pur-refno"); if(rfEl)rfEl.value=refNo;
+  var rdEl=document.getElementById("pur-date");  if(rdEl)rdEl.value=dateVal;
+
+  closePurSummary();
+  afterChange();
+  renderCart(); renderPurFlavors(); renderStock();
+  toast(totalUnits+" units purchased ✓","ok");
+  if(gdConnected){ gdSave(function(){ toast(totalUnits+" units saved to Sheets ✓","ok"); }); }
+  else { saveLocal(); }
 }
 
 // ── INIT ──
@@ -9561,6 +9820,16 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9812,6 +10081,58 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     <div class="brow">
       <button class="btn bpri" id="btn-me-save">Save Estimate</button>
       <button class="btn bsec" id="btn-me-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="pur-summary-modal">
+  <div class="modal-sheet" style="max-height:90vh">
+    <div class="modal-title">&#128722; Purchase Summary</div>
+    <span class="modal-close" onclick="closePurSummary()">&#x2715;</span>
+    <div style="background:var(--sur2);border-radius:var(--r);padding:12px 14px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div class="ilbl">Distributor</div><div id="pur-sum-dist" style="font-weight:700;font-size:14px">—</div></div>
+        <div><div class="ilbl">Ref #</div><input class="ifield" id="pur-sum-refno" placeholder="INV-001" style="margin:0;font-size:13px"></div>
+      </div>
+      <div><div class="ilbl">Purchase Date</div><input class="ifield" id="pur-sum-date" type="date" style="margin:0;font-size:13px"></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:8px">Items</div>
+    <div style="display:grid;grid-template-columns:1fr 55px 80px 80px 24px;gap:4px;padding:6px 0;border-bottom:2px solid var(--brd);margin-bottom:6px">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase">Brand / Flavor</div>
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;text-align:center">Qty</div>
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;text-align:right">Unit $</div>
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;text-align:right">Total</div>
+      <div></div>
+    </div>
+    <div id="pur-sum-items" style="margin-bottom:12px;max-height:35vh;overflow-y:auto"></div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:6px">Add Adhoc Item</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <select class="ifield" id="pur-sum-add-brand" style="margin:0;font-size:13px" onchange="purSumBrandChanged()"><option value="">— Brand —</option></select>
+        <select class="ifield" id="pur-sum-add-flavor" style="margin:0;font-size:13px"><option value="">— Flavor —</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:70px 90px 1fr;gap:6px">
+        <input class="ifield" id="pur-sum-add-qty" type="number" min="1" placeholder="Qty" style="margin:0;font-size:13px">
+        <input class="ifield" id="pur-sum-add-price" type="number" min="0" step="0.01" placeholder="Unit $" style="margin:0;font-size:13px">
+        <button class="btn bsec" onclick="purSumAddItem()" style="margin:0">+ Add</button>
+      </div>
+    </div>
+    <div style="background:var(--sur2);border-radius:var(--r);padding:12px 14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:var(--txt3);font-size:13px">Total Units</span>
+        <span id="pur-sum-total-units" style="font-weight:800;font-family:monospace">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:var(--txt3);font-size:13px">Total Items</span>
+        <span id="pur-sum-total-items" style="font-weight:800;font-family:monospace">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--brd)">
+        <span style="font-size:15px;font-weight:700">Grand Total</span>
+        <span id="pur-sum-grand-total" style="font-size:18px;font-weight:900;font-family:monospace;color:var(--acc)">$0.00</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bsec" style="flex:1" onclick="closePurSummary()">Cancel</button>
+      <button class="btn bsuc" style="flex:2" onclick="confirmPurchaseSummary()">&#10003; Confirm Purchase</button>
     </div>
   </div>
 </div>
