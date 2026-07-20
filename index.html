@@ -1,3 +1,73 @@
+
+<!-- PURCHASE FORM MODAL -->
+<div class="modal-overlay" id="purchase-form-modal" style="align-items:stretch;padding:0">
+  <div style="width:100%;height:100%;max-width:100%;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;padding:12px 14px 20px;box-sizing:border-box">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
+      <div class="modal-title" style="margin-bottom:0">&#128230; New Purchase</div>
+      <span class="modal-close" onclick="closePurchaseForm()">&#x2715;</span>
+    </div>
+
+    <!-- Invoice details -->
+    <div style="background:var(--sur2);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;flex-shrink:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div class="ilbl">Distributor</div>
+          <select class="ifield" id="pf-dist" style="margin:0;font-size:13px">
+            <option value="">— Select —</option>
+          </select>
+        </div>
+        <div>
+          <div class="ilbl">Invoice # (optional)</div>
+          <input class="ifield" id="pf-refno" placeholder="INV-001" style="margin:0;font-size:13px">
+        </div>
+      </div>
+      <div>
+        <div class="ilbl">Purchase Date</div>
+        <input class="ifield" id="pf-date" type="date" style="margin:0;font-size:13px">
+      </div>
+    </div>
+
+    <!-- Summary by brand + items -->
+    <div id="pf-summary-bar" style="flex-shrink:0;margin-bottom:6px"></div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:4px;flex-shrink:0">Selected Items</div>
+    <div id="pf-items-list" style="flex:1;overflow-y:auto;margin-bottom:8px;border:1px solid var(--brd);border-radius:var(--r);background:var(--sur)"></div>
+
+    <!-- Brand/Flavor Picker -->
+    <div style="flex-shrink:0;margin-bottom:8px">
+      <!-- Category chips -->
+      <div id="pf-cat-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <!-- Brand chips -->
+      <div id="pf-brand-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <!-- Flavor search -->
+      <input class="ifield" id="pf-fl-search" placeholder="&#128269; Search flavor..." style="margin:0 0 6px 0;font-size:13px" oninput="pfRenderFlavorList()">
+      <!-- Flavor list -->
+      <div id="pf-flavor-list" style="max-height:35vh;overflow-y:auto;border:1px solid var(--brd);border-radius:var(--r);background:var(--sur)"></div>
+    </div>
+
+    <!-- Totals -->
+    <div style="background:var(--sur2);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;flex-shrink:0">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--txt3);font-size:13px">Total Units</span>
+        <span id="pf-total-units" style="font-weight:800;font-family:monospace">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--brd)">
+        <span style="font-size:15px;font-weight:700">Grand Total</span>
+        <span id="pf-grand-total" style="font-size:18px;font-weight:900;font-family:monospace;color:var(--acc)">$0.00</span>
+      </div>
+    </div>
+
+    <!-- Save button -->
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button class="btn bsec" style="flex:1" onclick="closePurchaseForm()">Cancel</button>
+      <button class="btn bsuc" style="flex:2;font-size:15px" id="btn-pf-save" onclick="savePurchaseForm()">
+        &#10003; Save Purchase
+      </button>
+    </div>
+
+  </div>
+</div>
 <div class="modal-overlay" id="pur-summary-modal">
   <div class="modal-sheet" style="max-height:90vh">
     <div class="modal-title">&#128722; Purchase Summary</div>
@@ -378,72 +448,15 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
   </div>
   <div id="buy-history-pane" style="display:none"></div>
   <div id="buy-stock-pane">
-  <div class="tabs" id="ptabs" style="margin-bottom:12px;background:var(--sur);border-radius:var(--rs);border:1px solid var(--brd);padding:3px">
-    <div class="tab on" data-pt="upload" style="border-radius:6px">Upload Text</div>
-    <div class="tab" data-pt="manual" style="border-radius:6px">Manual Pick</div>
+  <!-- Add Purchase Button -->
+  <button class="btn bpri" id="btn-add-purchase" style="width:100%;margin-bottom:14px;font-size:15px;padding:14px" onclick="openPurchaseForm()">
+    &#43; Add Purchase
+  </button>
+  <!-- Recent purchases summary (loaded from purchaseHistory) -->
+  <div id="buy-recent-summary" style="color:var(--txt3);font-size:13px;text-align:center;padding:20px 0">
+    Tap <strong>+ Add Purchase</strong> to record a new purchase.<br>See <strong>Purchase History</strong> tab for all records.
   </div>
-
-  <!-- UPLOAD pane -->
-  <div id="pur-upload-pane">
-    <p class="stitle">Paste Purchase Text</p>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">Paste any WhatsApp order, invoice or list. Each line should have a flavor name and optional quantity (e.g. "Miami Mint x10" or "Blue Razz 5").</p>
-    <textarea class="ota" id="pur-text" placeholder="Geek Bar 15K&#10;Miami Mint x10&#10;Blue Razz Ice x5&#10;Watermelon Ice 8&#10;&#10;Crown Bar&#10;Berry Ice x12&#10;Grape Mint 6"></textarea>
-    <div class="brow" style="margin-top:10px">
-      <button class="btn bpri" id="btn-pur-parse">Parse &amp; Preview</button>
-      <button class="btn bsec bsm" id="btn-pur-clr">Clear</button>
-    </div>
-    <div id="pur-preview" style="margin-top:14px"></div>
-    <div id="pur-confirm-wrap" style="display:none;margin-top:12px">
-      <div class="dv"></div>
-      <div class="legend">
-        <div class="leg"><div class="legdot" style="background:var(--grn)"></div> Exact match</div>
-        <div class="leg"><div class="legdot" style="background:var(--amb)"></div> Suggested match</div>
-        <div class="leg"><div class="legdot" style="background:var(--acc)"></div> Manual selected</div>
-        <div class="leg"><div class="legdot" style="background:var(--red)"></div> Skipped</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div><div class="ilbl">Supplier Ref # (optional)</div><input class="ifield" id="pur-upload-refno" placeholder="e.g. INV-2025-001" style="margin:0"></div>
-        <div><div class="ilbl">Purchase Date</div><input class="ifield" id="pur-upload-date" type="date" style="margin:0"></div>
-      </div>
-      <button class="btn bsuc" id="btn-pur-confirm">&#10003; Confirm &amp; Add to Stock</button>
-      <div id="pur-unmatched-wrap" style="display:none;margin-top:14px">
-        <div class="dv"></div>
-        <div class="stitle" style="color:var(--red)">&#9888; Unmatched Items</div>
-        <p style="font-size:12px;color:var(--txt3);margin-bottom:10px">These items could not be matched to any flavor in the catalog. Send this list on WhatsApp to verify or check spellings.</p>
-        <textarea class="ota" id="pur-unmatched-text" readonly style="min-height:120px;border-color:rgba(255,77,109,.4)"></textarea>
-        <div class="brow" style="margin-top:8px">
-          <button class="btn wabtn bsm" id="btn-pur-wa-unmatched">&#128172; Send via WhatsApp</button>
-          <button class="btn bsec bsm" id="btn-pur-copy-unmatched">Copy</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MANUAL pane -->
-  <div id="pur-manual-pane" style="display:none">
-    <div class="igrp">
-      <div class="ilbl">Distributor (optional)</div>
-      <select class="ifield" id="pur-dist-select" style="margin-bottom:0"><option value="">&#8212; No distributor &#8212;</option></select>
-    </div>
-    <div class="igrp"><div class="ilbl">Category</div><div class="cat-chips" id="pur-cat-chips"></div><div class="ilbl">Brand</div><div class="bscroll" id="pb"></div></div>
-    <div class="igrp">
-      <div class="ilbl">Select Flavors</div>
-      <div class="swrap"><span class="sico">&#128269;</span><input class="ifield" id="psearch" placeholder="Search flavor..."></div>
-      <div class="flist" id="pflist"></div>
-    </div>
-    <div id="pcart-wrap" style="display:none">
-      <div class="stitle" style="margin-top:12px">Cart</div>
-      <div id="pcart"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div><div class="ilbl">Supplier Ref # (optional)</div><input class="ifield" id="pur-refno" placeholder="e.g. INV-2025-001" style="margin:0"></div>
-        <div><div class="ilbl">Purchase Date</div><input class="ifield" id="pur-date" type="date" style="margin:0"></div>
-      </div>
-      <button class="btn bsuc" id="btn-confirm-pur">Confirm Purchase</button>
-    </div>
-  </div>
-</div>
-
-  </div><!-- end buy-stock-pane -->
+</div><!-- end buy-stock-pane -->
 </div><!-- end pg-purchase -->
 
 <div class="pg" id="pg-sell">
@@ -527,6 +540,35 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
       <div style="display:flex;align-items:center;gap:6px">
         <span id="est-count-badge" style="font-size:11px;color:var(--txt3)"></span>
         <button class="btn bsec bsm" id="btn-add-manual-est">+ Manual</button>
+      </div>
+    </div>
+    <!-- Filter Bar -->
+    <div id="est-filter-bar" style="margin-bottom:12px">
+      <!-- Search row -->
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <div class="swrap" style="flex:1;margin-bottom:0">
+          <span class="sico">&#128269;</span>
+          <input class="ifield" id="est-search" placeholder="Search ID or customer..." style="padding-left:32px;margin:0;font-size:13px" oninput="renderEstimatesList()">
+        </div>
+        <button class="btn bsec bsm" id="btn-est-filter-clear" onclick="clearEstFilters()" style="flex-shrink:0;white-space:nowrap">Clear</button>
+      </div>
+      <!-- Date range row -->
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <div style="flex:1">
+          <div class="ilbl" style="margin-bottom:3px">From</div>
+          <input class="ifield" id="est-date-from" type="date" style="margin:0;font-size:13px" oninput="renderEstimatesList()">
+        </div>
+        <div style="flex:1">
+          <div class="ilbl" style="margin-bottom:3px">To</div>
+          <input class="ifield" id="est-date-to" type="date" style="margin:0;font-size:13px" oninput="renderEstimatesList()">
+        </div>
+      </div>
+      <!-- Quick date range chips -->
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <div class="fc" data-estrange="7">Last 7 days</div>
+        <div class="fc" data-estrange="30">Last 30 days</div>
+        <div class="fc" data-estrange="90">Last 90 days</div>
+        <div class="fc" data-estrange="0">All Time</div>
       </div>
     </div>
     <div id="est-list"></div>
@@ -1320,6 +1362,28 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 <script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var BUILD_TS = "2026-07-20T01:47:14.934Z";
 var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
 
@@ -1693,6 +1757,18 @@ function afterChange() {
   if(gdConnected) { isDirty = true; updateDirtyIndicator(); }
 }
 
+// Stamp updatedAt on a record so gdSave knows it's dirty
+function markDirty(record) {
+  if(record) record.updatedAt = Date.now();
+  return record;
+}
+
+// Stamp updatedAt on all records in an array matching id
+function markDirtyById(arr, id) {
+  var r = arr.find(function(x){return x.id===id;});
+  if(r) r.updatedAt = Date.now();
+}
+
 // ── GOOGLE DRIVE ──
 function gdPush() { gdSave(); } // kept for compatibility
 
@@ -1742,7 +1818,8 @@ function sheetsCall(payload) {
     try { d = JSON.parse(t); }
     catch(e) { throw new Error("Bad response: " + t.substring(0,100)); }
     if(d && d.error) throw new Error(d.error);
-    return d;
+    // New GAS wraps response as {ok:true, result:{...}} — unwrap so callers get result directly
+    return (d && d.result !== undefined) ? d.result : d;
   });
 }
 
@@ -1752,6 +1829,11 @@ function sheetsRead(tabs) {
 
 function sheetsUpsert(tab, rows, keyCol) {
   return sheetsCall({ action:"upsertRows", tab:tab, rows:rows, keyCol:keyCol });
+}
+
+function sheetsClearAndWrite(tab, rows) {
+  // Replace entire tab content — clear then write all rows
+  return sheetsCall({ action:"replaceTab", tab:tab, rows:rows||[] });
 }
 
 function sheetsAppend(tab, rows) {
@@ -1780,11 +1862,16 @@ function gdSave(onDone) {
 
   // Build all the row arrays to write
   // 1. Stock rows
+  // Only send stock rows changed since last save
   var stockRows = [];
   Object.keys(stock).forEach(function(skey) {
     var sep=skey.indexOf("~~"); if(sep<0) return;
-    stockRows.push({ brand:skey.substring(0,sep), flavor:skey.substring(sep+2),
-      qty:stock[skey]||0, brand_flavor:skey, updatedAt:now });
+    // Only include if changed since last save
+    var sUpdated = stockMeta && stockMeta[skey] ? stockMeta[skey].updatedAt||0 : now;
+    if(sUpdated > (lastSaveTs||0)) {
+      stockRows.push({ brand:skey.substring(0,sep), flavor:skey.substring(sep+2),
+        qty:stock[skey]||0, brand_flavor:skey, updatedAt:now });
+    }
   });
 
   // 2. TxLog — only append entries newer than last save
@@ -1812,7 +1899,8 @@ function gdSave(onDone) {
   });
 
   // 3. Estimates
-  var estRows = estimates.map(function(e){
+  // Only send estimates changed since last save
+  var estRows = estimates.filter(function(e){ return (e.updatedAt||0) > (lastSaveTs||0) || (e.createdAt||0) > (lastSaveTs||0); }).map(function(e){
     return { id:e.id, num:e.num||0,
       date_display:e.date||"", rawDate:e.rawDate||"",
       custId:e.custId||"", custName:e.custName||"",
@@ -1827,16 +1915,25 @@ function gdSave(onDone) {
     return [id, deletedEstimateIds[id]||now];
   });
   // Estimate items (only for new/updated estimates since last save)
+  // estimate_items — build as objects (for replaceTab which uses header mapping)
   var estItemRows = [];
-  estimates.forEach(function(e){
-    (e.items||[]).forEach(function(it){
-      estItemRows.push([e.id, it.brand||"", it.flavor||"",
-        it.category||"", it.qty||0, it.unitPrice||0, it.total||0]);
+  estimates.forEach(function(est){
+    (est.items||[]).forEach(function(it){
+      estItemRows.push({
+        estId:     est.id,
+        brand:     it.brand||"",
+        flavor:    it.flavor||"",
+        category:  it.category||"",
+        qty:       it.qty||0,
+        unitPrice: it.unitPrice||0,
+        total:     it.total||0
+      });
     });
   });
 
   // 4. Payments
-  var payRows = payments.map(function(p){
+  // Only send payments changed since last save
+  var payRows = payments.filter(function(p){ return (p.updatedAt||0) > (lastSaveTs||0) || (p.createdAt||0) > (lastSaveTs||0); }).map(function(p){
     return { id:p.id, estId:p.estId||"",
       custId:p.custId||"", custName:p.custName||"",
       date:p.date||"", amount:p.amount||0,
@@ -1854,7 +1951,8 @@ function gdSave(onDone) {
   });
 
   // 6. Customers
-  var custRows = customers.map(function(c){
+  // Only send customers changed since last save
+  var custRows = customers.filter(function(c){ return (c.updatedAt||0) > (lastSaveTs||0) || (c.createdAt||0) > (lastSaveTs||0); }).map(function(c){
     return { id:c.id, name:c.name||"", contact:c.contact||"",
       addr1:c.addr1||"", addr2:c.addr2||"",
       city:c.city||"", state:c.state||"", zip:c.zip||"",
@@ -1863,6 +1961,8 @@ function gdSave(onDone) {
   });
 
   // 7. Customer prices
+  // Customer prices only for dirty customers
+  var dirtyCustIds = custRows.map(function(c){return c.id;});
   var cpRows = [];
   Object.keys(customerPrices).forEach(function(key){
     var parts=key.split("~~"); if(parts.length<2) return;
@@ -1873,7 +1973,8 @@ function gdSave(onDone) {
   });
 
   // 8. Distributors
-  var distRows = distributors.map(function(d){
+  // Only send distributors changed since last save
+  var distRows = distributors.filter(function(d){ return (d.updatedAt||0) > (lastSaveTs||0) || (d.createdAt||0) > (lastSaveTs||0); }).map(function(d){
     return { id:d.id, name:d.name||"", contact:d.contact||"",
       phone:d.phone||"", email:d.email||"",
       addr1:d.addr1||"", addr2:d.addr2||"",
@@ -1893,7 +1994,8 @@ function gdSave(onDone) {
   });
 
   // 10. Orders
-  var ordRows = orders.map(function(o){
+  // Only send orders changed since last save
+  var ordRows = orders.filter(function(o){ return (o.updatedAt||0) > (lastSaveTs||0) || (o.createdAt||0) > (lastSaveTs||0); }).map(function(o){
     return { id:o.id, num:o.num||0,
       date_display:o.date||"", rawDate:o.rawDate||"",
       custId:o.custId||"", custName:o.custName||"",
@@ -1903,11 +2005,31 @@ function gdSave(onDone) {
   });
 
   // 11. Alt invoices
-  var altRows = altInvoices.filter(function(a){return !a.deletedAt;}).map(function(a){
+  // Only send alt invoices changed since last save
+  var altRows = altInvoices.filter(function(a){return !a.deletedAt && ((a.updatedAt||0)>(lastSaveTs||0)||(a.createdAt||0)>(lastSaveTs||0));}).map(function(a){
     return { id:a.id, estId:a.estId||"",
       custId:a.custId||"", custName:a.custName||"",
       targetTotal:a.targetTotal||0, rawDate:a.rawDate||"",
       createdAt:a.createdAt||now, updatedAt:a.updatedAt||now, deletedAt:"" };
+  });
+
+  // Alt invoice ITEMS — clear and rewrite all items for each alt invoice
+  var altItemRows = [];
+  altInvoices.filter(function(a){return !a.deletedAt;}).forEach(function(a){
+    (a.items||[]).forEach(function(it){
+      altItemRows.push({
+        altId:      a.id,
+        estId:      a.estId||"",
+        itemMasterId: it.id||"",
+        name:       it.name||"",
+        category:   it.category||"",
+        qty:        it.qty||0,
+        masterPrice:  it.masterPrice||0,
+        adjustedPrice:it.adjustedPrice||it.masterPrice||0,
+        lineTotal:  (it.adjustedPrice||it.masterPrice||0)*(it.qty||0),
+        updatedAt:  now
+      });
+    });
   });
 
   // 12. Brands (for costPrice / active updates)
@@ -1941,16 +2063,30 @@ function gdSave(onDone) {
 
   // ── Write everything in parallel ──
   var writes = [];
+  // ══════════════════════════════════════════════════════════════
+  // GDRIVE WRITE STRATEGY — DO NOT CHANGE WITHOUT READING THIS:
+  //
+  //  sheetsUpsert   — has a unique key (id, brand, etc.)
+  //                   safe to call repeatedly — updates existing rows
+  //
+  //  sheetsAppend   — ONLY for true append-only logs:
+  //                   txlog (audit trail grows forever)
+  //                   deleted_estimates (tombstone log)
+  //                   NEVER use for item tables — causes duplicates!
+  //
+  //  sheetsClearAndWrite — for item tables with no single unique key
+  //                   (estimate_items, alt_invoice_items)
+  //                   clears tab first then writes fresh every time
+  //                   safe to call repeatedly — always exact count
+  // ══════════════════════════════════════════════════════════════
 
   if(stockRows.length) writes.push(sheetsUpsert("stock", stockRows, "brand_flavor"));
   if(txRows.length)    writes.push(sheetsAppend("txlog", txRows));
-  if(purTabRows.length) writes.push(sheetsAppend("purchases", purTabRows));
+  // purchases Sheet is written immediately on purchase confirm — not via gdSave
+  // if(purTabRows.length) writes.push(sheetsAppend("purchases", purTabRows));
   if(estRows.length)   writes.push(sheetsUpsert("estimates", estRows, "id"));
-  if(estItemRows.length) {
-    // Clear and rewrite estimate items (simplest approach)
-    // Estimate items — append all (GAS handles dedup by estId if needed)
-    writes.push(sheetsAppend("estimate_items", estItemRows));
-  }
+  // estimate_items: only rewrite if any estimates changed (avoids unnecessary replaceTab)
+  if(estRows.length) writes.push(sheetsClearAndWrite("estimate_items", estItemRows));
   if(delEstRows.length) writes.push(sheetsAppend("deleted_estimates", delEstRows));
   if(payRows.length)   writes.push(sheetsUpsert("payments", payRows, "id"));
   if(memoRows.length)  writes.push(sheetsUpsert("memos", memoRows, "id"));
@@ -1960,6 +2096,12 @@ function gdSave(onDone) {
   if(dpRows.length)    writes.push(sheetsUpsert("distributor_prices", dpRows, "distId_brand"));
   if(ordRows.length)   writes.push(sheetsUpsert("orders", ordRows, "id"));
   if(altRows.length)   writes.push(sheetsUpsert("alt_invoices", altRows, "id"));
+  // Write alt invoice items — clear tab and rewrite all
+  // Only rewrite alt_invoice_items when alt invoices actually changed
+  if(altRows.length) {
+    if(altItemRows.length) writes.push(sheetsClearAndWrite("alt_invoice_items", altItemRows));
+    else writes.push(sheetsClearAndWrite("alt_invoice_items", []));
+  }
   if(brandRows.length) writes.push(sheetsUpsert("brands", brandRows, "brand"));
   writes.push(sheetsUpsert("settings", settingsRow, "nextEstNum"));
   if(defPriceRows.length) writes.push(sheetsUpsert("default_prices", defPriceRows, "brand"));
@@ -2836,11 +2978,7 @@ function renderCart(){
     el.appendChild(item);
   });
 }
-(function(){var __el=document.getElementById("btn-confirm-pur");if(!__el)return;__el.addEventListener("click",function(){
-  var keys=Object.keys(cart);
-  if(!keys.length){toast("No items in cart","err");return;}
-  openPurSummary();
-})})();
+// btn-confirm-pur removed — replaced by openPurchaseForm();
 
 // ── SELL PAGE ──
 (function(){var __el=document.getElementById("btn-sell-parse");if(!__el)return;__el.addEventListener("click",function(){
@@ -3675,6 +3813,7 @@ function renderSellCart() {
         return;
       }
     }
+    rec.updatedAt=Date.now(); rec.createdAt=rec.createdAt||Date.now();
     estimates.unshift(rec);
     // ── STEP 4: Deduct stock AFTER estimate safely recorded ──
     estItems.forEach(function(it){
@@ -5674,17 +5813,64 @@ function printEstimate(est){
 
 function renderEstimatesList(){
   var el=document.getElementById("est-list"); if(!el)return;
-  var badge=document.getElementById("est-count-badge"); if(badge)badge.textContent=estimates.length+" estimate"+(estimates.length!==1?"s":"");
   el.innerHTML="";
+
+  // ── Collect filter values ──
+  var searchQ = ((document.getElementById("est-search")||{}).value||"").toLowerCase().trim();
+  var dateFrom = (document.getElementById("est-date-from")||{}).value||"";
+  var dateTo   = (document.getElementById("est-date-to")||{}).value||"";
+
+  // ── Sort newest first ──
+  var sorted = estimates.slice().sort(function(a,b){ return estDateMs(b)-estDateMs(a); });
+
+  // ── Apply filters ──
+  var filtered = sorted.filter(function(est){
+    // Search by ID or customer name
+    if(searchQ){
+      var idMatch  = (est.id||"").toLowerCase().indexOf(searchQ)!==-1;
+      var custMatch= (est.custName||"").toLowerCase().indexOf(searchQ)!==-1;
+      if(!idMatch && !custMatch) return false;
+    }
+    // Date from — use numeric ms for reliable comparison
+    if(dateFrom){
+      if(estDateMs(est) < Date.parse(dateFrom)) return false;
+    }
+    // Date to — include full end day
+    if(dateTo){
+      if(estDateMs(est) > Date.parse(dateTo)+(86400000-1)) return false;
+    }
+    return true;
+  });
+
+  // ── Update badge ──
+  var badge=document.getElementById("est-count-badge");
+  if(badge){
+    if(filtered.length===estimates.length){
+      badge.textContent=estimates.length+" estimate"+(estimates.length!==1?"s":"");
+    } else {
+      badge.textContent=filtered.length+" of "+estimates.length+" shown";
+      badge.style.color="var(--acc)";
+    }
+  }
+
+  // ── Drive notice ──
   var notice=document.createElement("div"); notice.style.cssText="font-size:11px;color:var(--txt3);background:var(--sur2);border-radius:8px;padding:8px 12px;margin-bottom:12px";
   notice.innerHTML="<span style='color:var(--acc)'>&#9729;</span> Saved to Drive. Use <strong>&#11015; Refresh</strong> to sync across devices.";
   el.appendChild(notice);
+
   if(!estimates.length){
     var empty=document.createElement("div"); empty.className="empty";
     empty.innerHTML="<div class='ei'>&#128203;</div><div class='et'>No estimates yet.<br>Go to <strong>Manual Sale</strong> and tap <strong>Commit Sale</strong>.</div>";
     el.appendChild(empty); return;
   }
-  estimates.forEach(function(est){
+
+  if(!filtered.length){
+    var noMatch=document.createElement("div"); noMatch.className="empty";
+    noMatch.innerHTML="<div class='ei'>&#128270;</div><div class='et'>No estimates match your filter.<br><span style='color:var(--acc);cursor:pointer;font-weight:700' onclick='clearEstFilters()'>Clear filters</span></div>";
+    el.appendChild(noMatch); return;
+  }
+
+  filtered.forEach(function(est){
     var card=document.createElement("div"); card.className="pcard"; card.style.marginBottom="10px";
     var topRow=document.createElement("div"); topRow.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;gap:8px";
     var left=document.createElement("div"); left.style.flex="1";
@@ -5821,6 +6007,18 @@ function renderEstimatesList(){
     card.appendChild(preview);
     el.appendChild(card);
   });
+
+}
+
+function clearEstFilters(){
+  var s=document.getElementById("est-search"); if(s) s.value="";
+  var df=document.getElementById("est-date-from"); if(df) df.value="";
+  var dt=document.getElementById("est-date-to"); if(dt) dt.value="";
+  // Clear active chip
+  document.querySelectorAll("[data-estrange]").forEach(function(c){c.classList.remove("on");});
+  var badge=document.getElementById("est-count-badge");
+  if(badge) badge.style.color="";
+  renderEstimatesList();
 }
 
 function openEstimateEdit(estId){
@@ -5943,6 +6141,8 @@ function saveEstimateEdit(lock){
     est.id=newId;
   }
   est.items=newItems;est.total=grandTotal;est.custId=custId;est.custName=custName;est.showPrice=showPrice;est.date=newDate;est.locked=lock||false;
+  // Stamp updatedAt so gdSave knows this estimate changed
+  if(_editingEst) _editingEst.updatedAt=Date.now();
   afterChange(); savePricing(); exitEditMode(); renderEstimatesList();
   document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
   var et=document.querySelector("#stabs [data-st='estimates']"); if(et)et.classList.add("on");
@@ -6304,6 +6504,7 @@ function initPayModalListeners() {
       createdAt:editId?undefined:Date.now(),
       updatedAt:Date.now()
     };
+    pay.updatedAt=Date.now(); pay.createdAt=pay.createdAt||Date.now();
     if(editId){var idx=payments.findIndex(function(p){return p.id===editId;});if(idx>-1)payments[idx]=pay;else payments.unshift(pay);}
     else{payments.unshift(pay);}
     savePricing(); closePayModal();
@@ -6756,8 +6957,10 @@ function handleManualEstSave() {
   };
   if(editingManualEstId) {
     var idx = estimates.findIndex(function(e){ return e.id===editingManualEstId; });
-    if(idx > -1) estimates[idx] = manualEst; else estimates.unshift(manualEst);
+    manualEst.updatedAt = Date.now(); manualEst.createdAt = manualEst.createdAt||Date.now();
+  if(idx > -1) estimates[idx] = manualEst; else estimates.unshift(manualEst);
   } else {
+    manualEst.updatedAt = Date.now(); manualEst.createdAt = manualEst.createdAt||Date.now();
     estimates.unshift(manualEst);
   }
   savePricing();
@@ -8803,6 +9006,13 @@ function sortableTs(obj) {
   return obj.date||""; // last resort
 }
 
+function estDateMs(est) {
+  if(est.rawDate){ var ms=Date.parse(est.rawDate); if(!isNaN(ms)) return ms; }
+  if(est.date){ var ms2=Date.parse(est.date); if(!isNaN(ms2)) return ms2; }
+  if(est.createdAt) return parseInt(est.createdAt)||0;
+  return 0;
+}
+
 function printInvoice(est) {
   var cust = est.custId ? customers.find(function(c){return c.id===est.custId;}) : null;
   var items = est.items||[];
@@ -9475,7 +9685,7 @@ function renderPurchaseHistory() {
     if(!p.brand) return;
     var dt = p.date_iso ? (Date.parse(p.date_iso)||0) : 0;
     if(cutoff && dt < cutoff) return;
-    var key = (p.id||"")+"||"+p.brand+"||"+(p.flavor||"")+"||"+(p.date_iso||"")+"||"+(p.qty||"");
+    var key = p.brand+"||"+(p.flavor||"")+"||"+(p.date_iso||"")+"||"+(p.qty||"")+"||"+(p.refNo||"");
     if(seen[key]) return;
     seen[key]=true;
     allItems.push({
@@ -9493,7 +9703,7 @@ function renderPurchaseHistory() {
     if(e.type!=="purchase"||!e.brand) return;
     var dt = txDate(e);
     if(cutoff && dt < cutoff) return;
-    var key = (e.id||"")+"||"+e.brand+"||"+(e.flavor||"")+"||"+(e.date||"")+"||"+(e.qty||"");
+    var key = e.brand+"||"+(e.flavor||"")+"||"+(e.date||"")+"||"+(e.qty||"")+"||"+(e.refNo||"");
     if(seen[key]) return;
     seen[key]=true;
     allItems.push({
@@ -9769,6 +9979,13 @@ function purSumAddItem() {
   if(!br) { toast("Select a brand","err"); return; }
   if(!fl) { toast("Select a flavor","err"); return; }
   if(qty < 1) { toast("Enter quantity","err"); return; }
+  // Verify flavor belongs to selected brand
+  var validFlavors = (CATALOG[br]||[]).concat(customFlavors[br]||[]);
+  if(validFlavors.length && validFlavors.indexOf(fl) === -1) {
+    toast("Please re-select flavor for "+br,"err");
+    pfBrandChanged(); // reset flavor dropdown
+    return;
+  }
   var key = br+"~~"+fl;
   if(_purSummaryCart[key]) {
     // Add to existing
@@ -9894,22 +10111,18 @@ function confirmPurchaseSummary() {
       refNo:refNo,date:dateIso});
     // Build row for purchases Sheet
     purSheetRows.push([
-      "pur_"+now+"_"+Math.random().toString(36).substring(2,8),
+      "pur_"+now+"_"+k.replace(/[^a-z0-9]/gi,"_").substring(0,20),
       dateIso, br, fl, catOfBrand(br)||"", q, up, up*q,
       distId, dName, refNo, now
     ]);
     totalUnits+=q;
-    // Add to in-memory purchaseHistory immediately
-    purchaseHistory.unshift({
-      id:"pur_"+now, date_iso:dateIso,
-      brand:br, flavor:fl, category:catOfBrand(br)||"",
-      qty:q, unitPrice:up, total:up*q,
-      distId:distId, distName:dName, refNo:refNo, createdAt:now
-    });
+    // Note: purchaseHistory is updated after sheetsAppend succeeds (see below)
+    // Do NOT add here — would cause duplicates when Sheet reloads on Refresh
   });
 
-  // Clear cart
+  // Clear both carts after confirming
   _purSummaryCart = {};
+  cart = {};
   closePurSummary();
 
   // ── Save to purchases Sheet immediately (primary source of truth) ──
@@ -9918,18 +10131,23 @@ function confirmPurchaseSummary() {
     .then(function(){
       toast(totalUnits+" units purchased · saved to Sheets ✓","ok");
       addSyncLog("push","Purchase: "+(refNo||"Direct")+" · "+dName+" · "+totalUnits+" units");
+      // Add to in-memory purchaseHistory ONCE after Sheet confirms save
+      var _now2=Date.now();
+      purSheetRows.forEach(function(row){
+        purchaseHistory.unshift({
+          id:row[0], date_iso:row[1], brand:row[2], flavor:row[3],
+          category:row[4], qty:row[5], unitPrice:row[6], total:row[7],
+          distId:row[8], distName:row[9], refNo:row[10], createdAt:row[11]
+        });
+      });
+      // Refresh history panel
+      var hp=document.getElementById("buy-history-pane");
+      if(hp&&hp.style.display!=="none") renderPurchaseHistory();
     })
     .catch(function(err){
       toast(totalUnits+" units purchased (Sheets error: "+err.message+")","warn");
     });
-    // Also update stock in Sheets
-    var stockRows=[];
-    keys.forEach(function(k){
-      var pts=k.split("~~");
-      stockRows.push({brand:pts[0],flavor:pts.slice(1).join("~~"),
-        qty:stock[k]||0,brand_flavor:k,updatedAt:now});
-    });
-    sheetsUpsert("stock",stockRows,"brand_flavor").catch(function(){});
+    // Stock is written to Sheets via gdSave — no need to write here separately
   } else {
     saveLocal();
     toast(totalUnits+" units purchased (offline — sync when connected)","warn");
@@ -9937,11 +10155,366 @@ function confirmPurchaseSummary() {
 
   afterChange();
   renderCart(); renderPurFlavors(); renderStock();
-
-  // Refresh purchase history panel if open
-  var histPane=document.getElementById("buy-history-pane");
-  if(histPane && histPane.style.display!=="none") renderPurchaseHistory();
+  // Note: renderPurchaseHistory is called inside .then() after Sheet save — not here
 }
+
+
+// ═══════════════════════════════════════════════════
+// NEW PURCHASE FORM
+// ═══════════════════════════════════════════════════
+var _pfItems = []; // [{brand, flavor, qty, unitPrice}]
+
+function openPurchaseForm() {
+  _pfItems = [];
+  _pfBrand = null;
+  _pfCategory = Object.keys(CATALOG).length ? (brandsForCat ? brandsForCat("Vape").length ? "Vape" : Object.keys(CATALOG)[0] : "Vape") : "Vape";
+
+  // Set today's date
+  var dateEl = document.getElementById("pf-date");
+  if(dateEl) dateEl.value = todayStr_();
+  var refEl = document.getElementById("pf-refno");
+  if(refEl) refEl.value = "";
+  var srch = document.getElementById("pf-fl-search");
+  if(srch) srch.value = "";
+
+  // Populate distributor dropdown
+  var distSel = document.getElementById("pf-dist");
+  if(distSel) {
+    distSel.innerHTML = '<option value="">— Select —</option>';
+    distributors.forEach(function(d) {
+      var opt = document.createElement("option");
+      opt.value = d.id; opt.textContent = d.name;
+      distSel.appendChild(opt);
+    });
+  }
+
+  pfRenderCatChips();
+  pfRenderBrandChips();
+  pfRenderFlavorList();
+  pfRenderItems();
+
+  var modal = document.getElementById("purchase-form-modal");
+  if(modal) modal.classList.add("open");
+}
+
+function closePurchaseForm() {
+  var modal = document.getElementById("purchase-form-modal");
+  if(modal) modal.classList.remove("open");
+  _pfItems = [];
+  _pfBrand = null;
+}
+
+var _pfBrand = null;
+var _pfCategory = "Vape";
+
+function pfRenderCatChips() {
+  var el = document.getElementById("pf-cat-chips"); if(!el) return;
+  el.innerHTML = "";
+  var cats = [];
+  Object.keys(CATALOG).forEach(function(br){
+    var cat = catOfBrand(br)||"Other";
+    if(cats.indexOf(cat)===-1) cats.push(cat);
+  });
+  cats.forEach(function(cat){
+    var chip = document.createElement("div");
+    chip.className = "chip" + (cat===_pfCategory?" on":"");
+    chip.textContent = cat;
+    chip.addEventListener("click",function(){
+      _pfCategory = cat;
+      _pfBrand = null;
+      pfRenderCatChips();
+      pfRenderBrandChips();
+      pfRenderFlavorList();
+    });
+    el.appendChild(chip);
+  });
+}
+
+function pfRenderBrandChips() {
+  var el = document.getElementById("pf-brand-chips"); if(!el) return;
+  el.innerHTML = "";
+  var brs = typeof brandsForCat==="function" ? brandsForCat(_pfCategory) : Object.keys(CATALOG);
+  if(!brs.length) brs = Object.keys(CATALOG);
+  if(!_pfBrand && brs.length) _pfBrand = brs[0];
+  brs.forEach(function(br){
+    var chip = document.createElement("div");
+    chip.className = "chip" + (br===_pfBrand?" on":"");
+    // Show count if items selected for this brand
+    var cnt = _pfItems.filter(function(it){return it.brand===br;}).length;
+    chip.textContent = br + (cnt>0?" ("+cnt+")":"");
+    chip.style.cssText = cnt>0?"background:var(--grn);color:#fff;border-color:var(--grn)":"";
+    chip.addEventListener("click",function(){
+      _pfBrand = br;
+      pfRenderBrandChips();
+      pfRenderFlavorList();
+    });
+    el.appendChild(chip);
+  });
+}
+
+function pfRenderFlavorList() {
+  var el = document.getElementById("pf-flavor-list"); if(!el) return;
+  el.innerHTML = "";
+  if(!_pfBrand) {
+    el.innerHTML = "<div class='empty' style='padding:16px'><div class='et'>Select a brand above</div></div>";
+    return;
+  }
+  var q = ((document.getElementById("pf-fl-search")||{}).value||"").toLowerCase();
+  var flavors = (CATALOG[_pfBrand]||[]).concat(customFlavors[_pfBrand]||[]);
+  flavors = flavors.filter(function(f,i,a){return a.indexOf(f)===i;}); // dedup
+  if(q) flavors = flavors.filter(function(f){return f.toLowerCase().indexOf(q)!==-1;});
+  if(!flavors.length){
+    el.innerHTML = "<div class='empty' style='padding:12px'><div class='et'>No flavors found</div></div>";
+    return;
+  }
+  flavors.forEach(function(fl){
+    var existing = _pfItems.find(function(it){return it.brand===_pfBrand && it.flavor===fl;});
+    var curStock = stock[skey(_pfBrand,fl)]||0;
+
+    var item = document.createElement("div");
+    item.className = "fitem" + (existing?" sel":"");
+
+    var info = document.createElement("div");
+    var ne = document.createElement("div"); ne.className="fin"; ne.textContent=fl;
+    var se = document.createElement("div"); se.className="fsub";
+    se.textContent = "Stock: "+curStock + (existing?" · Qty: "+existing.qty+(existing.unitPrice>0?" · $"+existing.unitPrice.toFixed(2):""):"");
+    se.style.color = curStock===0?"var(--red)":curStock<=3?"var(--amb)":"var(--txt3)";
+    info.appendChild(ne); info.appendChild(se);
+
+    var chk = document.createElement("div"); chk.className="fchk";
+    if(existing) chk.textContent="✓";
+
+    item.appendChild(info); item.appendChild(chk);
+
+    item.addEventListener("click", function(){
+      if(existing){
+        // Already selected — remove
+        _pfItems = _pfItems.filter(function(it){return !(it.brand===_pfBrand&&it.flavor===fl);});
+      } else {
+        // Add with qty=1 and auto-price from distributor
+        var distId = (document.getElementById("pf-dist")||{}).value||"";
+        var price = distId ? (getDistPrice(distId,_pfBrand)||0) : 0;
+        _pfItems.push({brand:_pfBrand, flavor:fl, qty:1, unitPrice:price});
+      }
+      pfRenderFlavorList();
+      pfRenderItems();
+      pfRenderSummaryBar();
+      pfRenderBrandChips();
+    });
+
+    el.appendChild(item);
+  });
+}
+
+function pfRenderSummaryBar() {
+  var el = document.getElementById("pf-summary-bar"); if(!el||!_pfItems.length) { if(el)el.innerHTML=""; return; }
+  // Group by brand
+  var byBrand = {};
+  _pfItems.forEach(function(it){
+    if(!byBrand[it.brand]) byBrand[it.brand]={qty:0,total:0};
+    byBrand[it.brand].qty   += it.qty;
+    byBrand[it.brand].total += (it.unitPrice||0)*it.qty;
+  });
+  var brands = Object.keys(byBrand);
+  var html2 = "<div style='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px'>";
+  brands.forEach(function(br){
+    var b=byBrand[br];
+    html2 += "<div style='background:var(--sur2);border:1px solid var(--brd);border-radius:var(--r);padding:6px 10px;font-size:12px'>"+
+      "<span style='font-weight:800'>"+br+"</span> &nbsp;"+
+      "<span style='color:var(--grn);font-weight:700'>×"+b.qty+"</span>"+
+      (b.total>0?" &nbsp;<span style='color:var(--amb);font-family:monospace'>$"+b.total.toFixed(2)+"</span>":"")+
+      "</div>";
+  });
+  html2 += "</div>";
+  el.innerHTML = html2;
+}
+
+function pfRemoveItem(idx) {
+  _pfItems.splice(idx, 1);
+  pfRenderFlavorList(); pfRenderItems(); pfRenderSummaryBar(); pfRenderBrandChips();
+}
+
+function pfRenderItems() {
+  var el = document.getElementById("pf-items-list"); if(!el) return;
+  el.innerHTML="";
+
+  if(!_pfItems.length){
+    el.innerHTML="<div style='color:var(--txt3);font-size:13px;padding:12px;text-align:center'>No items yet — tap flavors above to add</div>";
+    document.getElementById("pf-total-units").textContent="0";
+    document.getElementById("pf-grand-total").textContent="$0.00";
+    pfRenderSummaryBar();
+    return;
+  }
+
+  var totalUnits=0, grandTotal=0;
+
+  _pfItems.forEach(function(it,idx){
+    var lineTotal=(it.unitPrice||0)*it.qty;
+    totalUnits+=it.qty; grandTotal+=lineTotal;
+
+    var row=document.createElement("div");
+    row.style.cssText="display:grid;grid-template-columns:1fr 60px 80px 72px 28px;gap:4px;align-items:center;padding:7px 0;border-bottom:1px solid var(--brd)";
+
+    // Name
+    var nameDiv=document.createElement("div");
+    nameDiv.innerHTML="<div style='font-weight:700;font-size:13px'>"+it.brand+"</div>"+
+      "<div style='font-size:11px;color:var(--txt3)'>"+it.flavor+"</div>";
+
+    // Qty
+    var qInp=document.createElement("input");
+    qInp.type="number"; qInp.min="1"; qInp.value=it.qty;
+    qInp.style.cssText="width:100%;padding:5px 4px;border:1.5px solid var(--acc);border-radius:8px;font-size:13px;font-weight:700;text-align:center;background:var(--sur)";
+    (function(i){qInp.addEventListener("change",function(){
+      _pfItems[i].qty=Math.max(1,parseInt(this.value)||1);
+      pfRenderItems(); pfRenderSummaryBar(); pfRenderBrandChips();
+      // Update flavor list sub-text
+      pfRenderFlavorList();
+    });})(idx);
+
+    // Price
+    var pInp=document.createElement("input");
+    pInp.type="number"; pInp.min="0"; pInp.step="0.01";
+    pInp.value=it.unitPrice>0?it.unitPrice:"";
+    pInp.placeholder="$0.00";
+    pInp.style.cssText="width:100%;padding:5px 4px;border:1.5px solid var(--brd);border-radius:8px;font-size:13px;text-align:right;background:var(--sur)";
+    (function(i){pInp.addEventListener("change",function(){
+      _pfItems[i].unitPrice=parseFloat(this.value)||0;
+      pfRenderItems(); pfRenderSummaryBar();
+      pfRenderFlavorList();
+    });})(idx);
+
+    // Total
+    var totDiv=document.createElement("div");
+    totDiv.style.cssText="font-size:12px;font-weight:700;font-family:monospace;text-align:right;color:"+(lineTotal>0?"var(--acc)":"var(--txt3)");
+    totDiv.textContent=lineTotal>0?"$"+lineTotal.toFixed(2):"—";
+
+    // Remove
+    var rmBtn=document.createElement("div");
+    rmBtn.style.cssText="color:var(--red);font-size:20px;cursor:pointer;text-align:center;line-height:1";
+    rmBtn.textContent="×";
+    (function(i,br,fl){rmBtn.addEventListener("click",function(){
+      _pfItems.splice(i,1);
+      pfRenderItems(); pfRenderSummaryBar(); pfRenderBrandChips();
+      // Uncheck in flavor list if same brand is active
+      if(_pfBrand===br) pfRenderFlavorList();
+    });})(idx,it.brand,it.flavor);
+
+    row.appendChild(nameDiv); row.appendChild(qInp);
+    row.appendChild(pInp); row.appendChild(totDiv); row.appendChild(rmBtn);
+    el.appendChild(row);
+  });
+
+  document.getElementById("pf-total-units").textContent=totalUnits+" unit"+(totalUnits!==1?"s":"");
+  document.getElementById("pf-grand-total").textContent="$"+grandTotal.toFixed(2);
+  pfRenderSummaryBar();
+}
+
+function savePurchaseForm() {
+  if(!_pfItems.length) { toast("Add at least one item","err"); return; }
+
+  var distSel = document.getElementById("pf-dist");
+  var distId  = distSel ? distSel.value : "";
+  var dName   = distSel && distSel.selectedIndex>0 ? distSel.options[distSel.selectedIndex].text : "";
+  var refNo   = (document.getElementById("pf-refno")||{}).value || "";
+  var dateVal = (document.getElementById("pf-date")||{}).value || todayStr_();
+  var dateIso = localDateFromInput(dateVal).toISOString();
+  var now     = Date.now();
+  var totalUnits = 0;
+  var totalCost  = 0;
+  var purSheetRows = [];
+
+  // ══ STEP 1: Update memory + build Sheet rows (instant) ══
+  _pfItems.forEach(function(it) {
+    var k  = it.brand+"~~"+it.flavor;
+    var q  = it.qty;
+    var up = it.unitPrice||0;
+
+    // Update stock in memory immediately
+    stock[k] = (stock[k]||0) + q;
+    totalUnits += q;
+    totalCost  += up * q;
+
+    // Audit trail
+    txLog.unshift({ type:"purchase", category:catOfBrand(it.brand),
+      brand:it.brand, flavor:it.flavor, qty:q,
+      distId:distId, distName:dName, unitPrice:up, total:up*q,
+      refNo:refNo, date:dateIso });
+
+    // Sheet row
+    purSheetRows.push([
+      "pur_"+now+"_"+k.replace(/[^a-z0-9]/gi,"_").substring(0,20),
+      dateIso, it.brand, it.flavor, catOfBrand(it.brand)||"",
+      q, up, up*q, distId, dName, refNo, now
+    ]);
+
+    // Add to purchaseHistory immediately
+    purchaseHistory.unshift({
+      id:"pur_"+now+"_"+k.replace(/[^a-z0-9]/gi,"_").substring(0,20),
+      date_iso:dateIso, brand:it.brand, flavor:it.flavor,
+      category:catOfBrand(it.brand)||"", qty:q, unitPrice:up, total:up*q,
+      distId:distId, distName:dName, refNo:refNo, createdAt:now
+    });
+  });
+
+  // ══ STEP 2: Close form + refresh board IMMEDIATELY ══
+  _pfItems = [];
+  closePurchaseForm();
+  renderStock();                          // stock board updates NOW
+  afterChange();                          // marks dirty, saves local backup
+  if(document.getElementById("buy-history-pane") &&
+     document.getElementById("buy-history-pane").style.display!=="none")
+    renderPurchaseHistory();
+
+  toast(totalUnits+" units added to stock · saving...","ok");
+
+  // ══ STEP 3: Save to Sheet in background (no waiting) ══
+  if(gdConnected) {
+    // Auto-save stock to Sheets immediately (clears dirty/orange indicator)
+    gdSave(null);
+    // Save purchases tab
+    sheetsAppend("purchases", purSheetRows)
+    .then(function(){
+      toast(totalUnits+" units · $"+totalCost.toFixed(2)+" · saved to Sheets ✓","ok");
+      addSyncLog("push","Purchase: "+(refNo||"Direct")+" · "+(dName||"—")+" · "+totalUnits+" units · $"+totalCost.toFixed(2));
+    })
+    .catch(function(err){
+      toast("Purchase saved locally. Sheet sync failed — tap ⬆ Save to retry","warn");
+      addSyncLog("error","Purchase Sheet sync failed: "+err.message,true);
+    });
+
+    // Save stock tab in background
+    var stockRows = [];
+    purSheetRows.forEach(function(row){
+      var k = row[2]+"~~"+row[3];
+      stockRows.push({ brand:row[2], flavor:row[3], qty:stock[k]||0,
+        brand_flavor:k, updatedAt:now });
+    });
+    sheetsUpsert("stock", stockRows, "brand_flavor")
+    .catch(function(){});
+  }
+}
+
+// Quick date range chips for estimates
+document.addEventListener("click",function(e){
+  var chip=e.target.closest&&e.target.closest("[data-estrange]");
+  if(!chip)return;
+  var days=parseInt(chip.getAttribute("data-estrange"),10);
+  // Toggle active
+  document.querySelectorAll("[data-estrange]").forEach(function(c){c.classList.remove("on");});
+  chip.classList.add("on");
+  var dtFrom=document.getElementById("est-date-from");
+  var dtTo=document.getElementById("est-date-to");
+  if(days===0){
+    if(dtFrom) dtFrom.value="";
+    if(dtTo)   dtTo.value="";
+  } else {
+    var now=new Date();
+    var from=new Date(now.getTime()-days*86400000);
+    if(dtFrom) dtFrom.value=from.toISOString().substring(0,10);
+    if(dtTo)   dtTo.value=now.toISOString().substring(0,10);
+  }
+  renderEstimatesList();
+});
 
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
@@ -9967,6 +10540,28 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
