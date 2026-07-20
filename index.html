@@ -1117,6 +1117,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 </div>
 
 <div class="pg" id="pg-sync">
+  <div id="build-info" style="font-size:11px;color:var(--txt3);text-align:center;padding:6px;background:var(--sur2);border-radius:8px;margin-bottom:10px;font-family:monospace"></div>
   <p class="stitle">Google Drive Sync</p>
 
   <!-- Status pill -->
@@ -1318,6 +1319,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 </div>
 
 <script>
+
+var BUILD_TS = "2026-07-20T01:47:14.934Z";
+var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
+
 
 
 
@@ -3095,6 +3100,9 @@ function renderHistory() {
 
 // ── SYNC PAGE ──
 function renderSyncPage(){
+  // Show build version
+  var bi=document.getElementById("build-info");
+  if(bi) bi.textContent="App version: "+BUILD_LABEL;
   if(gdUrl) document.getElementById("gd-url").value=gdUrl;
   if(gdConnected){ var _d2=document.getElementById("btn-gd-disc"); if(_d2)_d2.style.display=""; showGdStatus("ok","Connected: "+gdUrl); }
   renderSyncToggles();
@@ -9959,6 +9967,8 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
 
 
 
