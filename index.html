@@ -1420,6 +1420,12 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
+
+
+
 var BUILD_TS = "2026-07-20T01:47:14.934Z";
 var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
 
@@ -4929,7 +4935,7 @@ function renderPricingTable() {
           var v = parseFloat(this.value);
           if (!isNaN(v) && v >= 0) defaultPrices[brand] = v;
           else delete defaultPrices[brand];
-          savePricing(); gdPricingPush();
+          savePricing(); void(0);
         }); })(br);
         defTd.appendChild(defInp); tr.appendChild(defTd);
         var minTd=document.createElement("td");
@@ -4972,7 +4978,7 @@ function renderPricingTable() {
           // Show unsaved indicator
           var sb=document.getElementById("cust-price-save-btn");
           if(sb){sb.style.background="var(--amb)";sb.textContent="⚠ Save Prices";}
- gdPricingPush();
+ void(0);
           renderPricingTable();
         }); })(activePricingCust, br);
         cpTd.appendChild(cpInp); tr.appendChild(cpTd);
@@ -5008,7 +5014,7 @@ function renderPricingTable() {
 }
 
 // Push pricing data to Google Drive
-function gdPricingPush() { saveMasterToDrive(); } // alias
+function gdPricingPush() { /* no-op — prices saved directly to Sheet */ } // alias
 
 // ── PRINT ──
 // ── PRINT FILTER MODAL ──
@@ -5116,7 +5122,7 @@ function buildAndPrint(catFilter, onlyPriced) {
         (function(brand){ defInp.addEventListener("change", function(){
           var v = parseFloat(this.value);
           if (!isNaN(v) && v >= 0) defaultPrices[brand] = v; else delete defaultPrices[brand];
-          savePricing(); gdPricingPush();
+          savePricing(); void(0);
         }); })(br);
         defTd.appendChild(defInp); tr.appendChild(defTd);
         tr.appendChild(document.createElement("td"));
@@ -5137,7 +5143,7 @@ function buildAndPrint(catFilter, onlyPriced) {
           var v = parseFloat(this.value);
           if (!isNaN(v) && v >= 0) customerPrices[custKey(custId,brand)] = v;
           else delete customerPrices[custKey(custId,brand)];
-          savePricing(); gdPricingPush(); renderPricingTable();
+          savePricing(); void(0); renderPricingTable();
         }); })(activePricingCust, br);
         cpTd.appendChild(cpInp); tr.appendChild(cpTd);
 
@@ -5518,7 +5524,7 @@ function renderDistPricingPanel(distId) {
         if(!isNaN(v)&&v>=0) distributorPrices[distKey(dId,brand)]=v;
         else delete distributorPrices[distKey(dId,brand)];
         savePricing();
-        // Show unsaved indicator
+        sheetSaveDistPrice(dId, brand); // direct Sheet write
         var sb2=document.getElementById("dist-price-save-btn-"+dId);
         if(sb2){sb2.style.background="var(--amb)";sb2.textContent="⚠ Save Prices";}
       });})(distId,br);
@@ -10587,6 +10593,22 @@ document.addEventListener("click",function(e){
 
 // ── DIRECT SHEET WRITERS (bypass gdSave — write one record immediately) ──
 
+function sheetSaveDistributor(distId) {
+  if(!gdConnected||!distId) return;
+  var dist=distributors.find(function(d){return d.id===distId;});
+  if(!dist) return;
+  var now=Date.now();
+  sheetsUpsert("distributors",[{
+    id:dist.id, name:dist.name||"", contact:dist.contact||"",
+    phone:dist.phone||"", email:dist.email||"",
+    addr1:dist.addr1||"", addr2:dist.addr2||"",
+    city:dist.city||"", state:dist.state||"", zip:dist.zip||"", notes:dist.notes||"",
+    createdAt:dist.createdAt||now, updatedAt:dist.updatedAt||now
+  }],"id")
+  .then(function(){ toast("Distributor saved to Sheets ✓","ok"); })
+  .catch(function(err){ toast("Distributor save failed","err"); });
+}
+
 function sheetSaveBrand(brandName) {
   if(!gdConnected||!brandName) return;
   var m=brandMeta[brandName]||{};
@@ -10623,6 +10645,30 @@ function sheetSaveCategory(catName) {
   .catch(function(err){ toast("Category save failed: "+err.message,"err"); });
 }
 
+function sheetSaveDistPrice(distId, brand) {
+  if(!gdConnected||!distId||!brand) return;
+  var key=distId+"~~"+brand;
+  var dist=distributors.find(function(d){return d.id===distId;})||{};
+  var price=distributorPrices[key];
+  var row={distId:distId, distName:dist.name||"", brand:brand,
+    price:price!==undefined?price:0, distId_brand:key, updatedAt:Date.now()};
+  sheetsUpsert("distributor_prices",[row],"distId_brand")
+  .then(function(){ toast("Price saved to Sheets ✓","ok"); })
+  .catch(function(err){ toast("Price save failed: "+err.message,"err"); });
+}
+
+function sheetSaveCustPrice(custId, brand) {
+  if(!gdConnected||!custId||!brand) return;
+  var key=custId+"~~"+brand;
+  var cust=customers.find(function(c){return c.id===custId;})||{};
+  var price=customerPrices[key];
+  var row={custId:custId, custName:cust.name||"", brand:brand,
+    price:price!==undefined?price:0, custId_brand:key, updatedAt:Date.now()};
+  sheetsUpsert("customer_prices",[row],"custId_brand")
+  .then(function(){ toast("Price saved to Sheets ✓","ok"); })
+  .catch(function(err){ toast("Price save failed: "+err.message,"err"); });
+}
+
 function sheetSaveStock(key) {
   if(!gdConnected||!key) return;
   var sep=key.indexOf("~~"); if(sep<0) return;
@@ -10657,6 +10703,12 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
+
+
+
 
 
 
