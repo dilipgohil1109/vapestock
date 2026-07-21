@@ -1,17 +1,17 @@
 
 <!-- PURCHASE FORM MODAL -->
 <div class="modal-overlay" id="purchase-form-modal" style="align-items:stretch;padding:0">
-  <div style="width:100%;height:100%;max-width:100%;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;padding:12px 14px 20px;box-sizing:border-box">
+  <div style="width:100%;height:100%;max-width:100%;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;padding:12px 14px 12px;box-sizing:border-box">
 
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
+    <!-- Header row -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
       <div class="modal-title" style="margin-bottom:0">&#128230; New Purchase</div>
       <span class="modal-close" onclick="closePurchaseForm()">&#x2715;</span>
     </div>
 
-    <!-- Invoice details -->
-    <div style="background:var(--sur2);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;flex-shrink:0">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+    <!-- Invoice details row -->
+    <div style="background:var(--sur2);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;flex-shrink:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
         <div>
           <div class="ilbl">Distributor</div>
           <select class="ifield" id="pf-dist" style="margin:0;font-size:13px">
@@ -19,53 +19,60 @@
           </select>
         </div>
         <div>
-          <div class="ilbl">Invoice # (optional)</div>
+          <div class="ilbl">Invoice #</div>
           <input class="ifield" id="pf-refno" placeholder="INV-001" style="margin:0;font-size:13px">
         </div>
-      </div>
-      <div>
-        <div class="ilbl">Purchase Date</div>
-        <input class="ifield" id="pf-date" type="date" style="margin:0;font-size:13px">
-      </div>
-    </div>
-
-    <!-- Summary by brand + items -->
-    <div id="pf-summary-bar" style="flex-shrink:0;margin-bottom:6px"></div>
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:4px;flex-shrink:0">Selected Items</div>
-    <div id="pf-items-list" style="flex:1;overflow-y:auto;margin-bottom:8px;border:1px solid var(--brd);border-radius:var(--r);background:var(--sur)"></div>
-
-    <!-- Brand/Flavor Picker -->
-    <div style="flex-shrink:0;margin-bottom:8px">
-      <!-- Category chips -->
-      <div id="pf-cat-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
-      <!-- Brand chips -->
-      <div id="pf-brand-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
-      <!-- Flavor search -->
-      <input class="ifield" id="pf-fl-search" placeholder="&#128269; Search flavor..." style="margin:0 0 6px 0;font-size:13px" oninput="pfRenderFlavorList()">
-      <!-- Flavor list -->
-      <div id="pf-flavor-list" style="max-height:35vh;overflow-y:auto;border:1px solid var(--brd);border-radius:var(--r);background:var(--sur)"></div>
-    </div>
-
-    <!-- Totals -->
-    <div style="background:var(--sur2);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;flex-shrink:0">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="color:var(--txt3);font-size:13px">Total Units</span>
-        <span id="pf-total-units" style="font-weight:800;font-family:monospace">0</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--brd)">
-        <span style="font-size:15px;font-weight:700">Grand Total</span>
-        <span id="pf-grand-total" style="font-size:18px;font-weight:900;font-family:monospace;color:var(--acc)">$0.00</span>
+        <div>
+          <div class="ilbl">Date</div>
+          <input class="ifield" id="pf-date" type="date" style="margin:0;font-size:13px">
+        </div>
       </div>
     </div>
 
-    <!-- Save button -->
-    <div style="display:flex;gap:8px;flex-shrink:0">
-      <button class="btn bsec" style="flex:1" onclick="closePurchaseForm()">Cancel</button>
-      <button class="btn bsuc" style="flex:2;font-size:15px" id="btn-pf-save" onclick="savePurchaseForm()">
-        &#10003; Save Purchase
-      </button>
-    </div>
+    <!-- MAIN BODY: Left = Picker, Right = Selected Items -->
+    <div style="display:flex;gap:10px;flex:1;min-height:0">
 
+      <!-- LEFT PANEL: Brand/Flavor Picker -->
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:6px;flex-shrink:0">Select Items</div>
+        <!-- Category chips -->
+        <div id="pf-cat-chips" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;flex-shrink:0"></div>
+        <!-- Brand chips -->
+        <div id="pf-brand-chips" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;flex-shrink:0;max-height:80px;overflow-y:auto"></div>
+        <!-- Flavor search -->
+        <input class="ifield" id="pf-fl-search" placeholder="&#128269; Search flavor..." style="margin:0 0 6px 0;font-size:13px;flex-shrink:0" oninput="pfRenderFlavorList()">
+        <!-- Flavor list — fills remaining height with its own scrollbar -->
+        <div id="pf-flavor-list" style="flex:1;overflow-y:auto;border:1px solid var(--brd);border-radius:var(--r);background:var(--sur);min-height:0"></div>
+      </div>
+
+      <!-- RIGHT PANEL: Selected Items -->
+      <div style="width:45%;display:flex;flex-direction:column;min-height:0;border-left:2px solid var(--brd);padding-left:10px">
+        <!-- Summary bar -->
+        <div id="pf-summary-bar" style="flex-shrink:0;margin-bottom:4px"></div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:4px;flex-shrink:0">Selected Items</div>
+        <!-- Items list — fills remaining height with its own scrollbar -->
+        <div id="pf-items-list" style="flex:1;overflow-y:auto;min-height:0;border:1px solid var(--brd);border-radius:var(--r);background:var(--sur)"></div>
+        <!-- Totals -->
+        <div style="background:var(--sur2);border-radius:var(--r);padding:8px 12px;margin-top:8px;flex-shrink:0">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="color:var(--txt3);font-size:12px">Units</span>
+            <span id="pf-total-units" style="font-weight:800;font-family:monospace;font-size:13px">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--brd)">
+            <span style="font-size:14px;font-weight:700">Total</span>
+            <span id="pf-grand-total" style="font-size:16px;font-weight:900;font-family:monospace;color:var(--acc)">$0.00</span>
+          </div>
+        </div>
+        <!-- Save/Cancel buttons -->
+        <div style="display:flex;gap:6px;margin-top:8px;flex-shrink:0">
+          <button class="btn bsec" style="flex:1;padding:10px" onclick="closePurchaseForm()">Cancel</button>
+          <button class="btn bsuc" style="flex:2;font-size:14px;padding:10px" id="btn-pf-save" onclick="savePurchaseForm()">
+            &#10003; Save Purchase
+          </button>
+        </div>
+      </div>
+
+    </div><!-- end main body -->
   </div>
 </div>
 <div class="modal-overlay" id="pur-summary-modal">
@@ -510,6 +517,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
       <div style="display:flex;gap:8px;margin:10px 0">
         <div style="flex:1"><div class="ilbl">Estimate #</div><input class="ifield" id="est-num-inp" placeholder="e.g. 001" style="margin-bottom:0"></div>
         <div style="flex:1"><div class="ilbl">Date</div><input class="ifield" id="est-date-inp" type="date" style="margin-bottom:0"></div>
+      </div>
+      <div style="margin-bottom:8px">
+        <div class="ilbl">Shipping Cost ($) <span style="font-weight:400;color:var(--txt3)">(optional)</span></div>
+        <input class="ifield" id="est-shipping-inp" type="number" min="0" step="0.01" placeholder="0.00" style="margin-bottom:0;max-width:160px">
       </div>
       <!-- Cart Summary -->
       <div id="sell-cart-summary" style="display:none;background:var(--sur2);border:1px solid var(--brd);border-radius:8px;padding:10px 12px;margin-bottom:10px">
@@ -1384,6 +1395,31 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var BUILD_TS = "2026-07-20T01:47:14.934Z";
 var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
 
@@ -1533,7 +1569,12 @@ var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzuH99s94q5C4oB01JFppe
 var gdFileId = "";
 var gdConnected = false;
 var purchaseHistory = []; // loaded from KS_3_Purchases Sheet
-var lastSaveTs  = 0;   // timestamp of last successful Sheets save
+var _dirtyBrands    = {};  // brand name → true, cleared after gdSave
+var _dirtyStock     = {};  // brand~~flavor → true, cleared after gdSave
+var _dirtyFlavors   = {};  // brand name → true, cleared after gdSave
+var _dirtySettings  = false; // true when nextEstNum or settings change
+var _dirtyDefPrices = {};  // brand → true when default price changes
+var lastSaveTs  = parseInt(localStorage.getItem("ks_lastSaveTs")||"0",10); // persisted across sessions
 var isDirty = false;
 var lastSaveTs = 0;
 var lastDriveTs = 0;
@@ -1849,280 +1890,284 @@ function saveMasterToDrive() {
 // Save STOCK data (manual Save button)
 function gdSave(onDone) {
   if(!gdConnected) {
-    sheetsCall({ action:"ping" })
-    .then(function(){ gdConnected=true; gdSave(onDone); })
-    .catch(function(){ toast("Not connected to Google Sheets","err"); });
+    sheetsCall({action:"ping"}).then(function(){gdConnected=true;gdSave(onDone);})
+    .catch(function(){toast("Not connected","err");});
     return;
   }
-  var sb = document.getElementById("btn-save-drive");
-  if(sb) { sb.textContent="⏳ Saving..."; sb.disabled=true; }
+  var sb=document.getElementById("btn-save-drive");
+  if(sb){sb.textContent="⏳ Saving...";sb.disabled=true;}
   setSyncDot("busy","saving...");
-  var saveTs = Date.now();
-  var now    = saveTs;
+  var now=Date.now(), saveTs=now;
+  var since=lastSaveTs||0; // only send records newer than last save
 
-  // Build all the row arrays to write
-  // 1. Stock rows
-  // Only send stock rows changed since last save
-  var stockRows = [];
-  Object.keys(stock).forEach(function(skey) {
-    var sep=skey.indexOf("~~"); if(sep<0) return;
-    // Only include if changed since last save
-    var sUpdated = stockMeta && stockMeta[skey] ? stockMeta[skey].updatedAt||0 : now;
-    if(sUpdated > (lastSaveTs||0)) {
-      stockRows.push({ brand:skey.substring(0,sep), flavor:skey.substring(sep+2),
-        qty:stock[skey]||0, brand_flavor:skey, updatedAt:now });
-    }
+  // ── 1. Stock — only rows changed since last save ──
+  var stockRows=[];
+  Object.keys(_dirtyStock||{}).forEach(function(k){
+    if(!stock.hasOwnProperty(k)) return;
+    var sep=k.indexOf("~~"); if(sep<0) return;
+    stockRows.push({brand:k.substring(0,sep),flavor:k.substring(sep+2),
+        qty:stock[k]||0,brand_flavor:k,updatedAt:now});
   });
 
-  // 2. TxLog — only append entries newer than last save
-  // lastSaveTs tracks when we last wrote to Sheets — only newer entries are appended
-  var newTxEntries = txLog.filter(function(e){
-    var ts = txDate(e);
-    return ts > (lastSaveTs||0);
-  });
-  // Also extract new purchase entries to write to dedicated purchases tab
-  var newPurchaseEntries = newTxEntries.filter(function(e){ return e.type==="purchase" && e.brand; });
-  // Build purchase rows for dedicated purchases tab
-  var purTabRows = newPurchaseEntries.map(function(e,i){
-    return [e.id||(e.type+"_"+now+"_"+i), e.date||new Date().toISOString(),
-      e.brand||"", e.flavor||"", e.category||"",
-      e.qty||0, e.unitPrice||0, e.total||0,
-      e.distId||"", e.distName||"", e.refNo||"", now];
+  // ── 2. TxLog — only entries newer than last save ──
+  var txRows=txLog.filter(function(e){
+    var ts=txDate(e); return ts>since;
+  }).map(function(e,i){
+    return [e.id||(e.type+"_"+now+"_"+i),e.type||"",
+      e.date||new Date().toISOString(),e.brand||"",e.flavor||"",
+      e.qty||0,e.unitPrice||0,e.total||0,e.category||"",
+      e.distId||"",e.distName||"",e.custId||"",e.custName||"",
+      e.estId||"",e.refNo||"",e.note||""];
   });
 
-  var txRows = newTxEntries.map(function(e,i){
-    return [e.id||(e.type+"_"+now+"_"+i), e.type||"",
-      e.date||new Date().toISOString(), e.brand||"", e.flavor||"",
-      e.qty||0, e.unitPrice||0, e.total||0, e.category||"",
-      e.distId||"", e.distName||"", e.custId||"", e.custName||"",
-      e.estId||"", e.refNo||"", e.note||""];
+  // ── 3. Estimates — only changed ──
+  var estRows=estimates.filter(function(e){
+    return (e.updatedAt||0)>since||(e.createdAt||0)>since;
+  }).map(function(e){
+    return {id:e.id,num:e.num||0,date_display:e.date||"",rawDate:e.rawDate||"",
+      custId:e.custId||"",custName:e.custName||"",
+      total:e.total||0,shipping:e.shipping||0,
+      showPrice:e.showPrice!==false,locked:e.locked||false,manual:e.manual||false,
+      description:e.description||"",note:e.note||"",deletedAt:"",
+      createdAt:e.createdAt||now,updatedAt:e.updatedAt||now};
   });
 
-  // 3. Estimates
-  // Only send estimates changed since last save
-  var estRows = estimates.filter(function(e){ return (e.updatedAt||0) > (lastSaveTs||0) || (e.createdAt||0) > (lastSaveTs||0); }).map(function(e){
-    return { id:e.id, num:e.num||0,
-      date_display:e.date||"", rawDate:e.rawDate||"",
-      custId:e.custId||"", custName:e.custName||"",
-      total:e.total||0, showPrice:e.showPrice!==false,
-      locked:e.locked||false, manual:e.manual||false,
-      description:e.description||"", note:e.note||"",
-      deletedAt:"",
-      createdAt:e.createdAt||now, updatedAt:e.updatedAt||now };
-  });
-  // Deleted estimates
-  var delEstRows = Object.keys(deletedEstimateIds).map(function(id){
-    return [id, deletedEstimateIds[id]||now];
-  });
-  // Estimate items (only for new/updated estimates since last save)
-  // estimate_items — build as objects (for replaceTab which uses header mapping)
-  var estItemRows = [];
-  estimates.forEach(function(est){
-    (est.items||[]).forEach(function(it){
-      estItemRows.push({
-        estId:     est.id,
-        brand:     it.brand||"",
-        flavor:    it.flavor||"",
-        category:  it.category||"",
-        qty:       it.qty||0,
-        unitPrice: it.unitPrice||0,
-        total:     it.total||0
+  // ── 4. Estimate items — only for changed estimates ──
+  var changedEstIds=estRows.map(function(e){return e.id;});
+  var estItemRows=[];
+  if(changedEstIds.length){
+    estimates.filter(function(e){return changedEstIds.indexOf(e.id)!==-1;})
+    .forEach(function(est){
+      (est.items||[]).forEach(function(it){
+        estItemRows.push({estId:est.id,brand:it.brand||"",flavor:it.flavor||"",
+          category:it.category||"",qty:it.qty||0,unitPrice:it.unitPrice||0,total:it.total||0,
+          estId_brand_flavor:est.id+"~~"+(it.brand||"")+"~~"+(it.flavor||""),updatedAt:now});
       });
     });
+  }
+
+  // ── 5. Deleted estimates — only newly deleted since last save ──
+  var delEstRows=[];
+  Object.keys(deletedEstimateIds).forEach(function(id){
+    var ts=parseInt(deletedEstimateIds[id])||0;
+    if(ts>since) delEstRows.push([id,deletedEstimateIds[id]||now]);
   });
 
-  // 4. Payments
-  // Only send payments changed since last save
-  var payRows = payments.filter(function(p){ return (p.updatedAt||0) > (lastSaveTs||0) || (p.createdAt||0) > (lastSaveTs||0); }).map(function(p){
-    return { id:p.id, estId:p.estId||"",
-      custId:p.custId||"", custName:p.custName||"",
-      date:p.date||"", amount:p.amount||0,
-      method:p.method||"", chequeNo:p.chequeNo||"",
-      note:p.note||"", received:p.received||false,
-      createdAt:p.createdAt||now, updatedAt:p.updatedAt||now };
+  // ── 6. Payments — only changed ──
+  var payRows=payments.filter(function(p){
+    return (p.updatedAt||0)>since||(p.createdAt||0)>since;
+  }).map(function(p){
+    return {id:p.id,estId:p.estId||"",custId:p.custId||"",custName:p.custName||"",
+      date:p.date||"",amount:p.amount||0,method:p.method||"",chequeNo:p.chequeNo||"",
+      note:p.note||"",received:p.received||false,
+      createdAt:p.createdAt||now,updatedAt:p.updatedAt||now};
   });
 
-  // 5. Memos
-  var memoRows = memos.map(function(m){
-    return { id:m.id, custId:m.custId||"", custName:m.custName||"",
-      date:m.date||"", amount:m.amount||0,
-      memoType:m.memoType||"credit", note:m.note||"",
-      createdAt:m.createdAt||now, updatedAt:m.updatedAt||now };
+  // ── 7. Memos — only changed ──
+  var memoRows=memos.filter(function(m){
+    return (m.updatedAt||0)>since||(m.createdAt||0)>since;
+  }).map(function(m){
+    return {id:m.id,custId:m.custId||"",custName:m.custName||"",
+      date:m.date||"",amount:m.amount||0,memoType:m.memoType||"credit",note:m.note||"",
+      createdAt:m.createdAt||now,updatedAt:m.updatedAt||now};
   });
 
-  // 6. Customers
-  // Only send customers changed since last save
-  var custRows = customers.filter(function(c){ return (c.updatedAt||0) > (lastSaveTs||0) || (c.createdAt||0) > (lastSaveTs||0); }).map(function(c){
-    return { id:c.id, name:c.name||"", contact:c.contact||"",
-      addr1:c.addr1||"", addr2:c.addr2||"",
-      city:c.city||"", state:c.state||"", zip:c.zip||"",
-      phone:c.phone||"", notes:c.notes||"",
-      createdAt:c.createdAt||now, updatedAt:c.updatedAt||now };
+  // ── 8. Customers — only changed ──
+  var custRows=customers.filter(function(c){
+    return (c.updatedAt||0)>since||(c.createdAt||0)>since;
+  }).map(function(c){
+    return {id:c.id,name:c.name||"",contact:c.contact||"",
+      addr1:c.addr1||"",addr2:c.addr2||"",
+      city:c.city||"",state:c.state||"",zip:c.zip||"",
+      phone:c.phone||"",notes:c.notes||"",
+      createdAt:c.createdAt||now,updatedAt:c.updatedAt||now};
   });
 
-  // 7. Customer prices
-  // Customer prices only for dirty customers
-  var dirtyCustIds = custRows.map(function(c){return c.id;});
-  var cpRows = [];
-  Object.keys(customerPrices).forEach(function(key){
-    var parts=key.split("~~"); if(parts.length<2) return;
-    var custId=parts[0], brand=parts[1];
-    var cust=customers.find(function(c){return c.id===custId;})||{};
-    cpRows.push({ custId:custId, custName:cust.name||"", brand:brand,
-      price:customerPrices[key]||0, custId_brand:key, updatedAt:now });
+  // ── 9. Customer prices — only when customers changed ──
+  var cpRows=[];
+  if(custRows.length||!since){
+    var dirtyCustIds=custRows.map(function(c){return c.id;});
+    Object.keys(customerPrices).forEach(function(key){
+      var parts=key.split("~~"); if(parts.length<2) return;
+      var custId=parts[0],brand=parts[1];
+      if(since&&dirtyCustIds.indexOf(custId)===-1) return;
+      var cust=customers.find(function(c){return c.id===custId;})||{};
+      cpRows.push({custId:custId,custName:cust.name||"",brand:brand,
+        price:customerPrices[key]||0,custId_brand:key,updatedAt:now});
+    });
+  }
+
+  // ── 10. Distributors — only changed ──
+  var distRows=distributors.filter(function(d){
+    return (d.updatedAt||0)>since||(d.createdAt||0)>since;
+  }).map(function(d){
+    return {id:d.id,name:d.name||"",contact:d.contact||"",
+      phone:d.phone||"",email:d.email||"",
+      addr1:d.addr1||"",addr2:d.addr2||"",
+      city:d.city||"",state:d.state||"",zip:d.zip||"",notes:d.notes||"",
+      createdAt:d.createdAt||now,updatedAt:d.updatedAt||now};
   });
 
-  // 8. Distributors
-  // Only send distributors changed since last save
-  var distRows = distributors.filter(function(d){ return (d.updatedAt||0) > (lastSaveTs||0) || (d.createdAt||0) > (lastSaveTs||0); }).map(function(d){
-    return { id:d.id, name:d.name||"", contact:d.contact||"",
-      phone:d.phone||"", email:d.email||"",
-      addr1:d.addr1||"", addr2:d.addr2||"",
-      city:d.city||"", state:d.state||"", zip:d.zip||"",
-      notes:d.notes||"",
-      createdAt:d.createdAt||now, updatedAt:d.updatedAt||now };
+  // ── 11. Distributor prices — only when distributors changed ──
+  var dpRows=[];
+  if(distRows.length||!since){
+    var dirtyDistIds=distRows.map(function(d){return d.id;});
+    Object.keys(distributorPrices).forEach(function(key){
+      var parts=key.split("~~"); if(parts.length<2) return;
+      var distId=parts[0],brand=parts[1];
+      if(since&&dirtyDistIds.indexOf(distId)===-1) return;
+      var dist=distributors.find(function(d){return d.id===distId;})||{};
+      dpRows.push({distId:distId,distName:dist.name||"",brand:brand,
+        price:distributorPrices[key]||0,distId_brand:key,updatedAt:now});
+    });
+  }
+
+  // ── 12. Orders — only changed ──
+  var ordRows=orders.filter(function(o){
+    return (o.updatedAt||0)>since||(o.createdAt||0)>since;
+  }).map(function(o){
+    return {id:o.id,num:o.num||0,date_display:o.date||"",rawDate:o.rawDate||"",
+      custId:o.custId||"",custName:o.custName||"",total:o.total||0,
+      status:o.status||"pending",estId:o.estId||"",note:o.note||"",
+      createdAt:o.createdAt||now,updatedAt:o.updatedAt||now};
   });
 
-  // 9. Distributor prices
-  var dpRows = [];
-  Object.keys(distributorPrices).forEach(function(key){
-    var parts=key.split("~~"); if(parts.length<2) return;
-    var distId=parts[0], brand=parts[1];
-    var dist=distributors.find(function(d){return d.id===distId;})||{};
-    dpRows.push({ distId:distId, distName:dist.name||"", brand:brand,
-      price:distributorPrices[key]||0, distId_brand:key, updatedAt:now });
+  // ── 13. Alt invoices — only changed ──
+  var altRows=altInvoices.filter(function(a){
+    return !a.deletedAt&&((a.updatedAt||0)>since||(a.createdAt||0)>since);
+  }).map(function(a){
+    return {id:a.id,estId:a.estId||"",custId:a.custId||"",custName:a.custName||"",
+      targetTotal:a.targetTotal||0,rawDate:a.rawDate||"",
+      createdAt:a.createdAt||now,updatedAt:a.updatedAt||now,deletedAt:""};
   });
 
-  // 10. Orders
-  // Only send orders changed since last save
-  var ordRows = orders.filter(function(o){ return (o.updatedAt||0) > (lastSaveTs||0) || (o.createdAt||0) > (lastSaveTs||0); }).map(function(o){
-    return { id:o.id, num:o.num||0,
-      date_display:o.date||"", rawDate:o.rawDate||"",
-      custId:o.custId||"", custName:o.custName||"",
-      total:o.total||0, status:o.status||"pending",
-      estId:o.estId||"", note:o.note||"",
-      createdAt:o.createdAt||now, updatedAt:o.updatedAt||now };
-  });
-
-  // 11. Alt invoices
-  // Only send alt invoices changed since last save
-  var altRows = altInvoices.filter(function(a){return !a.deletedAt && ((a.updatedAt||0)>(lastSaveTs||0)||(a.createdAt||0)>(lastSaveTs||0));}).map(function(a){
-    return { id:a.id, estId:a.estId||"",
-      custId:a.custId||"", custName:a.custName||"",
-      targetTotal:a.targetTotal||0, rawDate:a.rawDate||"",
-      createdAt:a.createdAt||now, updatedAt:a.updatedAt||now, deletedAt:"" };
-  });
-
-  // Alt invoice ITEMS — clear and rewrite all items for each alt invoice
-  var altItemRows = [];
-  altInvoices.filter(function(a){return !a.deletedAt;}).forEach(function(a){
-    (a.items||[]).forEach(function(it){
-      altItemRows.push({
-        altId:      a.id,
-        estId:      a.estId||"",
-        itemMasterId: it.id||"",
-        name:       it.name||"",
-        category:   it.category||"",
-        qty:        it.qty||0,
-        masterPrice:  it.masterPrice||0,
-        adjustedPrice:it.adjustedPrice||it.masterPrice||0,
-        lineTotal:  (it.adjustedPrice||it.masterPrice||0)*(it.qty||0),
-        updatedAt:  now
+  // ── 14. Alt invoice items — only when alt invoices changed ──
+  var altItemRows=[];
+  if(altRows.length){
+    var changedAltIds=altRows.map(function(a){return a.id;});
+    altInvoices.filter(function(a){
+      return !a.deletedAt&&changedAltIds.indexOf(a.id)!==-1;
+    }).forEach(function(a){
+      (a.items||[]).forEach(function(it){
+        altItemRows.push({altId:a.id,estId:a.estId||"",itemMasterId:it.id||"",
+          name:it.name||"",category:it.category||"",qty:it.qty||0,
+          masterPrice:it.masterPrice||0,adjustedPrice:it.adjustedPrice||it.masterPrice||0,
+          lineTotal:(it.adjustedPrice||it.masterPrice||0)*(it.qty||0),updatedAt:now});
       });
     });
-  });
+  }
 
-  // 12. Brands (for costPrice / active updates)
-  var brandRows = [];
-  Object.keys(brandMeta).forEach(function(br){
+  // ── 15. Brands — only dirty ──
+  var brandRows=[];
+  var flavorRows=[];
+  Object.keys(_dirtyBrands||{}).forEach(function(br){
     var m=brandMeta[br]||{};
     var cat=customFlavors["__catbrand__"+br]||"Vape";
-    var isBuiltIn=!customFlavors["__brand__"+br];
-    var inactive=inactiveBrands&&inactiveBrands[br];
-    brandRows.push({ brand:br, category:cat,
-      puffs:m.puffs||"", nic:m.nic||"", ml:m.ml||"", desc:m.desc||"",
-      costPrice:m.costPrice||"", active:!inactive, isBuiltIn:isBuiltIn,
-      updatedAt:now });
+    brandRows.push({brand:br,category:cat,
+      puffs:m.puffs||"",nic:m.nic||"",ml:m.ml||"",desc:m.desc||"",
+      costPrice:m.costPrice||"",active:!(inactiveBrands&&inactiveBrands[br]),
+      isBuiltIn:!customFlavors["__brand__"+br],updatedAt:now});
+    if(_dirtyFlavors&&_dirtyFlavors[br]){
+      var allFl=(CATALOG[br]||[]).concat((customFlavors[br]||[]).filter(function(f){
+        return (CATALOG[br]||[]).indexOf(f)===-1;}));
+      allFl.forEach(function(fl){
+        flavorRows.push({brand:br,flavor:fl,brand_flavor:br+"~~"+fl,updatedAt:now});
+      });
+    }
+  });
+  // Also include brands with dirty flavors but not in _dirtyBrands
+  Object.keys(_dirtyFlavors||{}).forEach(function(br){
+    if(_dirtyBrands&&_dirtyBrands[br]) return; // already handled
+    var allFl=(CATALOG[br]||[]).concat((customFlavors[br]||[]).filter(function(f){
+      return (CATALOG[br]||[]).indexOf(f)===-1;}));
+    allFl.forEach(function(fl){
+      flavorRows.push({brand:br,flavor:fl,brand_flavor:br+"~~"+fl,updatedAt:now});
+    });
   });
 
-  // 13. Settings
-  var settingsRow = [{ nextEstNum:nextEstimateNum, nextOrderNum:nextOrderNum,
-    autoRefresh:true, backupEnabled:true, updatedAt:now }];
-
-  // 14. Default prices
-  var defPriceRows = Object.keys(defaultPrices).map(function(br){
-    return { brand:br, price:defaultPrices[br]||0, updatedAt:now };
+  // ── 16. Default prices — only dirty brands ──
+  var defPriceRows=[];
+  Object.keys(_dirtyBrands||{}).forEach(function(br){
+    if(defaultPrices[br]!==undefined)
+      defPriceRows.push({brand:br,price:defaultPrices[br]||0,updatedAt:now});
   });
 
-  // 15. Item master
-  var imRows = itemMaster.map(function(it){
-    return { id:it.id, name:it.name||"", category:it.category||"",
-      unitPrice:it.unitPrice||0, active:it.active!==false,
-      createdAt:it.createdAt||now, updatedAt:it.updatedAt||now };
+  // ── 17. Item master — only changed ──
+  var imRows=itemMaster.filter(function(it){
+    return (it.updatedAt||0)>since||(it.createdAt||0)>since;
+  }).map(function(it){
+    return {id:it.id,name:it.name||"",category:it.category||"",
+      unitPrice:it.unitPrice||0,active:it.active!==false,
+      createdAt:it.createdAt||now,updatedAt:it.updatedAt||now};
   });
 
-  // ── Write everything in parallel ──
-  var writes = [];
-  // ══════════════════════════════════════════════════════════════
-  // GDRIVE WRITE STRATEGY — DO NOT CHANGE WITHOUT READING THIS:
-  //
-  //  sheetsUpsert   — has a unique key (id, brand, etc.)
-  //                   safe to call repeatedly — updates existing rows
-  //
-  //  sheetsAppend   — ONLY for true append-only logs:
-  //                   txlog (audit trail grows forever)
-  //                   deleted_estimates (tombstone log)
-  //                   NEVER use for item tables — causes duplicates!
-  //
-  //  sheetsClearAndWrite — for item tables with no single unique key
-  //                   (estimate_items, alt_invoice_items)
-  //                   clears tab first then writes fresh every time
-  //                   safe to call repeatedly — always exact count
-  // ══════════════════════════════════════════════════════════════
+  // ── 18. Settings — only when estimate/order number changed ──
+  var settingsRows=[];
+  if(_dirtySettings)
+    settingsRows=[{nextEstNum:nextEstimateNum,nextOrderNum:nextOrderNum,
+      autoRefresh:true,backupEnabled:true,updatedAt:now}];
 
-  if(stockRows.length) writes.push(sheetsUpsert("stock", stockRows, "brand_flavor"));
-  if(txRows.length)    writes.push(sheetsAppend("txlog", txRows));
-  // purchases Sheet is written immediately on purchase confirm — not via gdSave
-  // if(purTabRows.length) writes.push(sheetsAppend("purchases", purTabRows));
-  if(estRows.length)   writes.push(sheetsUpsert("estimates", estRows, "id"));
-  // estimate_items: only rewrite if any estimates changed (avoids unnecessary replaceTab)
-  if(estRows.length) writes.push(sheetsClearAndWrite("estimate_items", estItemRows));
-  if(delEstRows.length) writes.push(sheetsAppend("deleted_estimates", delEstRows));
-  if(payRows.length)   writes.push(sheetsUpsert("payments", payRows, "id"));
-  if(memoRows.length)  writes.push(sheetsUpsert("memos", memoRows, "id"));
-  if(custRows.length)  writes.push(sheetsUpsert("customers", custRows, "id"));
-  if(cpRows.length)    writes.push(sheetsUpsert("customer_prices", cpRows, "custId_brand"));
-  if(distRows.length)  writes.push(sheetsUpsert("distributors", distRows, "id"));
-  if(dpRows.length)    writes.push(sheetsUpsert("distributor_prices", dpRows, "distId_brand"));
-  if(ordRows.length)   writes.push(sheetsUpsert("orders", ordRows, "id"));
-  if(altRows.length)   writes.push(sheetsUpsert("alt_invoices", altRows, "id"));
-  // Write alt invoice items — clear tab and rewrite all
-  // Only rewrite alt_invoice_items when alt invoices actually changed
-  if(altRows.length) {
-    if(altItemRows.length) writes.push(sheetsClearAndWrite("alt_invoice_items", altItemRows));
-    else writes.push(sheetsClearAndWrite("alt_invoice_items", []));
+  // ══ Build writes — all parallel, all guarded ══
+  var writes=[];
+  if(stockRows.length)    writes.push(sheetsUpsert("stock",              stockRows,    "brand_flavor"));
+  if(txRows.length)       writes.push(sheetsAppend("txlog",              txRows));
+  if(estRows.length)      writes.push(sheetsUpsert("estimates",          estRows,      "id"));
+  if(estItemRows.length)  writes.push(sheetsUpsert("estimate_items",     estItemRows,  "estId_brand_flavor"));
+  if(delEstRows.length)   writes.push(sheetsAppend("deleted_estimates",  delEstRows));
+  if(payRows.length)      writes.push(sheetsUpsert("payments",           payRows,      "id"));
+  if(memoRows.length)     writes.push(sheetsUpsert("memos",              memoRows,     "id"));
+  if(custRows.length)     writes.push(sheetsUpsert("customers",          custRows,     "id"));
+  if(cpRows.length)       writes.push(sheetsUpsert("customer_prices",    cpRows,       "custId_brand"));
+  if(distRows.length)     writes.push(sheetsUpsert("distributors",       distRows,     "id"));
+  if(dpRows.length)       writes.push(sheetsUpsert("distributor_prices", dpRows,       "distId_brand"));
+  if(ordRows.length)      writes.push(sheetsUpsert("orders",             ordRows,      "id"));
+  if(altRows.length)      writes.push(sheetsUpsert("alt_invoices",       altRows,      "id"));
+  if(altItemRows.length)  writes.push(sheetsClearAndWrite("alt_invoice_items", altItemRows));
+  if(brandRows.length)    writes.push(sheetsUpsert("brands",             brandRows,    "brand"));
+  if(flavorRows.length)   writes.push(sheetsUpsert("flavors",            flavorRows,   "brand_flavor"));
+  if(settingsRows.length) writes.push(sheetsUpsert("settings",           settingsRows, "nextEstNum"));
+  if(defPriceRows.length) writes.push(sheetsUpsert("default_prices",     defPriceRows, "brand"));
+  if(imRows.length)       writes.push(sheetsUpsert("item_master",        imRows,       "id"));
+
+  // Nothing changed — mark clean instantly
+  if(!writes.length){
+    if(sb){sb.textContent="⬆ Save";sb.disabled=false;}
+    isDirty=false;lastSaveTs=saveTs;updateDirtyIndicator();
+    _dirtyBrands={};_dirtyFlavors={};_dirtySettings=false;_dirtyStock={};
+    try{localStorage.setItem("ks_lastSaveTs",String(saveTs));}catch(x){}
+    setSyncDot("ok","saved ✓");savePricing();saveLocal();
+    if(onDone) onDone();
+    return;
   }
-  if(brandRows.length) writes.push(sheetsUpsert("brands", brandRows, "brand"));
-  writes.push(sheetsUpsert("settings", settingsRow, "nextEstNum"));
-  if(defPriceRows.length) writes.push(sheetsUpsert("default_prices", defPriceRows, "brand"));
-  if(imRows.length)    writes.push(sheetsUpsert("item_master", imRows, "id"));
+
+  // Log what's being sent
+  addSyncLog("push","Saving: "+writes.length+" tabs · "+
+    [stockRows.length?"stock:"+stockRows.length:"",
+     txRows.length?"tx:"+txRows.length:"",
+     estRows.length?"est:"+estRows.length:"",
+     estItemRows.length?"items:"+estItemRows.length:"",
+     brandRows.length?"brands:"+brandRows.length:"",
+     flavorRows.length?"flavors:"+flavorRows.length:"",
+     cpRows.length?"cust$:"+cpRows.length:""
+    ].filter(Boolean).join(" · "));
 
   Promise.all(writes)
-  .then(function() {
-    if(sb){ sb.textContent="⬆ Save"; sb.disabled=false; }
-    isDirty=false; lastSaveTs=saveTs; updateDirtyIndicator();
-    savePricing(); saveLocal();
+  .then(function(){
+    if(sb){sb.textContent="⬆ Save";sb.disabled=false;}
+    isDirty=false;lastSaveTs=saveTs;updateDirtyIndicator();
+    _dirtyBrands={};_dirtyFlavors={};_dirtySettings=false;_dirtyStock={};
+    try{localStorage.setItem("ks_lastSaveTs",String(saveTs));}catch(x){}
+    savePricing();saveLocal();
     setSyncDot("ok","saved ✓");
-    addSyncLog("push","Saved to Sheets ✓ · "+estimates.length+" est · "+payments.length+" pay · "+customers.length+" cust · "+Object.keys(stock).length+" stock items");
-    toast("Saved to Google Sheets ✓","ok");
+    toast("Saved ✓","ok");
     if(onDone) onDone();
   })
-  .catch(function(err) {
-    if(sb){ sb.textContent="⬆ Save"; sb.disabled=false; }
+  .catch(function(err){
+    if(sb){sb.textContent="⬆ Save";sb.disabled=false;}
     setSyncDot("err","error");
     var msg=(err&&err.message)?err.message:String(err);
-    addSyncLog("error","Sheets save failed: "+msg,true);
-    toast("Save failed: "+msg.substring(0,60),"err");
+    addSyncLog("error","Save failed: "+msg,true);
+    toast("Save failed: "+msg.substring(0,50),"err");
   });
 }
 
@@ -2287,6 +2332,7 @@ function gdRefresh() {
             date:e.date_display, rawDate:e.rawDate,
             custId:e.custId, custName:e.custName,
             total:parseFloat(e.total)||0,
+            shipping:parseFloat(e.shipping)||0,
             showPrice:String(e.showPrice)!=="false",
             locked:String(e.locked)==="true",
             manual:String(e.manual)==="true",
@@ -2435,6 +2481,8 @@ function gdRefresh() {
     if(rb){ rb.textContent="⬇ Refresh"; rb.disabled=false; }
     setSyncDot("ok","synced ✓");
     addSyncLog("pull","Synced from Sheets ✓ · "+estimates.length+" est · "+payments.length+" pay · "+customers.length+" cust · "+Object.keys(CATALOG||{}).length+" brands · "+orders.filter(function(o){return o.status!=="fulfilled";}).length+" open orders");
+    lastSaveTs=Date.now();
+    try{localStorage.setItem("ks_lastSaveTs",String(lastSaveTs));}catch(x){}
     toast("Synced from Google Sheets ✓","ok");
   })
   .catch(function(err) {
@@ -3772,7 +3820,11 @@ function renderSellCart() {
     });
     // ── STEP 2: Build the estimate record ──
     var rawDate = diVal || (function(){ var t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); })();
-    var rec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,total:grandTotal,locked:false,createdAt:Date.now(),updatedAt:Date.now()};
+    _dirtySettings=true;
+    var rec={id:estId,num:nextEstimateNum++,date:saleDate,rawDate:rawDate,custId:custId,custName:custName,items:estItems,showPrice:showPrice,
+      shipping:parseFloat((document.getElementById("est-shipping-inp")||{}).value)||0,
+      total:grandTotal+(parseFloat((document.getElementById("est-shipping-inp")||{}).value)||0),
+      locked:false,createdAt:Date.now(),updatedAt:Date.now()};
     // ── STEP 3: Check for duplicate ID — if exists, UPDATE instead of INSERT ──
     var existingIdx = estimates.findIndex(function(e){ return e.id===rec.id; });
     if(existingIdx > -1) {
@@ -3799,7 +3851,6 @@ function renderSellCart() {
         txLog=txLog.filter(function(e){return e.estId!==rec.id;});
         estItems.forEach(function(it){txLog.unshift({type:"sale",category:catOfBrand(it.brand),brand:it.brand,flavor:it.flavor,qty:it.qty,custId:custId,custName:custName,unitPrice:it.unitPrice,total:it.total,date:saleDate,estId:rec.id});});
         afterChange(); savePricing();
-        if(gdConnected) gdSave(null);
         resetSellCart(); renderEstimatesList();
         document.querySelectorAll("#stabs .tab").forEach(function(t){t.classList.remove("on");});
         var et2=document.querySelector("#stabs [data-st='estimates']"); if(et2)et2.classList.add("on");
@@ -3825,7 +3876,7 @@ function renderSellCart() {
     });
     afterChange(); savePricing();
     // Auto-save to Drive after sale commits
-    if(gdConnected) { gdSave(function(){ toast("Sale saved to Drive \u2713","ok"); }); } else { saveLocal(); }
+        saveLocal();
     // NO auto-print — user taps Print button on the estimate card
     sellCart={};
     var ni=document.getElementById("est-num-inp"); if(ni) ni.value="";
@@ -4457,6 +4508,8 @@ function closeAddBrandModal() {
     if(!CATALOG[name]) CATALOG[name] = [];
     // Mark as custom brand
     customFlavors["__brand__" + name] = true;
+    _dirtyBrands[name] = true;
+    sheetSaveBrand(name); // write directly to brands Sheet
     // Assign to current active category
     var assignCat = catActiveCategory || "Vape";
     customFlavors["__catbrand__" + name] = assignCat;
@@ -4547,6 +4600,9 @@ function closeCatFlavorModal() {
     CATALOG[br].push(name);
     if (!customFlavors[br]) customFlavors[br] = [];
     customFlavors[br].push(name);
+    _dirtyBrands[br]  = true;
+    _dirtyFlavors[br] = true;
+    sheetSaveFlavors(br); // write flavors directly to Sheet
     if (qtyVal > 0) {
       stock[skey(br, name)] = qtyVal;
       txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, unitPrice: 0, total: 0, date: new Date().toISOString() });
@@ -5701,11 +5757,8 @@ function renderSyncToggles(){
             if(d.distributors)         distributors       = d.distributors;
             if(d.distributorPrices)    distributorPrices  = d.distributorPrices;
             saveLocal(); savePricing();
-            toast("Backup loaded to device — saving to Drive...", "ok");
-            gdSave(function(){
-              toast("Backup restored \u2713 All data recovered","ok");
-              renderStock(); updateStats();
-            });
+            toast("Backup loaded — tap ⬆ Save to sync to Sheets", "ok");
+            renderStock(); updateStats();
           }).catch(function(err){ toast("Restore failed: "+(err.message||err),"err"); console.error(err); });
           // catch handled above
         });})(f.name);
@@ -5959,9 +6012,7 @@ function renderEstimatesList(){
           estimates=estimates.filter(function(e){return e.id!==id;});
           savePricing();
           // Force immediate Drive save so tombstone reaches Drive
-          if(gdConnected){
-            gdSave(function(){ toast("Estimate "+id+" deleted & Drive updated","warn"); });
-          }
+          // Tap ⬆ Save to sync deletion to Sheets
           renderEstimatesList();
           // Refresh account views so deleted estimate's amount disappears immediately
           renderBalances();
@@ -5995,6 +6046,12 @@ function renderEstimatesList(){
       if(estBal>0.01){
         var balLine=document.createElement("div");
         balLine.style.cssText="font-size:11px;color:#c0392b;font-weight:700;margin-top:4px";
+        if(est.shipping>0){
+          var shipLine=document.createElement("div");
+          shipLine.style.cssText="font-size:11px;color:var(--txt3);margin-top:2px";
+          shipLine.textContent="Shipping: $"+est.shipping.toFixed(2);
+          card.appendChild(shipLine);
+        }
         balLine.textContent="Balance due: $"+estBal.toFixed(2);
         card.appendChild(balLine);
       } else if(estPaid>0){
@@ -6043,6 +6100,9 @@ function openEstimateEdit(estId){
   sellCart={};
   (est.items||[]).forEach(function(it){sellCart[it.brand+"~~"+it.flavor]={qty:it.qty,price:it.unitPrice||""};});
   populateSellCustDropdown();
+  // Populate shipping
+  var _si=document.getElementById("est-shipping-inp");
+  if(_si) _si.value=(est.shipping&&est.shipping>0)?est.shipping:"";
   var sel=document.getElementById("sell-cust-select"); if(sel)sel.value=est.custId||"";
   var sp=document.getElementById("sell-show-price"); if(sp)sp.checked=est.showPrice!==false;
   var ni=document.getElementById("est-num-inp"); if(ni)ni.value=est.id||"";
@@ -6068,6 +6128,7 @@ function cancelEstimateEdit(){
   editingEstId=null; sellCart={}; exitEditMode(); saveLocal(); updateStats(); toast("Edit cancelled","warn");
 }
 function exitEditMode(){
+  var _sc=document.getElementById("est-shipping-inp"); if(_sc) _sc.value="";
   editingOpenedStock={};
   editingAdjustments={};
   editingEstId=null;
@@ -6087,6 +6148,7 @@ function saveEstimateEdit(lock){
   var custName=custObj?custObj.name:"Walk-in";
   var sp=document.getElementById("sell-show-price"); var showPrice=sp?sp.checked:true;
   var ni=(document.getElementById("est-num-inp")||{}).value||"";
+  var shippingVal=parseFloat((document.getElementById("est-shipping-inp")||{}).value)||0;
   var di=(document.getElementById("est-date-inp")||{}).value||"";
   var newId=ni.trim()||est.id;
   var newDate=di?new Date(di).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):est.date;
@@ -6141,6 +6203,9 @@ function saveEstimateEdit(lock){
     est.id=newId;
   }
   est.items=newItems;est.total=grandTotal;est.custId=custId;est.custName=custName;est.showPrice=showPrice;est.date=newDate;est.locked=lock||false;
+  est.shipping=shippingVal;
+  var _itemsTotal=(est.items||[]).reduce(function(s,it){return s+(it.total||(it.unitPrice||0)*(it.qty||0));},0);
+  est.total=_itemsTotal+shippingVal;
   // Stamp updatedAt so gdSave knows this estimate changed
   if(_editingEst) _editingEst.updatedAt=Date.now();
   afterChange(); savePricing(); exitEditMode(); renderEstimatesList();
@@ -7424,9 +7489,11 @@ function renderCartSummary() {
     });
   });
 
-  // Grand total
+  // Grand total (include shipping if set)
+  var _shipAmt=parseFloat((document.getElementById("est-shipping-inp")||{}).value)||0;
+  var _totalWithShip = grandAmt + _shipAmt;
   if(grandEl){
-    grandEl.textContent=grandUnits+" units"+(grandAmt>0?" / $"+grandAmt.toFixed(2):"");
+    grandEl.textContent=grandUnits+" units"+(grandAmt>0?" / $"+_totalWithShip.toFixed(2):"")+(_shipAmt>0?" (incl $"+_shipAmt.toFixed(2)+" shipping)":"");
     var totalDiv=document.getElementById("sell-cart-summary-total");
     if(totalDiv)totalDiv.style.display=grandAmt>0?"flex":"none";
   }
@@ -7748,8 +7815,6 @@ function renderOrdCart(){
     var rec={id:ordId,num:nextOrderNum++,date:dateStr,rawDate:rawDate,custId:custId,custName:custName,items:ordItems,total:grandTotal,status:"pending",estId:null,note:noteVal,createdAt:Date.now(),updatedAt:Date.now()};
     orders.unshift(rec);
     savePricing();
-    // Auto-save to Drive
-    if(gdConnected) gdSave(null);
     ordCart={};
     var ni=document.getElementById("ord-num-inp"); if(ni)ni.value="";
     var di=document.getElementById("ord-date-inp"); if(di)di.value="";
@@ -8091,8 +8156,7 @@ function fulfilOrder(ordId){
     estimates.unshift(estRec);
     ord.status="fulfilled"; ord.estId=estId; ord.updatedAt=Date.now();
     afterChange(); savePricing();
-    if(gdConnected){gdSave(function(){toast(ordId+" → "+estId+" saved to Drive ✓","ok");});}
-    else{saveLocal();toast(ordId+" → "+estId+" ✓","ok");}
+    saveLocal(); toast(ordId+" → "+estId+" ✓","ok");
     renderOpenOrders();
   });
 }
@@ -8296,12 +8360,13 @@ function exitStockAdjMode(autoSave) {
   document.getElementById("stock-adj-bar").style.display = "flex";
   document.getElementById("stock-adj-active").style.display = "none";
   renderStockGrid();
-  if(autoSave && gdConnected) {
-    gdSave(function(){ toast("Stock saved to Drive \u2713","ok"); });
-  } else if(autoSave) {
-    saveLocal();
-    toast("Stock locked (Drive not connected — saved locally)","warn");
-  }
+  // Stock saves locally — tap ⬆ Save button to sync to Sheets
+  if(autoSave) { saveLocal(); }
+
+
+
+
+
 }
 
 function startAdjTimer() {
@@ -8911,7 +8976,6 @@ document.addEventListener("click", function(e) {
     var idx = distributors.findIndex(function(x){return x.id===data.id;});
     if(idx>-1) distributors[idx]=data; else distributors.push(data);
     savePricing();
-    if(gdConnected) gdSave(null);
     var m2 = document.getElementById("dist-modal");
     if(m2) m2.classList.remove("open");
     renderDistributors();
@@ -8986,7 +9050,7 @@ document.addEventListener("click",function(e){
     };
     var idx=memos.findIndex(function(m){return m.id===memo.id;});
     if(idx>-1)memos[idx]=memo; else memos.unshift(memo);
-    savePricing(); if(gdConnected)gdSave(null);
+    savePricing();
     closeMemoModal();
     if(currentStmtCustId)renderCustomerStatement(currentStmtCustId);
     renderBalances();
@@ -9134,6 +9198,11 @@ function printInvoice(est) {
     h += "<div class='totals'>";
     h += "<div class='tot-row'><span>SubTotal</span><span>$"+grandTotal.toFixed(2)+"</span></div>";
     h += "<div class='tot-row'><span>Tax</span><span>$0.00</span></div>";
+    var shipAmt=parseFloat(est.shipping)||0;
+    if(shipAmt>0){
+      h += "<div class='tot-row'><span>Shipping</span><span>$"+shipAmt.toFixed(2)+"</span></div>";
+      grandTotal+=shipAmt;
+    }
     h += "<div class='tot-row total'><span>TOTAL</span><span>$"+grandTotal.toFixed(2)+"</span></div>";
     h += "</div>";
   }
@@ -9457,7 +9526,7 @@ document.addEventListener("click",function(e){
       var existIdx=altInvoices.findIndex(function(a){return a.id===rec.id;});
       if(existIdx>-1){rec.createdAt=altInvoices[existIdx].createdAt;altInvoices[existIdx]=rec;}
       else altInvoices.push(rec);
-      savePricing(); if(gdConnected)gdSave(null);
+      savePricing();
       toast("Alternate invoice saved ✓","ok");
       _renderAltSavedList(_altEst.id);
       setTimeout(function(){ if(typeof renderEstimates==="function") renderEstimates(); },150);
@@ -9475,7 +9544,7 @@ function printSavedAltInvoice(altId){
 function deleteSavedAltInvoice(altId){
   var idx=altInvoices.findIndex(function(a){return a.id===altId;}); if(idx===-1)return;
   altInvoices[idx].deletedAt=Date.now(); altInvoices[idx].updatedAt=Date.now();
-  savePricing(); if(gdConnected)gdSave(null);
+  savePricing();
   if(_altEst)_renderAltSavedList(_altEst.id);
   toast("Alternate invoice removed","warn");
 }
@@ -10104,7 +10173,7 @@ function confirmPurchaseSummary() {
     var q=entry.qty||1;
     var up=entry.price!==""?parseFloat(entry.price)||0:0;
     // Update stock in memory
-    stock[k]=(stock[k]||0)+q;
+    stock[k]=(stock[k]||0)+q; _dirtyStock[k]=true; sheetSaveStock(k);
     // Add to txLog (backup/audit trail)
     txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,
       qty:q,distId:distId,distName:dName,unitPrice:up,total:up*q,
@@ -10469,8 +10538,7 @@ function savePurchaseForm() {
 
   // ══ STEP 3: Save to Sheet in background (no waiting) ══
   if(gdConnected) {
-    // Auto-save stock to Sheets immediately (clears dirty/orange indicator)
-    gdSave(null);
+    // Purchase saves locally — tap ⬆ Save to sync stock
     // Save purchases tab
     sheetsAppend("purchases", purSheetRows)
     .then(function(){
@@ -10516,6 +10584,55 @@ document.addEventListener("click",function(e){
   renderEstimatesList();
 });
 
+
+// ── DIRECT SHEET WRITERS (bypass gdSave — write one record immediately) ──
+
+function sheetSaveBrand(brandName) {
+  if(!gdConnected||!brandName) return;
+  var m=brandMeta[brandName]||{};
+  var row=[{brand:brandName,
+    category:customFlavors["__catbrand__"+brandName]||"Vape",
+    puffs:m.puffs||"",nic:m.nic||"",ml:m.ml||"",desc:m.desc||"",
+    costPrice:m.costPrice||"",
+    active:!(inactiveBrands&&inactiveBrands[brandName]),
+    isBuiltIn:!customFlavors["__brand__"+brandName],
+    updatedAt:Date.now()}];
+  sheetsUpsert("brands",row,"brand")
+  .then(function(){ delete _dirtyBrands[brandName]; toast("Brand saved to Sheets ✓","ok"); })
+  .catch(function(err){ toast("Brand save failed: "+err.message,"err"); });
+}
+
+function sheetSaveFlavors(brandName) {
+  if(!gdConnected||!brandName) return;
+  var allFl=(CATALOG[brandName]||[]).concat((customFlavors[brandName]||[]).filter(function(f){
+    return (CATALOG[brandName]||[]).indexOf(f)===-1;}));
+  if(!allFl.length) return;
+  var rows=allFl.map(function(fl){
+    return {brand:brandName,flavor:fl,brand_flavor:brandName+"~~"+fl,updatedAt:Date.now()};
+  });
+  sheetsUpsert("flavors",rows,"brand_flavor")
+  .then(function(){ delete _dirtyFlavors[brandName]; toast(allFl.length+" flavors saved ✓","ok"); })
+  .catch(function(err){ toast("Flavor save failed: "+err.message,"err"); });
+}
+
+function sheetSaveCategory(catName) {
+  if(!gdConnected||!catName) return;
+  var rows=[{name:catName,sortOrder:Date.now(),createdAt:Date.now(),updatedAt:Date.now()}];
+  sheetsUpsert("categories",rows,"name")
+  .then(function(){ toast("Category saved to Sheets ✓","ok"); })
+  .catch(function(err){ toast("Category save failed: "+err.message,"err"); });
+}
+
+function sheetSaveStock(key) {
+  if(!gdConnected||!key) return;
+  var sep=key.indexOf("~~"); if(sep<0) return;
+  var row=[{brand:key.substring(0,sep),flavor:key.substring(sep+2),
+    qty:stock[key]||0,brand_flavor:key,updatedAt:Date.now()}];
+  sheetsUpsert("stock",row,"brand_flavor")
+  .then(function(){ delete _dirtyStock[key]; })
+  .catch(function(){});
+}
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -10540,6 +10657,31 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
