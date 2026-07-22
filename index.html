@@ -1438,6 +1438,10 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
+
 var BUILD_TS = "2026-07-22T15:04:01.687Z";
 var BUILD_LABEL = "v Jul 22, 2026 03:04 PM UTC";
 
@@ -1918,7 +1922,7 @@ function gdSave(onDone) {
   var now=Date.now(), saveTs=now;
   var since=lastSaveTs||0; // only send records newer than last save
 
-  // ── 1. Stock — only rows changed since last save ──
+  // ── 1. Stock — dirty rows, fallback to all non-zero if nothing dirty ──
   var stockRows=[];
   Object.keys(_dirtyStock||{}).forEach(function(k){
     if(!stock.hasOwnProperty(k)) return;
@@ -1926,6 +1930,16 @@ function gdSave(onDone) {
     stockRows.push({brand:k.substring(0,sep),flavor:k.substring(sep+2),
         qty:stock[k]||0,brand_flavor:k,updatedAt:now});
   });
+  // Fallback: if nothing dirty, write all non-zero stock
+  // Catches cases where sheetSaveStock failed silently (missing brand_flavor column)
+  if(!stockRows.length){
+    Object.keys(stock).forEach(function(k){
+      if(!(stock[k]>0)) return;
+      var sep=k.indexOf("~~"); if(sep<0) return;
+      stockRows.push({brand:k.substring(0,sep),flavor:k.substring(sep+2),
+        qty:stock[k],brand_flavor:k,updatedAt:now});
+    });
+  }
 
   // ── 2. TxLog — only entries newer than last save ──
   var txRows=txLog.filter(function(e){
@@ -10784,21 +10798,26 @@ function sheetSaveCustPrice(custId, brand) {
 }
 
 function sheetSaveStock(key) {
-  if(!gdConnected||!key) return;
+  if(!key) return;
+  // Always mark dirty so gdSave picks it up as backup
+  _dirtyStock[key] = true;
+  if(!gdConnected) return;
   var sep=key.indexOf("~~"); if(sep<0) return;
   var brand=key.substring(0,sep), flavor=key.substring(sep+2);
-  var row=[{
-    brand:brand, flavor:flavor,
-    qty:stock[key]||0,
-    brand_flavor:key,  // composite key for upsert
-    updatedAt:Date.now()
-  }];
-  // Try upsert by brand_flavor first
+  var now=Date.now();
+  var row=[{brand:brand, flavor:flavor, qty:stock[key]||0,
+    brand_flavor:key, updatedAt:now}];
   sheetsUpsert("stock",row,"brand_flavor")
-  .then(function(){ delete _dirtyStock[key]; })
-  .catch(function(){
-    // Fallback: try upsert by brand+flavor search
-    sheetsUpsert("stock",row,"brand_flavor").catch(function(){});
+  .then(function(r){
+    if(r && r.error) {
+      // brand_flavor column missing — log warning, gdSave will retry
+      addSyncLog("warn","Stock column missing — tap ⬆ Save to sync stock",true);
+    } else {
+      delete _dirtyStock[key];
+    }
+  })
+  .catch(function(err){
+    addSyncLog("warn","Stock save failed for "+brand+" "+flavor+" — tap ⬆ Save",true);
   });
 }
 
@@ -10841,6 +10860,10 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
+
 
 
 
