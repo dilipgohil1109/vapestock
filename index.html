@@ -1426,6 +1426,9 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
 var BUILD_TS = "2026-07-20T01:47:14.934Z";
 var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
 
@@ -2218,6 +2221,17 @@ function gdRefresh() {
     var im       = r.item_master   ? rowsToObjs(r.item_master.headers,   r.item_master.rows)   : [];
 
     // Rebuild customFlavors from Sheets catalog
+    // First preserve localStorage custom categories not yet in Sheet
+    var _oldCF = customFlavors || {};
+    var _localCats = Object.keys(_oldCF).filter(function(k){return k.indexOf("__cat__")===0;});
+    var _sheetCatNames = cats.map(function(c){return c.name;});
+    // Push localStorage-only categories to Sheet (sync missing ones)
+    _localCats.forEach(function(k){
+      var catName=k.replace("__cat__","");
+      if(_sheetCatNames.indexOf(catName)===-1 && catName!=="Vape") {
+        sheetSaveCategory(catName); // push missing category to Sheet
+      }
+    });
     // This replaces the old customFlavors object
     var newCF = {};
     // Categories
@@ -3447,7 +3461,7 @@ function rebuildCatalogFromCustomFlavors() {
 
 function saveCustomFlavors() {
   try { localStorage.setItem("vs5_custom", JSON.stringify(customFlavors)); } catch(e) {}
-  saveMasterToDrive(); // Auto-save master on catalog change
+  // Note: Sheet writes are handled by sheetSaveBrand/sheetSaveCategory directly
 }
 
 function openAddFlavorModal() {
@@ -3928,8 +3942,9 @@ function closeAddCategoryModal() {
     CATEGORY_NAMES.push(name);
     customFlavors["__cat__" + name] = true;
     saveCustomFlavors();
+    sheetSaveCategory(name); // direct write to categories Sheet
     catActiveCategory = name;
-    catActiveBrand = null;  // New category is empty — no brand active
+    catActiveBrand = null;
     closeAddCategoryModal();
     renderCatalogPage();
     toast(name + " category created!", "ok");
@@ -4516,6 +4531,9 @@ function closeAddBrandModal() {
     customFlavors["__brand__" + name] = true;
     _dirtyBrands[name] = true;
     sheetSaveBrand(name); // write directly to brands Sheet
+    // Also ensure the assigned category exists in Sheet
+    var _assignedCat = customFlavors["__catbrand__"+name]||catActiveCategory||"Vape";
+    sheetSaveCategory(_assignedCat);
     // Assign to current active category
     var assignCat = catActiveCategory || "Vape";
     customFlavors["__catbrand__" + name] = assignCat;
@@ -4692,7 +4710,7 @@ function savePricing() {
       console.warn("brandImages localStorage save failed (quota?):", imgEx.message);
     }
   } catch(e) {}
-  saveMasterToDrive(); // Auto-save master on pricing/customer change
+  // saveMasterToDrive(); // disabled — using direct Sheet writes change
 }
 function loadPricing() {
   try {
@@ -10638,11 +10656,21 @@ function sheetSaveFlavors(brandName) {
 }
 
 function sheetSaveCategory(catName) {
-  if(!gdConnected||!catName) return;
-  var rows=[{name:catName,sortOrder:Date.now(),createdAt:Date.now(),updatedAt:Date.now()}];
-  sheetsUpsert("categories",rows,"name")
+  if(!catName) return; // save locally even if not connected
+  // Always save to localStorage first
+  customFlavors["__cat__"+catName] = true;
+  saveCustomFlavors();
+  if(!gdConnected) return;
+  // Write to Sheet — try with multiple column options
+  var now=Date.now();
+  sheetsUpsert("categories",[{
+    name:catName, sortOrder:now, createdAt:now, updatedAt:now
+  }],"name")
   .then(function(){ toast("Category saved to Sheets ✓","ok"); })
-  .catch(function(err){ toast("Category save failed: "+err.message,"err"); });
+  .catch(function(){ 
+    // Sheet may have different columns — try appendRows as fallback
+    sheetsAppend("categories",[[catName,now,now,now]]).catch(function(){});
+  });
 }
 
 function sheetSaveDistPrice(distId, brand) {
@@ -10703,6 +10731,9 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
 
 
 
