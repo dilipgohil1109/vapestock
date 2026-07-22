@@ -1430,6 +1430,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 var BUILD_TS = "2026-07-20T01:47:14.934Z";
 var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
 
@@ -3939,7 +3940,7 @@ function closeAddCategoryModal() {
     var inp = document.getElementById("add-category-input");
     var name = inp ? inp.value.trim() : "";
     if (!name) { toast("Enter a category name", "err"); return; }
-    if (CATEGORIES[name]) { toast("Category already exists", "warn"); return; }
+    if (CATEGORIES[name] !== undefined) { toast("Category already exists", "warn"); return; }
     CATEGORIES[name] = [];
     CATEGORY_NAMES.push(name);
     customFlavors["__cat__" + name] = true;
@@ -10673,11 +10674,8 @@ function sheetDeleteBrand(br) {
 }
 
 function sheetSaveCategory(catName) {
-  if(!catName) return; // save locally even if not connected
-  // Always save to localStorage first
-  customFlavors["__cat__"+catName] = true;
-  saveCustomFlavors();
-  if(!gdConnected) return;
+  if(!catName) return;
+  if(!gdConnected) return; // local already saved by caller
   // Write to Sheet — try with multiple column options
   var now=Date.now();
   sheetsUpsert("categories",[{
@@ -10748,6 +10746,7 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
 
 
 
