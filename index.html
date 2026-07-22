@@ -1431,6 +1431,9 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
+
+
 var BUILD_TS = "2026-07-20T01:47:14.934Z";
 var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
 
@@ -2715,6 +2718,7 @@ function renderStockGrid() {
         var nv=Math.max(0,parseInt(inp.value,10)||0);
         var old=stock[skey(activeBrand,fl)]||0;
         stock[skey(activeBrand,fl)]=nv;
+        if(nv!==old){var _ak=skey(activeBrand,fl);_dirtyStock[_ak]=true;sheetSaveStock(_ak);}
         if(nv!==old) txLog.unshift({type:"adj",category:catOfBrand(activeBrand),brand:activeBrand,flavor:fl,qty:nv-old,date:new Date().toLocaleString()});
         afterChange(); renderStockGrid();
       });
@@ -3548,6 +3552,7 @@ function renderCustomFlavorList() {
   // set stock
   if (qtyVal > 0) {
     stock[skey(br, name)] = qtyVal;
+    _dirtyStock[skey(br,name)]=true; sheetSaveStock(skey(br,name));
     txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, unitPrice: 0, total: 0, date: new Date().toISOString() });
   }
   saveCustomFlavors(); saveLocal(); updateStats();
@@ -4271,6 +4276,17 @@ function renderCatCategorySection() {
       del.textContent = "Delete Category";
       del.addEventListener("click", function() { confirmDeleteCategory(cat); });
       row.appendChild(del);
+      // Sync to Sheet button
+      var syncBtn = document.createElement("span");
+      syncBtn.style.cssText = "font-size:11px;color:var(--acc);cursor:pointer;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(99,91,255,.1);border:1px solid rgba(99,91,255,.3);margin-left:4px";
+      syncBtn.textContent = "↑ Sync";
+      (function(c){ syncBtn.addEventListener("click", function(){
+        sheetSaveCategory(c);
+        customFlavors["__cat__"+c]=true;
+        saveCustomFlavors();
+        toast("Category synced to Sheets ✓","ok");
+      }); })(cat);
+      row.appendChild(syncBtn);
     }
     wrap.appendChild(row);
   });
@@ -4634,6 +4650,7 @@ function closeCatFlavorModal() {
     sheetSaveFlavors(br); // write flavors directly to Sheet
     if (qtyVal > 0) {
       stock[skey(br, name)] = qtyVal;
+    _dirtyStock[skey(br,name)]=true; sheetSaveStock(skey(br,name));
       txLog.unshift({ type: "purchase", category: catOfBrand(br), brand: br, flavor: name, qty: qtyVal, unitPrice: 0, total: 0, date: new Date().toISOString() });
     }
     saveCustomFlavors(); saveLocal(); updateStats();
@@ -8389,8 +8406,12 @@ function exitStockAdjMode(autoSave) {
   document.getElementById("stock-adj-bar").style.display = "flex";
   document.getElementById("stock-adj-active").style.display = "none";
   renderStockGrid();
-  // Stock saves locally — tap ⬆ Save button to sync to Sheets
-  if(autoSave) { saveLocal(); }
+  // Save stock changes — sheetSaveStock is called per-key on inline edit
+  // Also mark dirty and trigger gdSave for txLog entries
+  if(autoSave) {
+    saveLocal();
+    afterChange(); // marks dirty indicator
+  }
 
 
 
@@ -10722,6 +10743,21 @@ function sheetSaveStock(key) {
   .catch(function(){});
 }
 
+// On startup: sync any custom categories from localStorage to Sheet (background)
+(function(){
+  setTimeout(function(){
+    if(!gdConnected) return;
+    var cf = customFlavors || {};
+    Object.keys(cf).forEach(function(k){
+      if(k.indexOf("__cat__")===0){
+        var catName=k.replace("__cat__","");
+        if(catName==="Vape") return;
+        sheetSaveCategory(catName);
+      }
+    });
+  }, 5000); // delay 5s to let connection establish
+})();
+
 // ── INIT ──
 loadLocal(); loadPricing(); loadCustomFlavors();
 var _ar=localStorage.getItem('vs5_autorefresh'); if(_ar!==null) autoRefreshEnabled=(_ar==='1');
@@ -10746,6 +10782,9 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
 
 
 
