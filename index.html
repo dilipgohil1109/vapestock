@@ -1434,8 +1434,12 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
-var BUILD_TS = "2026-07-20T01:47:14.934Z";
-var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
+
+
+
+
+var BUILD_TS = "2026-07-22T15:04:01.687Z";
+var BUILD_LABEL = "v Jul 22, 2026 03:04 PM UTC";
 
 
 
@@ -1931,7 +1935,8 @@ function gdSave(onDone) {
       e.date||new Date().toISOString(),e.brand||"",e.flavor||"",
       e.qty||0,e.unitPrice||0,e.total||0,e.category||"",
       e.distId||"",e.distName||"",e.custId||"",e.custName||"",
-      e.estId||"",e.refNo||"",e.note||""];
+      e.estId||"",e.refNo||"",e.note||"",
+      e.delta||0,e.balance_after||0,e.adj_type||""];
   });
 
   // ── 3. Estimates — only changed ──
@@ -2420,9 +2425,18 @@ function gdRefresh() {
 
     // Stock — rebuild object from rows
     if(stRows.length) {
+      // Build stock map taking LATEST row per brand~~flavor (by updatedAt)
+      // This handles duplicate rows from append-only writes
       stock = {};
+      var stockUpd = {};
       stRows.forEach(function(r) {
-        if(r.brand && r.flavor) stock[r.brand+"~~"+r.flavor] = parseInt(r.qty)||0;
+        if(!r.brand || !r.flavor) return;
+        var k = r.brand+"~~"+r.flavor;
+        var upd = parseInt(r.updatedAt)||0;
+        if(stockUpd[k] === undefined || upd > stockUpd[k]) {
+          stock[k] = parseInt(r.qty)||0;
+          stockUpd[k] = upd;
+        }
       });
     }
 
@@ -2719,7 +2733,11 @@ function renderStockGrid() {
         var old=stock[skey(activeBrand,fl)]||0;
         stock[skey(activeBrand,fl)]=nv;
         if(nv!==old){var _ak=skey(activeBrand,fl);_dirtyStock[_ak]=true;sheetSaveStock(_ak);}
-        if(nv!==old) txLog.unshift({type:"adj",category:catOfBrand(activeBrand),brand:activeBrand,flavor:fl,qty:nv-old,date:new Date().toLocaleString()});
+        if(nv!==old) var _adjDelta=nv-old;
+        txLog.unshift({type:"adj",adj_type:_adjDelta>=0?"+":"-",
+          category:catOfBrand(activeBrand),brand:activeBrand,flavor:fl,
+          qty:Math.abs(_adjDelta),delta:_adjDelta,balance_after:nv,
+          date:new Date().toISOString()});
         afterChange(); renderStockGrid();
       });
       inp.addEventListener("keydown",function(e){ if(e.key==="Enter") inp.blur(); });
@@ -3081,7 +3099,9 @@ function renderCart(){
     var deduct=Math.min(item.qty,cur);
     stock[k]=Math.max(0,cur-item.qty);
     if(item.qty>cur) warn++;
-    txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,qty:deduct,date:new Date().toISOString()});
+    txLog.unshift({type:"sale",category:catOfBrand(br),brand:br,flavor:fl,
+      qty:deduct,delta:-deduct,balance_after:stock[skey(br,fl)],
+      date:new Date().toISOString()});
     count++;
   });
   afterChange();
@@ -3945,7 +3965,13 @@ function closeAddCategoryModal() {
     var inp = document.getElementById("add-category-input");
     var name = inp ? inp.value.trim() : "";
     if (!name) { toast("Enter a category name", "err"); return; }
-    if (CATEGORIES[name] !== undefined) { toast("Category already exists", "warn"); return; }
+    if (CATEGORIES[name] !== undefined && CATEGORY_NAMES.indexOf(name) !== -1) {
+      toast("Category already exists", "warn"); return;
+    }
+    // If in CATEGORIES but not in CATEGORY_NAMES — stale entry, allow re-add
+    if (CATEGORIES[name] !== undefined && CATEGORY_NAMES.indexOf(name) === -1) {
+      delete CATEGORIES[name]; // clear stale entry
+    }
     CATEGORIES[name] = [];
     CATEGORY_NAMES.push(name);
     customFlavors["__cat__" + name] = true;
@@ -5399,6 +5425,29 @@ function renderPsPage() {
 })();
 
 // ── SYNC LOG HELPER ──
+function verifyStockFromTxlog() {
+  var calculated = {};
+  txLog.forEach(function(e){
+    var k=(e.brand||"")+"~~"+(e.flavor||"");
+    if(!e.brand||!e.flavor) return;
+    if(e.delta!==undefined) calculated[k]=(calculated[k]||0)+(parseFloat(e.delta)||0);
+  });
+  var mismatches=[];
+  Object.keys(stock).forEach(function(k){
+    var snap=stock[k]||0, calc=Math.round(calculated[k]||0);
+    if(snap!==calc){var p=k.split("~~");mismatches.push({brand:p[0],flavor:p[1],snapshot:snap,calculated:calc,diff:snap-calc});}
+  });
+  var el=document.getElementById("sync-verify-result"); if(!el) return;
+  if(!mismatches.length){
+    el.innerHTML="<div style='color:var(--grn);font-weight:700;padding:10px'>✓ All "+Object.keys(stock).length+" entries verified — snapshot matches txlog</div>";
+  } else {
+    var h2="<div style='color:var(--amb);font-weight:700;padding:6px 0'>⚠ "+mismatches.length+" mismatches:</div><table style='width:100%;font-size:12px;border-collapse:collapse'><tr style='background:var(--sur2)'><th style='padding:4px 8px;text-align:left'>Brand</th><th>Flavor</th><th>Snapshot</th><th>TxLog Calc</th><th>Diff</th></tr>";
+    mismatches.slice(0,20).forEach(function(m){h2+="<tr style='border-top:1px solid var(--brd)'><td style='padding:4px 8px'>"+m.brand+"</td><td style='padding:4px'>"+m.flavor+"</td><td style='text-align:center;font-weight:700'>"+m.snapshot+"</td><td style='text-align:center'>"+m.calculated+"</td><td style='text-align:center;color:"+(m.diff>0?"var(--grn)":"var(--red)")+"'>"+(m.diff>0?"+":"")+m.diff+"</td></tr>";});
+    h2+="</table><div style='font-size:11px;color:var(--txt3);padding:6px 0'>Note: Verify only works for transactions recorded after Option B was deployed</div>";
+    el.innerHTML=h2;
+  }
+}
+
 function addSyncLog(direction, detail, isError) {
   txLog.unshift({
     type: "sync",
@@ -10226,7 +10275,8 @@ function confirmPurchaseSummary() {
     stock[k]=(stock[k]||0)+q; _dirtyStock[k]=true; sheetSaveStock(k);
     // Add to txLog (backup/audit trail)
     txLog.unshift({type:"purchase",category:catOfBrand(br),brand:br,flavor:fl,
-      qty:q,distId:distId,distName:dName,unitPrice:up,total:up*q,
+      qty:q,delta:+q,balance_after:stock[br+"~~"+fl],
+      distId:distId,distName:dName,unitPrice:up,total:up*q,
       refNo:refNo,date:dateIso});
     // Build row for purchases Sheet
     purSheetRows.push([
@@ -10736,11 +10786,20 @@ function sheetSaveCustPrice(custId, brand) {
 function sheetSaveStock(key) {
   if(!gdConnected||!key) return;
   var sep=key.indexOf("~~"); if(sep<0) return;
-  var row=[{brand:key.substring(0,sep),flavor:key.substring(sep+2),
-    qty:stock[key]||0,brand_flavor:key,updatedAt:Date.now()}];
+  var brand=key.substring(0,sep), flavor=key.substring(sep+2);
+  var row=[{
+    brand:brand, flavor:flavor,
+    qty:stock[key]||0,
+    brand_flavor:key,  // composite key for upsert
+    updatedAt:Date.now()
+  }];
+  // Try upsert by brand_flavor first
   sheetsUpsert("stock",row,"brand_flavor")
   .then(function(){ delete _dirtyStock[key]; })
-  .catch(function(){});
+  .catch(function(){
+    // Fallback: try upsert by brand+flavor search
+    sheetsUpsert("stock",row,"brand_flavor").catch(function(){});
+  });
 }
 
 // On startup: sync any custom categories from localStorage to Sheet (background)
@@ -10782,6 +10841,10 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
+
+
+
 
 
 
