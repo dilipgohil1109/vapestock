@@ -1429,6 +1429,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 var BUILD_TS = "2026-07-20T01:47:14.934Z";
 var BUILD_LABEL = "v Jul 20, 2026 01:47 AM UTC";
 
@@ -2238,9 +2239,10 @@ function gdRefresh() {
     cats.forEach(function(c) {
       if(c.name && c.name !== "Vape") newCF["__cat__"+c.name] = true;
     });
-    // Brands
+    // Brands (skip inactive/deleted brands)
     brands.forEach(function(b) {
       if(!b.brand) return;
+      if(String(b.active)==="false") return; // deleted brand — skip
       if(String(b.isBuiltIn) !== "true") {
         newCF["__brand__"+b.brand] = true;
         newCF["__catbrand__"+b.brand] = b.category||"Vape";
@@ -4575,6 +4577,8 @@ function confirmDeleteBrand(br) {
   });
   catActiveBrand = brandsForCat(catActiveCategory)[0] || BRANDS[0] || null;
   saveCustomFlavors(); saveLocal(); updateStats();
+  // Delete from Sheets immediately
+  sheetDeleteBrand(br);
   renderCatCategorySection(); renderCatBrandScroll(); renderCatFlavorList(); renderStockBrands();
   toast(br + " deleted", "warn");
 }
@@ -10655,6 +10659,19 @@ function sheetSaveFlavors(brandName) {
   .catch(function(err){ toast("Flavor save failed: "+err.message,"err"); });
 }
 
+function sheetDeleteBrand(br) {
+  if(!gdConnected||!br) return;
+  // Delete from brands tab
+  sheetsCall({action:"deleteRow",tab:"brands",keyCol:"brand",keyVal:br}).catch(function(){});
+  // Delete all flavor rows (loop — GAS deleteRow only removes one at a time)
+  // We handle this by marking inactive instead: set active=false on brand row
+  // Flavors are keyed by brand_flavor — we'd need to loop; instead just set inactive
+  sheetsUpsert("brands",[{brand:br,active:false,updatedAt:Date.now()}],"brand").catch(function(){});
+  // Delete default price
+  sheetsCall({action:"deleteRow",tab:"default_prices",keyCol:"brand",keyVal:br}).catch(function(){});
+  // Flavor rows left in Sheet — they won't show since brand is gone from CATALOG
+}
+
 function sheetSaveCategory(catName) {
   if(!catName) return; // save locally even if not connected
   // Always save to localStorage first
@@ -10731,6 +10748,7 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
 
 
 
