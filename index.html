@@ -1442,6 +1442,7 @@ body[data-print-mode="invoice"] .tabs{display:none!important}
 
 
 
+
 var BUILD_TS = "2026-07-22T15:04:01.687Z";
 var BUILD_LABEL = "v Jul 22, 2026 03:04 PM UTC";
 
@@ -1930,14 +1931,13 @@ function gdSave(onDone) {
     stockRows.push({brand:k.substring(0,sep),flavor:k.substring(sep+2),
         qty:stock[k]||0,brand_flavor:k,updatedAt:now});
   });
-  // Fallback: if nothing dirty, write all non-zero stock
+  // Fallback: if nothing dirty, write all stock including zeros
   // Catches cases where sheetSaveStock failed silently (missing brand_flavor column)
   if(!stockRows.length){
     Object.keys(stock).forEach(function(k){
-      if(!(stock[k]>0)) return;
       var sep=k.indexOf("~~"); if(sep<0) return;
       stockRows.push({brand:k.substring(0,sep),flavor:k.substring(sep+2),
-        qty:stock[k],brand_flavor:k,updatedAt:now});
+        qty:stock[k]||0,brand_flavor:k,updatedAt:now});
     });
   }
 
@@ -2746,9 +2746,9 @@ function renderStockGrid() {
         var nv=Math.max(0,parseInt(inp.value,10)||0);
         var old=stock[skey(activeBrand,fl)]||0;
         stock[skey(activeBrand,fl)]=nv;
+        var _adjDelta=nv-old;
         if(nv!==old){var _ak=skey(activeBrand,fl);_dirtyStock[_ak]=true;sheetSaveStock(_ak);}
-        if(nv!==old) var _adjDelta=nv-old;
-        txLog.unshift({type:"adj",adj_type:_adjDelta>=0?"+":"-",
+        if(nv!==old) txLog.unshift({type:"adj",adj_type:_adjDelta>=0?"+":"-",
           category:catOfBrand(activeBrand),brand:activeBrand,flavor:fl,
           qty:Math.abs(_adjDelta),delta:_adjDelta,balance_after:nv,
           date:new Date().toISOString()});
@@ -10860,6 +10860,7 @@ if(typeof SHEETS_URL !== "undefined" && SHEETS_URL){
     toast("Cannot connect to Google Sheets","err");
   });
 } else { setSyncDot("","local"); }
+
 
 
 
